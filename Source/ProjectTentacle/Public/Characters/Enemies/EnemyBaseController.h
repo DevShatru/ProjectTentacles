@@ -13,5 +13,13 @@ UCLASS()
 class PROJECTTENTACLE_API AEnemyBaseController : public AAIController
 {
 	GENERATED_BODY()
-	
+
+public:
+	AEnemyBaseController();
+	virtual void BeginPlay() override;
+
+protected:
+	// Base behavior tree, run on start
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UBehaviorTree* BehaviorTree;
 };
