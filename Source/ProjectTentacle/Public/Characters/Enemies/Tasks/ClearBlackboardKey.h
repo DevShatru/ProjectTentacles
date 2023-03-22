@@ -1,25 +1,20 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BehaviorTree/Tasks/BTTask_GameplayTaskBase.h"
+#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "ClearBlackboardKey.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API UClearBlackboardKey : public UBTTask_GameplayTaskBase
+class PROJECTTENTACLE_API UClearBlackboardKey : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 
 public:
 	UClearBlackboardKey();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	
-protected:
-	// Blackboard Key to clear
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Blackboard)
-	FBlackboardKeySelector BlackboardKey;
 };

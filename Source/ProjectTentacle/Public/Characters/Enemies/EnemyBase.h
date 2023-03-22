@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 #pragma once
 
@@ -12,7 +12,7 @@ class PROJECTTENTACLE_API AEnemyBase : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this pawn's properties
+	// Sets default values for this character's properties
 	AEnemyBase();
 
 protected:

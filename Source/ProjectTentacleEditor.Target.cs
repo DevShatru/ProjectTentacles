@@ -9,7 +9,6 @@ public class ProjectTentacleEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
-		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
-		ExtraModuleNames.Add("ProjectTentacle");
+		ExtraModuleNames.AddRange( new string[] { "ProjectTentacle" } );
 	}
 }

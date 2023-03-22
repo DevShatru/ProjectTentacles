@@ -1,9 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BehaviorTree/Tasks/BTTask_GameplayTaskBase.h"
+#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "FindPatrolPoint.generated.h"
 
 /**
@@ -12,7 +12,7 @@
 class UNavigationSystemV1;
 
 UCLASS()
-class PROJECTTENTACLE_API UFindPatrolPoint : public UBTTask_GameplayTaskBase
+class PROJECTTENTACLE_API UFindPatrolPoint : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 	
@@ -24,10 +24,6 @@ protected:
 	// Radius within which to find a location
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float FindRadius = 100.0f;
-
-	// Blackboard key to write found location to
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Blackboard)
-	FBlackboardKeySelector BlackboardKey;
 
 private:
 	// Cache nav system and whether cache attempt has been made

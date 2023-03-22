@@ -1,10 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
 #include "Characters/Enemies/EnemyBaseController.h"
-
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+
 
 AEnemyBaseController::AEnemyBaseController()
 {

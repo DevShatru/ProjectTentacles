@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 #pragma once
 
@@ -13,7 +13,7 @@ UCLASS()
 class PROJECTTENTACLE_API AEnemyBaseController : public AAIController
 {
 	GENERATED_BODY()
-
+	
 public:
 	AEnemyBaseController();
 	virtual void BeginPlay() override;
