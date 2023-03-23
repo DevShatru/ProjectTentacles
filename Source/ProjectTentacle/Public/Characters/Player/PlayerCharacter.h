@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "PlayerCharacter.generated.h"
 
@@ -52,6 +53,10 @@ class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter
 {
 	GENERATED_BODY()
 
+private:
+	void InitializeTimeLineComp();
+
+	
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -69,16 +74,18 @@ protected:
 	// ================================================== Melee Attack ================================================
 	UFUNCTION()
 	void TryMeleeAttack();
-
+	
 	void BeginMeleeAttack();
 
+	void FinishEnemy();
+	
 	void SetAttackMovementPositions(FVector TargetPos);
-
+	
 	UFUNCTION()
 	void MovingAttackMovement(float Alpha);
 	
 	EPlayerAttackType GetAttackTypeByRndNum(int32 RndNum);
-
+	
 	void StartAttackMovementTimeline(EPlayerAttackType CurrentAttackType);
 	
 	// ====================================================== Dodge ===================================================
@@ -89,17 +96,12 @@ protected:
 
 
 	// ================================================= Utility ======================================================
-	//TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
+	TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
 
-	void InstantRotation(FVector RotatingVector);
+	 void InstantRotation(FVector RotatingVector);
 
-	//FVector GetTargetEnemyPos(TArray<AAttackTargetTester*> OpponentsAroundSelf);
-
-	UFUNCTION()
-	void ForwardInputChecking();
+	AAttackTargetTester* GetTargetEnemy(TArray<AAttackTargetTester*> OpponentsAroundSelf);
 	
-	UFUNCTION()
-	void RightInputChecking();
 
 
 	
@@ -128,6 +130,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
 	UCurveFloat* DashingDoubleKickCurve;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
+	UCurveFloat* CloseToPerformFinisherCurve;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingForwardKey;
 	
@@ -139,6 +144,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingRightKey;
+
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
 	float MaxAngleForFacingEnemy = 45.0f;
@@ -152,6 +159,16 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
 	UClass* FilteringClass;
 
+	UPROPERTY()
+	AAttackTargetTester* TargetActor;
+
+	UPROPERTY()
+	EPlayerAttackType CurrentAttackType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=FinisherMontages)
+	UAnimMontage* FinisherAnimMontages;
+
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
 
@@ -173,6 +190,7 @@ protected:
 	FTimeline FlyingPunchTimeLine;
 	FTimeline SpinKickTimeLine;
 	FTimeline DashingDoubleKickTimeLine;
+	FTimeline CloseToPerformFinisherTimeLine;
 
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
@@ -188,4 +206,7 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
+
+	UFUNCTION()
+	virtual void DamagingTarget_Implementation() override;
 };

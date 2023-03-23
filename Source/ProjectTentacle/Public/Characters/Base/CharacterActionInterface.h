@@ -28,4 +28,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void StartWaitForCombo();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void DamagingTarget();
 };

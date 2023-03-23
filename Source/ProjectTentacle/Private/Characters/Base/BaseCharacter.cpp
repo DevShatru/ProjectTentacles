@@ -57,7 +57,7 @@ void ABaseCharacter::ActionEnd_Implementation(bool BufferingCheck)
 {
 	ICharacterActionInterface::ActionEnd_Implementation(BufferingCheck);
 
-	CurrentActionState = EActionState::WaitForCombo;
+	CurrentActionState = EActionState::Idle;
 	
 }
 
@@ -65,6 +65,6 @@ void ABaseCharacter::StartWaitForCombo_Implementation()
 {
 	ICharacterActionInterface::StartWaitForCombo_Implementation();
 
-	CurrentActionState = EActionState::Idle;
+	CurrentActionState = EActionState::WaitForCombo;
 }
 
