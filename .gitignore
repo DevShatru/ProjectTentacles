@@ -59,6 +59,7 @@ Plugins/FMODStudio/Binaries/Win64/
 *.xcodeproj
 *.xcworkspace
 *.vsconfig
+*.lnk
 
 # Windows
 Thumbs.db
