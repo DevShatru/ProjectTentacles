@@ -20,6 +20,10 @@ public:
 	AEnemyBaseController();
 	virtual void BeginPlay() override;
 
+	// Register encounters and targets
+	void RegisterOwningEncounter(class AEncounterVolume* NewOwningEncounter);
+	void EngageTarget(AActor* Target);
+
 protected:
 	// Base behavior tree, run on start
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -30,7 +34,12 @@ protected:
 	UAIPerceptionComponent* Perception;
 	UPROPERTY(BlueprintReadOnly)
 	UAISenseConfig_Sight* Sight;
-	
+
+	// Bound to perception updated delegate
 	UFUNCTION()
-	void UpdateTarget(AActor* Actor, FAIStimulus Stimulus);
+	void UpdatePerception(AActor* Actor, FAIStimulus Stimulus);
+	
+private:
+	class AEncounterVolume* OwningEncounter;
+	AActor* EncounterTarget;
 };

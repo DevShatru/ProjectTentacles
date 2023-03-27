@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/EnemyBase.h"
 
+#include "Characters/Enemies/EnemyBaseController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
@@ -12,6 +13,18 @@ AEnemyBase::AEnemyBase()
 	PrimaryActorTick.bCanEverTick = true;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	GetCharacterMovement()->bUseRVOAvoidance = true;
+}
+
+void AEnemyBase::RegisterOwningEncounter(AEncounterVolume* NewOwningEncounter)
+{
+	TryGetOwnController();
+	OwnController->RegisterOwningEncounter(NewOwningEncounter);
+}
+
+void AEnemyBase::EngageTarget(AActor* Target)
+{
+	TryGetOwnController();
+	OwnController->EngageTarget(Target);
 }
 
 // Called when the game starts or when spawned
@@ -24,5 +37,10 @@ void AEnemyBase::BeginPlay()
 void AEnemyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
 
+void AEnemyBase::TryGetOwnController()
+{
+	if(OwnController) return;
+	OwnController = Cast<AEnemyBaseController>(GetController());
 }

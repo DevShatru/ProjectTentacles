@@ -4,6 +4,7 @@
 #include "Characters/Enemies/EnemyBaseController.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Characters/Enemies/EncounterVolume.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 
@@ -31,7 +32,7 @@ AEnemyBaseController::AEnemyBaseController()
 void AEnemyBaseController::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	EncounterTarget = nullptr;
 	if(!BehaviorTree) return;
 
 	// Init blackboard and run master behaviour
@@ -39,10 +40,25 @@ void AEnemyBaseController::BeginPlay()
 	RunBehaviorTree(BehaviorTree);
 
 	// Bind UFunction to perception updated delegate
-	Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyBaseController::UpdateTarget);
+	Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyBaseController::UpdatePerception);
 }
 
-void AEnemyBaseController::UpdateTarget(AActor* Actor, FAIStimulus Stimulus)
+void AEnemyBaseController::RegisterOwningEncounter(AEncounterVolume* NewOwningEncounter)
+{
+	OwningEncounter = NewOwningEncounter;
+}
+
+// Engage target and disable further perception
+void AEnemyBaseController::EngageTarget(AActor* Target)
+{
+	EncounterTarget = Target;
+	Perception->SetSenseEnabled(UAISense_Sight::StaticClass(), false);
+}
+
+
+void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 {
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, Actor->GetHumanReadableName());
+	if(!OwningEncounter) return;
+	OwningEncounter->TryTriggerEncounter(Actor);
 }
