@@ -4,6 +4,7 @@
 #include "Characters/Enemies/EncounterVolume.h"
 
 #include "NavigationInvokerComponent.h"
+#include "Characters/Enemies/EnemyBase.h"
 
 // Sets default values
 AEncounterVolume::AEncounterVolume()
@@ -18,8 +19,37 @@ AEncounterVolume::AEncounterVolume()
 	SetRootComponent(Root);
 }
 
+
+void AEncounterVolume::TryTriggerEncounter(AActor* Target)
+{
+	// Early return if encounter has already begun
+	if(bIsEncounterActive) return;
+	bIsEncounterActive = true;
+	EngageContainedUnits(Target);
+}
+
 // Called when the game starts or when spawned
 void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
+	bIsEncounterActive = false;
+	RegisterEncounterForUnits();
+}
+
+// Register this encounter with contained units
+void AEncounterVolume::RegisterEncounterForUnits()
+{
+	for(AEnemyBase* ContainedUnit : ContainedUnits)
+	{
+		ContainedUnit->RegisterOwningEncounter(this);
+	}
+}
+
+// Trigger for contained units to engage the target
+void AEncounterVolume::EngageContainedUnits(AActor* Target)
+{
+	for(AEnemyBase* ContainedUnit : ContainedUnits)
+	{
+		ContainedUnit->EngageTarget(Target);
+	}
 }

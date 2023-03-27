@@ -18,19 +18,36 @@ public:
 	// Sets default values for this actor's properties
 	AEncounterVolume();
 
+	// Try to start the encounter, if it hasn't already
+	void TryTriggerEncounter(AActor* Target);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// Area around the encounter to generate navigation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UNavigationInvokerComponent* NavInvoker;
-	
+
+	// Root component
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	USceneComponent* Root;
 
+	// Set of all contained units at any time
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSet<AEnemyBase*> ContainedEnemies;
-	
+	TSet<AEnemyBase*> ContainedUnits;
+
+	// Attack queue for melee and ranged units
 	TQueue<AEnemyBase*> AttackQueueBasic;
+
+	// Attack queue for brutes
 	TQueue<AEnemyBase*> AttackQueueHeavy;
+
+private:
+	// Register the encounter object with each contained units
+	void RegisterEncounterForUnits();
+	// Engage contained units when encounter starts
+	void EngageContainedUnits(AActor* Target);
+	// Track whether the encounter has started yet
+	unsigned int bIsEncounterActive:1;
 };
