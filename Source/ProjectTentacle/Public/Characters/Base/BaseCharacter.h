@@ -19,7 +19,8 @@ enum class EActionState: uint8
 	Recovering = 3 UMETA(DisplayName = "RECOVERING"),
 	ReceivedDamage = 4 UMETA(DisplayName = "RECEIVEDDAMAGE"),
 	SpecialAttack = 5 UMETA(DisplayName = "SPECIALATTACK"),
-	WaitForCombo = 6 UMETA(DisplayName = "WAITFORCOMBO")
+	WaitForCombo = 6 UMETA(DisplayName = "WAITFORCOMBO"),
+	Dodge = 7 UMETA(DisplayName = "DODGE")
 };
 
 
@@ -55,7 +56,7 @@ protected:
 	UAnimMontage* CurrentPlayingMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=AnimMontages)
-	UAnimMontage* DodgeAnimMontage;
+	UAnimMontage* EvadeAnimMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=AnimMontages)
 	TArray<UAnimMontage*> MeleeAttackMontages;
