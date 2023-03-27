@@ -94,8 +94,11 @@ protected:
 
 	void BeginDodge();
 
+	// ================================================== Counter ======================================================
+	void BeginCounterAttack(AActor* CounteringTarget);
 
-	// ================================================= Utility ======================================================
+	
+	// ================================================== Utility ======================================================
 	TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
 
 	 void InstantRotation(FVector RotatingVector);
@@ -168,6 +171,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=FinisherMontages)
 	UAnimMontage* FinisherAnimMontages;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DamageReceiveMontages)
+	UAnimMontage* ReceiveDamageMontage;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DamageReceiveMontages)
+	UAnimMontage* CounterAttackMontages;
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
@@ -207,6 +216,8 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
 };

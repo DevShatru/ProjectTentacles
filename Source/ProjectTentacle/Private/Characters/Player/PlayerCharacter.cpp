@@ -89,6 +89,36 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	CloseToPerformFinisherTimeLine.TickTimeline(DeltaSeconds);
 }
 
+float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	if(CurrentActionState == EActionState::Evade)
+	{
+		StopAnimMontage();
+		BeginCounterAttack(DamageCauser);
+	}
+
+	if(CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::Attack)
+	{
+		if(CurrentActionState == EActionState::Attack)
+		{
+			StopAnimMontage();	
+		}
+
+		// TODO: Damage player
+
+		// Player Play receiving damage montage
+		if(ReceiveDamageMontage == nullptr) return DamageAmount;
+
+		CurrentActionState = EActionState::Recovering;
+	
+		CurrentPlayingMontage = ReceiveDamageMontage;
+		
+		PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
+	}
+	
+	return DamageAmount;
+}
 
 
 // ==================================================== Movement ==============================================
@@ -302,8 +332,30 @@ void APlayerCharacter::BeginDodge()
 	PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeLeft");
 }
 
-// ==================================================== Utility ===============================================
 
+
+// ================================================== Counter ======================================================
+void APlayerCharacter::BeginCounterAttack(AActor* CounteringTarget)
+{
+	// if Dodge montage is null pointer, just return
+	if(CounterAttackMontages == nullptr) return;
+
+	CurrentActionState = EActionState::SpecialAttack;
+
+	AAttackTargetTester* CastedTarget = Cast<AAttackTargetTester>(CounteringTarget);
+	if(CastedTarget == nullptr) return;
+
+	TargetActor = CastedTarget;
+	
+	CurrentPlayingMontage = CounterAttackMontages;
+
+	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActor->GetActorLocation() - GetActorLocation());
+	InstantRotation(FacingEnemyDir);
+	
+	PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
+}
+
+// ==================================================== Utility ===============================================
 TArray<AAttackTargetTester*> APlayerCharacter::GetAllOpponentAroundSelf()
 {
 	TArray<AActor*> FoundActorList;
