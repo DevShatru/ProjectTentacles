@@ -88,14 +88,25 @@ protected:
 	
 	void StartAttackMovementTimeline(EPlayerAttackType CurrentAttackType);
 	
-	// ====================================================== Dodge ===================================================
+	// ====================================================== Evade ===================================================
 	UFUNCTION()
+	void TryEvade();
+
+	void BeginEvade();
+
+	// ================================================== Counter ======================================================
+	void BeginCounterAttack(AActor* CounteringTarget);
+
+	// ================================================== Dodge ========================================================
 	void TryDodge();
 
 	void BeginDodge();
 
+	FVector DecideDodgingDirection(FVector PlayerFaceDir);
 
-	// ================================================= Utility ======================================================
+	UAnimMontage* DecideDodgingMontage(FVector PlayerDodgingDirection);
+	
+	// ================================================== Utility ======================================================
 	TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
 
 	 void InstantRotation(FVector RotatingVector);
@@ -133,6 +144,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
 	UCurveFloat* CloseToPerformFinisherCurve;
 	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingForwardKey;
 	
@@ -168,6 +180,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=FinisherMontages)
 	UAnimMontage* FinisherAnimMontages;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DamageReceiveMontages)
+	UAnimMontage* ReceiveDamageMontage;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DamageReceiveMontages)
+	UAnimMontage* CounterAttackMontages;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DodgeSetting)
+	float DodgeDistance = 250.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DodgeSetting)
+	UCurveFloat* DodgeLerpingCurve;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DodgeSetting)
+	UAnimMontage* BackFlipMontage;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DodgeSetting)
+	UAnimMontage* FrontRollingMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
@@ -176,9 +205,9 @@ protected:
 	FTimerHandle RightInputTimerHandle;
 
 	
-	FVector MovingAttackStart;
+	FVector MovingStartPos;
 	
-	FVector MovingAttackEnd;
+	FVector MovingEndPos;
 
 	
 	
@@ -191,7 +220,7 @@ protected:
 	FTimeline SpinKickTimeLine;
 	FTimeline DashingDoubleKickTimeLine;
 	FTimeline CloseToPerformFinisherTimeLine;
-
+	FTimeline DodgeLerpingTimeLine;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
 	FVector CurrentInputForward = FVector(0,0,0);
@@ -207,6 +236,8 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
 };
