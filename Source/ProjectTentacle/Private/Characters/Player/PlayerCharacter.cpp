@@ -34,8 +34,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
-	PlayerInputComponent->BindAction("Evade", IE_Pressed, this, &APlayerCharacter::TryDodge);
+	PlayerInputComponent->BindAction("Evade", IE_Pressed, this, &APlayerCharacter::TryEvade);
 	PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &APlayerCharacter::TryMeleeAttack);
+	PlayerInputComponent->BindAction("Dodge", IE_Pressed, this, &APlayerCharacter::TryDodge);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -65,6 +66,8 @@ void APlayerCharacter::InitializeTimeLineComp()
 	SpinKickTimeLine.AddInterpFloat(SpinKickCurve, MovingAttackPosUpdate);
 	DashingDoubleKickTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
 	CloseToPerformFinisherTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
+	DodgeLerpingTimeLine.AddInterpFloat(DodgeLerpingCurve, MovingAttackPosUpdate);
+
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -87,8 +90,39 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	SpinKickTimeLine.TickTimeline(DeltaSeconds);
 	DashingDoubleKickTimeLine.TickTimeline(DeltaSeconds);
 	CloseToPerformFinisherTimeLine.TickTimeline(DeltaSeconds);
+	DodgeLerpingTimeLine.TickTimeline(DeltaSeconds);
 }
 
+float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	if(CurrentActionState == EActionState::Evade)
+	{
+		StopAnimMontage();
+		BeginCounterAttack(DamageCauser);
+	}
+
+	if(CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::Attack)
+	{
+		if(CurrentActionState == EActionState::Attack)
+		{
+			StopAnimMontage();	
+		}
+
+		// TODO: Damage player
+
+		// Player Play receiving damage montage
+		if(ReceiveDamageMontage == nullptr) return DamageAmount;
+
+		CurrentActionState = EActionState::Recovering;
+	
+		CurrentPlayingMontage = ReceiveDamageMontage;
+		
+		PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
+	}
+	
+	return DamageAmount;
+}
 
 
 // ==================================================== Movement ==============================================
@@ -231,19 +265,20 @@ void APlayerCharacter::FinishEnemy()
 	PlayAnimMontage(CurrentPlayingMontage, 1, "Default");
 
 	TargetActor->PlayFinishedAnimation();
+	CloseToPerformFinisherTimeLine.PlayFromStart();
 }
 
 void APlayerCharacter::SetAttackMovementPositions(FVector TargetPos)
 {
-	MovingAttackStart = GetActorLocation();
+	MovingStartPos = GetActorLocation();
 
 	// Get direction from target to player
-	FVector OffsetWithoutZ = MovingAttackStart - TargetPos;
+	FVector OffsetWithoutZ = MovingStartPos - TargetPos;
 	OffsetWithoutZ.Z = 0;
 	const FVector DirFromTargetToPlayer = UKismetMathLibrary::Normal(OffsetWithoutZ);
 
 	// Get lerp end position
-	MovingAttackEnd = TargetPos + (DirFromTargetToPlayer * 80);
+	MovingEndPos = TargetPos + (DirFromTargetToPlayer * 80);
 }
 
 EPlayerAttackType APlayerCharacter::GetAttackTypeByRndNum(int32 RndNum)
@@ -275,21 +310,21 @@ void APlayerCharacter::StartAttackMovementTimeline(EPlayerAttackType AttackType)
 	}
 }
 
-// ====================================================== Dodge ===============================================
-void APlayerCharacter::TryDodge()
+// ====================================================== Evade ===============================================
+void APlayerCharacter::TryEvade()
 {
 	// if player is able to dodge, make dodge
-	if(CurrentActionState == EActionState::Idle) BeginDodge();
+	if(CurrentActionState == EActionState::Idle) BeginEvade();
 }
 
-void APlayerCharacter::BeginDodge()
+void APlayerCharacter::BeginEvade()
 {
-	// if Dodge montage is null pointer, just return
-	if(DodgeAnimMontage == nullptr) return;
+	// if evade montage is null pointer, just return
+	if(EvadeAnimMontage == nullptr) return;
 
 	CurrentActionState = EActionState::Evade;
 
-	CurrentPlayingMontage = DodgeAnimMontage;
+	CurrentPlayingMontage = EvadeAnimMontage;
 
 	const int32 RndPerformIndex = UKismetMathLibrary::RandomIntegerInRange(0,1);
 
@@ -302,8 +337,112 @@ void APlayerCharacter::BeginDodge()
 	PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeLeft");
 }
 
-// ==================================================== Utility ===============================================
 
+
+// ================================================== Counter ======================================================
+void APlayerCharacter::BeginCounterAttack(AActor* CounteringTarget)
+{
+	// if Dodge montage is null pointer, just return
+	if(CounterAttackMontages == nullptr) return;
+
+	CurrentActionState = EActionState::SpecialAttack;
+
+	AAttackTargetTester* CastedTarget = Cast<AAttackTargetTester>(CounteringTarget);
+	if(CastedTarget == nullptr) return;
+
+	TargetActor = CastedTarget;
+	
+	CurrentPlayingMontage = CounterAttackMontages;
+
+	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActor->GetActorLocation() - GetActorLocation());
+	InstantRotation(FacingEnemyDir);
+	
+	PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
+}
+
+// ==================================================== Dodge ===============================================
+
+void APlayerCharacter::TryDodge()
+{
+	// if player is able to dodge, make dodge
+	if(CurrentActionState == EActionState::Idle)
+	{
+		StopAnimMontage();	
+		BeginDodge();
+	}
+}
+
+void APlayerCharacter::BeginDodge()
+{
+	// Get Player facing direction
+	const FVector PlayerFaceDir = GetActorForwardVector();
+
+	// Get dodging direction
+	const FVector PlayerDodgingDir = DecideDodgingDirection(PlayerFaceDir);
+
+	// Get dodging montage depends on dodging direction
+	UAnimMontage* PlayerDodgingMontage = DecideDodgingMontage(PlayerDodgingDir);
+
+	// Set action state and playing montage to dodging
+	CurrentActionState = EActionState::Dodge;
+	CurrentPlayingMontage = PlayerDodgingMontage;
+
+	// Set moving locations
+	const FVector DodgeStart = GetActorLocation();
+	const FVector DodgingDest = DodgeStart + (PlayerDodgingDir * DodgeDistance);
+	MovingStartPos = DodgeStart;
+	MovingEndPos = DodgingDest;
+
+	
+
+	// Play both lerping timeline and montage
+	PlayAnimMontage(CurrentPlayingMontage, 1 , NAME_None);
+	DodgeLerpingTimeLine.PlayFromStart();
+}
+
+FVector APlayerCharacter::DecideDodgingDirection(FVector PlayerFaceDir)
+{
+	
+	// if input direction is both 0, it means player didn't 
+	if(InputDirection.GetInputDirectionX() == 0 && InputDirection.GetInputDirectionY() == 0)
+	{
+		const FVector PlayerBackDir = -1 * PlayerFaceDir;
+		return PlayerBackDir;
+	}
+	
+	// Get input direction
+	const FVector SelfPos = GetActorLocation();
+	const FRotator Rotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
+	const FVector RightX = UKismetMathLibrary::GetRightVector(YawRotation);
+	const FVector ForwardY = UKismetMathLibrary::GetForwardVector(YawRotation);
+	const FVector RightInputDir = RightX * InputDirection.GetInputDirectionX();
+	const FVector ForwardInputDir = ForwardY * InputDirection.GetInputDirectionY();
+	const FVector InputDest = SelfPos + ((RightInputDir * 50) + (ForwardInputDir * 50));
+	const FVector SelfToInputDestDir = UKismetMathLibrary::GetDirectionUnitVector(SelfPos, InputDest);
+
+	return SelfToInputDestDir;
+}
+
+UAnimMontage* APlayerCharacter::DecideDodgingMontage(FVector PlayerDodgingDirection)
+{
+	// Get Player facing direction
+	const FVector PlayerFaceDir = GetActorForwardVector();
+	
+	const float DotProduct = UKismetMathLibrary::Dot_VectorVector(PlayerFaceDir, PlayerDodgingDirection);
+
+	// Dot product is negative = player is dodging backward
+	if(DotProduct < 0)
+	{
+		InstantRotation((-1 * PlayerDodgingDirection));
+		return BackFlipMontage;
+	}
+
+	InstantRotation(PlayerDodgingDirection);
+	return FrontRollingMontage;
+}
+
+// ==================================================== Utility ===============================================
 TArray<AAttackTargetTester*> APlayerCharacter::GetAllOpponentAroundSelf()
 {
 	TArray<AActor*> FoundActorList;
@@ -342,19 +481,32 @@ AAttackTargetTester* APlayerCharacter::GetTargetEnemy(TArray<AAttackTargetTester
 {
 	const FVector SelfPos = GetActorLocation();
 
+	FVector SelfToInputDestDir;
+
+	const float InputXValue = InputDirection.GetInputDirectionX(); 
+	const float InputYValue = InputDirection.GetInputDirectionY(); 
+	
 	// find out which way is right
-	const FRotator Rotation = Controller->GetControlRotation();
-	const FRotator YawRotation(0, Rotation.Yaw, 0);
+	if(InputXValue != 0 || InputYValue != 0)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-	const FVector RightX = UKismetMathLibrary::GetRightVector(YawRotation);
-	const FVector ForwardY = UKismetMathLibrary::GetForwardVector(YawRotation);
+		const FVector RightX = UKismetMathLibrary::GetRightVector(YawRotation);
+		const FVector ForwardY = UKismetMathLibrary::GetForwardVector(YawRotation);
 
-	const FVector RightInputDir = RightX * InputDirection.GetInputDirectionX();
-	const FVector ForwardInputDir = ForwardY * InputDirection.GetInputDirectionY();
-	
-	const FVector InputDest = SelfPos + ((RightInputDir * 50) + (ForwardInputDir * 50));
-	
-	const FVector SelfToInputDestDir = UKismetMathLibrary::GetDirectionUnitVector(SelfPos, InputDest);
+		const FVector RightInputDir = RightX * InputDirection.GetInputDirectionX();
+		const FVector ForwardInputDir = ForwardY * InputDirection.GetInputDirectionY();
+		
+		const FVector InputDest = SelfPos + ((RightInputDir * 50) + (ForwardInputDir * 50));
+
+		SelfToInputDestDir = UKismetMathLibrary::GetDirectionUnitVector(SelfPos, InputDest);
+	}
+	else
+	{
+		// if there is no input direction, it means player didn't press movement key, it means attack will happen in front of player
+		SelfToInputDestDir = GetActorForwardVector();
+	}
 	
 	// set first one as closest target and iterating from opponents list
 	AAttackTargetTester* ReturnTarget = OpponentsAroundSelf[0];
@@ -399,7 +551,7 @@ void APlayerCharacter::MovingAttackMovement(float Alpha)
 {
 	const FVector CharacterCurrentPos = GetActorLocation();
 	
-	const FVector MovingPos = UKismetMathLibrary::VLerp(MovingAttackStart, MovingAttackEnd, Alpha);
+	const FVector MovingPos = UKismetMathLibrary::VLerp(MovingStartPos, MovingEndPos, Alpha);
 
 	const FVector LaunchingPos = FVector(MovingPos.X, MovingPos.Y, CharacterCurrentPos.Z);
 
@@ -433,8 +585,6 @@ void APlayerCharacter::DamagingTarget_Implementation()
 			break;
 		default: ;
 	}
-	
-	
 }
 
 
