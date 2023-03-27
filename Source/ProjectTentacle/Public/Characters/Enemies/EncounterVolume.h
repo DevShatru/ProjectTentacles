@@ -27,6 +27,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	USceneComponent* Root;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSet<AEnemyBase*> ContainedEnemies;
 	
 	TQueue<AEnemyBase*> AttackQueueBasic;
 	TQueue<AEnemyBase*> AttackQueueHeavy;
