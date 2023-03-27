@@ -6,7 +6,6 @@
 #include "BehaviorTree/BlackboardComponent.h"
 
 //Static defaults
-unsigned int UFindPatrolPoint::bAttemptNavCache = 0;
 UNavigationSystemV1* UFindPatrolPoint::NavSystem = nullptr;
 
 UFindPatrolPoint::UFindPatrolPoint()
@@ -19,14 +18,10 @@ UFindPatrolPoint::UFindPatrolPoint()
 
 EBTNodeResult::Type UFindPatrolPoint::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if(!NavSystem)
+	if(!NavSystem || !NavSystem->MainNavData)
 	{
-		// If NavSystem isn't cached, check if caching has been attempted and fail if it has
-		if(bAttemptNavCache) return EBTNodeResult::Failed;
-
-		// Otherwise, attempt cache and flip bit flag
+		// Attempt to cache if it hasn't already or the cache is invalid
 		NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
-		bAttemptNavCache = 1;
 		if(!NavSystem) return EBTNodeResult::Failed;
 	}
 
@@ -37,7 +32,7 @@ EBTNodeResult::Type UFindPatrolPoint::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	// Fail if we can't find a location
 	FNavLocation PatrolPoint;
 	NavSystem->GetRandomReachablePointInRadius(Owner->GetActorLocation(), FindRadius, PatrolPoint);
-	if(PatrolPoint.Location == FVector::ZeroVector) return EBTNodeResult::Failed;
+	if (PatrolPoint.Location == FVector::ZeroVector) return EBTNodeResult::Failed;
 
 	// Save location to blackboard
 	OwnerComp.GetBlackboardComponent()->SetValueAsVector(BlackboardKey.SelectedKeyName, PatrolPoint.Location);

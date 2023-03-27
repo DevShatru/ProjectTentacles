@@ -28,5 +28,4 @@ protected:
 private:
 	// Cache nav system and whether cache attempt has been made
 	static UNavigationSystemV1* NavSystem;
-	static unsigned int bAttemptNavCache;
 };
