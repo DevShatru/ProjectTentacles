@@ -30,5 +30,8 @@ public:
 	void StartWaitForCombo();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void TryToDamagePlayer();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void DamagingTarget();
 };
