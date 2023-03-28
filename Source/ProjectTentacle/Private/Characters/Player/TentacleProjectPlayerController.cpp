@@ -22,7 +22,7 @@ void ATentacleProjectPlayerController::SetupInputComponent()
 
 	InputComponent->BindAxis("MoveForward", this, &ATentacleProjectPlayerController::OnMoveForward);
 	InputComponent->BindAxis("MoveRight", this, &ATentacleProjectPlayerController::OnMoveRight);
-	InputComponent->BindAction("Evade", IE_Pressed, this, &ATentacleProjectPlayerController::OnEvade);
+	InputComponent->BindAction("Counter", IE_Pressed, this, &ATentacleProjectPlayerController::OnEvade);
 	InputComponent->BindAction("MeleeAttack", IE_Pressed, this, &ATentacleProjectPlayerController::OnMeleeAttack);
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ATentacleProjectPlayerController::OnDodge);
 	//
