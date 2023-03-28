@@ -11,7 +11,7 @@ AActor* UEnvQueryContext_Player::Player = nullptr;
 
 void UEnvQueryContext_Player::ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const
 {
-	if(!Player || !IsValid(Player))
+	if(!Player->IsValidLowLevelFast())
 	{
 		Player = nullptr;
 		for (TActorIterator<APlayerCharacter> It(GetWorld(), APlayerCharacter::StaticClass()); It; ++It)
