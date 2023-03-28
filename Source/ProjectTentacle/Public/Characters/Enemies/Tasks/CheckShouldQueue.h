@@ -3,22 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
-#include "SetKeyValueAsBool.generated.h"
+#include "BehaviorTree/BTTaskNode.h"
+#include "CheckShouldQueue.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API USetKeyValueAsBool : public UBTTask_BlackboardBase
+class PROJECTTENTACLE_API UCheckShouldQueue : public UBTTaskNode
 {
 	GENERATED_BODY()
-	USetKeyValueAsBool();
+	UCheckShouldQueue();
 
 protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool Value;
-	
+private:
+	FVector LastSurroundPoint;
 };
