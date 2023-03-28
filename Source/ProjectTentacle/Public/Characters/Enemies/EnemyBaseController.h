@@ -7,7 +7,6 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "EnemyBaseController.generated.h"
 
-class UAISenseConfig_Sight;
 /**
  * 
  */
@@ -23,6 +22,7 @@ public:
 	// Register encounters and targets
 	void RegisterOwningEncounter(class AEncounterVolume* NewOwningEncounter);
 	void EngageTarget(AActor* Target);
+	TArray<class AEnemyBase*> GetAllies() const;
 
 protected:
 	// Base behavior tree, run on start
@@ -33,7 +33,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UAIPerceptionComponent* Perception;
 	UPROPERTY(BlueprintReadOnly)
-	UAISenseConfig_Sight* Sight;
+	class UAISenseConfig_Sight* Sight;
 
 	// Bound to perception updated delegate
 	UFUNCTION()

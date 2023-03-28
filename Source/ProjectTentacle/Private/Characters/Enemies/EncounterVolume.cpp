@@ -28,6 +28,18 @@ void AEncounterVolume::TryTriggerEncounter(AActor* Target)
 	EngageContainedUnits(Target);
 }
 
+TArray<AEnemyBase*> AEncounterVolume::GetAlliesForPawn(APawn* Pawn)
+{
+	TArray<AEnemyBase*> AlliesForPawn;
+	for(AEnemyBase* ContainedUnit : ContainedUnits)
+	{
+		if(ContainedUnit == Pawn) continue;
+		AlliesForPawn.Add(ContainedUnit);
+	}
+
+	return AlliesForPawn;
+}
+
 // Called when the game starts or when spawned
 void AEncounterVolume::BeginPlay()
 {

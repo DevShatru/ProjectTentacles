@@ -5,9 +5,6 @@
 #include "NavigationSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-//Static defaults
-UNavigationSystemV1* UFindPatrolPoint::NavSystem = nullptr;
-
 UFindPatrolPoint::UFindPatrolPoint()
 {
 	NodeName = "Find Patrol Point";
@@ -18,12 +15,9 @@ UFindPatrolPoint::UFindPatrolPoint()
 
 EBTNodeResult::Type UFindPatrolPoint::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if(!NavSystem || !NavSystem->MainNavData)
-	{
-		// Attempt to cache if it hasn't already or the cache is invalid
-		NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
-		if(!NavSystem) return EBTNodeResult::Failed;
-	}
+	// Cache NavSystem Reference
+	NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
+	if(!NavSystem) return EBTNodeResult::Failed;
 
 	// Fail if owner doesn't exist
 	const AActor* Owner = OwnerComp.GetOwner();
