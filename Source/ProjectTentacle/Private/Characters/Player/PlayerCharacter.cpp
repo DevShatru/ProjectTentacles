@@ -7,8 +7,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h"
 
-
+FGenericTeamId APlayerCharacter::TeamId = FGenericTeamId(1);
 // ==================================================== Constructor =========================================
 
 APlayerCharacter::APlayerCharacter()
@@ -23,6 +25,15 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	
+	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimuli Source"));
+	StimuliSource->bAutoRegister = true;
+	StimuliSource->RegisterForSense(UAISense_Sight::StaticClass());
+}
+
+FGenericTeamId APlayerCharacter::GetGenericTeamId() const
+{
+	return TeamId;
 }
 
 // =================================== Begin Play, Set up InputComponent, Tick ==============================

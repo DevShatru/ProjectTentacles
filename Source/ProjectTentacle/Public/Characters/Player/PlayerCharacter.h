@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GenericTeamAgentInterface.h"
 #include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "PlayerCharacter.generated.h"
@@ -49,13 +50,14 @@ public:
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter
+class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
 private:
 	void InitializeTimeLineComp();
-
+	static FGenericTeamId TeamId;
+	virtual FGenericTeamId GetGenericTeamId() const override;
 	
 protected:
 	// APawn interface
@@ -227,6 +229,10 @@ protected:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
 	FVector CurrentInputRight = FVector(0,0,0);
+	
+	// Register as visual stimulus for enemies
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	class UAIPerceptionStimuliSourceComponent* StimuliSource;
 	
 public:
 

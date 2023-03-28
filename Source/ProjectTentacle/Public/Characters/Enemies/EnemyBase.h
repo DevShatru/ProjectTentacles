@@ -11,15 +11,22 @@ class PROJECTTENTACLE_API AEnemyBase : public ACharacter
 {
 	GENERATED_BODY()
 
-public:
-	// Sets default values for this character's properties
-	AEnemyBase();
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
+	// Sets default values for this character's properties
+	AEnemyBase();
+
+	// Register encounters and targets with owning controller
+	void RegisterOwningEncounter(class AEncounterVolume* NewOwningEncounter);
+	void EngageTarget(AActor* Target);
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+private:
+	class AEnemyBaseController* OwnController;
+	void TryGetOwnController();
 };
