@@ -51,8 +51,14 @@ void AEnemyBaseController::RegisterOwningEncounter(AEncounterVolume* NewOwningEn
 // Engage target and disable further perception
 void AEnemyBaseController::EngageTarget(AActor* Target)
 {
+	Blackboard->SetValueAsBool("bIsEncounterActive", true);
 	EncounterTarget = Target;
 	Perception->SetSenseEnabled(UAISense_Sight::StaticClass(), false);
+}
+
+TArray<AEnemyBase*> AEnemyBaseController::GetAllies() const
+{
+	return OwningEncounter->GetAlliesForPawn(GetPawn());
 }
 
 

@@ -27,5 +27,5 @@ protected:
 
 private:
 	// Cache nav system and whether cache attempt has been made
-	static UNavigationSystemV1* NavSystem;
+	UNavigationSystemV1* NavSystem;
 };
