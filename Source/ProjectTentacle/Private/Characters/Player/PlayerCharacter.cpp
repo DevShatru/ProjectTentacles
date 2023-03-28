@@ -41,21 +41,21 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Set up gameplay key bindings
-	check(PlayerInputComponent);
-	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
-	PlayerInputComponent->BindAction("Evade", IE_Pressed, this, &APlayerCharacter::TryEvade);
-	PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &APlayerCharacter::TryMeleeAttack);
-	PlayerInputComponent->BindAction("Dodge", IE_Pressed, this, &APlayerCharacter::TryDodge);
-
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &APlayerCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
+	// // Set up gameplay key bindings
+	// check(PlayerInputComponent);
+	// PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
+	// PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+	// PlayerInputComponent->BindAction("Evade", IE_Pressed, this, &APlayerCharacter::TryEvade);
+	// PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &APlayerCharacter::TryMeleeAttack);
+	// PlayerInputComponent->BindAction("Dodge", IE_Pressed, this, &APlayerCharacter::TryDodge);
+	//
+	// // We have 2 versions of the rotation bindings to handle different kinds of devices differently
+	// // "turn" handles devices that provide an absolute delta, such as a mouse.
+	// // "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
+	// PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	// PlayerInputComponent->BindAxis("TurnRate", this, &APlayerCharacter::TurnAtRate);
+	// PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	// PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -392,7 +392,9 @@ void APlayerCharacter::BeginDodge()
 	const FVector PlayerDodgingDir = DecideDodgingDirection(PlayerFaceDir);
 
 	// Get dodging montage depends on dodging direction
-	UAnimMontage* PlayerDodgingMontage = DecideDodgingMontage(PlayerDodgingDir);
+	UAnimMontage* PlayerDodgingMontage = FrontRollingMontage;
+	InstantRotation(PlayerDodgingDir);
+	//UAnimMontage* PlayerDodgingMontage = DecideDodgingMontage(PlayerDodgingDir);
 
 	// Set action state and playing montage to dodging
 	CurrentActionState = EActionState::Dodge;
