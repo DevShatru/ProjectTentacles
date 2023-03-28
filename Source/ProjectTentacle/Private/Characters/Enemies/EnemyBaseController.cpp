@@ -52,6 +52,7 @@ void AEnemyBaseController::RegisterOwningEncounter(AEncounterVolume* NewOwningEn
 void AEnemyBaseController::EngageTarget(AActor* Target)
 {
 	Blackboard->SetValueAsBool("bIsEncounterActive", true);
+	Blackboard->SetValueAsObject("Target", Target);
 	EncounterTarget = Target;
 	Perception->SetSenseEnabled(UAISense_Sight::StaticClass(), false);
 }
