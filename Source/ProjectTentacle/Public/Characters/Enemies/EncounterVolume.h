@@ -21,6 +21,8 @@ public:
 	// Try to start the encounter, if it hasn't already
 	void TryTriggerEncounter(AActor* Target);
 
+	TArray<AEnemyBase*> GetAlliesForPawn(APawn* Pawn);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
