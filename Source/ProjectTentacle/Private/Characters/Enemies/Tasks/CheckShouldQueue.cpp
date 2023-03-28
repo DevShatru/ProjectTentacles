@@ -28,6 +28,6 @@ EBTNodeResult::Type UCheckShouldQueue::ExecuteTask(UBehaviorTreeComponent& Owner
 		return EBTNodeResult::Succeeded;
 	}
 	
-	OwnerComp.GetBlackboardComponent()->SetValueAsBool("bIsQueued", false);
+	OwnerComp.GetBlackboardComponent()->ClearValue("bIsQueued");
 	return EBTNodeResult::Succeeded;
 }
