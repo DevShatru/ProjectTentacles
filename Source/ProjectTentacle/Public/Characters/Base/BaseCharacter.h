@@ -4,24 +4,10 @@
 
 
 #include "CoreMinimal.h"
-//#include "CharacterActionInterface.h"
 #include "CharacterActionInterface.h"
-#include "Components/TimelineComponent.h"
+#include "EnumClassesForCharacters.h"
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
-
-UENUM(BlueprintType)
-enum class EActionState: uint8
-{
-	Idle = 0 UMETA(DisplayName = "IDLE"),
-	Evade = 1 UMETA(DisplayName = "EVADE"),
-	Attack = 2 UMETA(DisplayName = "ATTACK"),
-	Recovering = 3 UMETA(DisplayName = "RECOVERING"),
-	ReceivedDamage = 4 UMETA(DisplayName = "RECEIVEDDAMAGE"),
-	SpecialAttack = 5 UMETA(DisplayName = "SPECIALATTACK"),
-	WaitForCombo = 6 UMETA(DisplayName = "WAITFORCOMBO"),
-	Dodge = 7 UMETA(DisplayName = "DODGE")
-};
 
 
 UCLASS()

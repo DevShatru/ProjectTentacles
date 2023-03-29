@@ -6,17 +6,9 @@
 #include "GenericTeamAgentInterface.h"
 #include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
+#include "Components/TimelineComponent.h"
 #include "PlayerCharacter.generated.h"
 
-UENUM(BlueprintType)
-enum class EPlayerAttackType: uint8
-{
-	ShortFlipKick = 0 UMETA(DisplayName = "ShortFlipKick"),
-	FlyingKick = 1 UMETA(DisplayName = "FlyingKick"),
-	FlyingPunch = 2 UMETA(DisplayName = "FlyingPunch"),
-	SpinKick = 3 UMETA(DisplayName = "SpinKick"),
-	DashingDoubleKick = 4 UMETA(DisplayName = "FlyingKick"),
-};
 
 USTRUCT(BlueprintType)
 struct FInputDirection
@@ -50,7 +42,7 @@ public:
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface
+class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IDamageInterface
 {
 	GENERATED_BODY()
 
@@ -185,10 +177,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
-
-	FTimerHandle ForwardInputTimerHandle;
-	FTimerHandle RightInputTimerHandle;
-
 	
 	FVector MovingStartPos;
 	
@@ -206,13 +194,8 @@ protected:
 	FTimeline DashingDoubleKickTimeLine;
 	FTimeline CloseToPerformFinisherTimeLine;
 	FTimeline DodgeLerpingTimeLine;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
-	FVector CurrentInputForward = FVector(0,0,0);
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
-	FVector CurrentInputRight = FVector(0,0,0);
-	
+
 	// Register as visual stimulus for enemies
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
@@ -245,10 +228,9 @@ public:
 	
 	void TryDodge();
 	
-
-
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-	
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
+
+	UFUNCTION()
+	virtual void ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType EnemyAttackType) override;
 };

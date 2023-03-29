@@ -90,8 +90,36 @@ void AAttackTargetTester::TryToDamagePlayer_Implementation()
 	{
 		for (AActor* EachFoundActor : FoundActorList)
 		{
-			UGameplayStatics::ApplyDamage(EachFoundActor, 30, GetController(), this, DamageType);
+			IDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
+			//UGameplayStatics::ApplyDamage(EachFoundActor, 30, GetController(), this, DamageType);
 		}
+	}
+
+}
+
+void AAttackTargetTester::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
+	EPlayerAttackType PlayerAttackType)
+{
+	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
+
+	switch (PlayerAttackType)
+	{
+	case EPlayerAttackType::ShortFlipKick:
+		PlayDamageReceiveAnimation(0);
+		break;
+	case EPlayerAttackType::FlyingKick:
+		PlayDamageReceiveAnimation(1);
+		break;
+	case EPlayerAttackType::FlyingPunch:
+		PlayDamageReceiveAnimation(2);
+		break;
+	case EPlayerAttackType::SpinKick:
+		PlayDamageReceiveAnimation(3);
+		break;
+	case EPlayerAttackType::DashingDoubleKick:
+		PlayDamageReceiveAnimation(4);
+		break;
+	default: ;
 	}
 
 }

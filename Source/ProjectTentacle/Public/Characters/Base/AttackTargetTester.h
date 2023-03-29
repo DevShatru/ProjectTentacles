@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "CharacterActionInterface.h"
+#include "DamageInterface.h"
 #include "GameFramework/Character.h"
 #include "AttackTargetTester.generated.h"
 
 
 
 UCLASS()
-class PROJECTTENTACLE_API AAttackTargetTester : public ACharacter , public ICharacterActionInterface
+class PROJECTTENTACLE_API AAttackTargetTester : public ACharacter , public ICharacterActionInterface, public IDamageInterface
 {
 	GENERATED_BODY()
 
@@ -52,6 +53,13 @@ protected:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
 	TSubclassOf<UDamageType> DamageType;
+
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
+	EEnemyAttackType CurrentAttackType;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
+	int32 BaseDamageAmount = 2;
 	
 public:	
 	// Called every frame
@@ -67,10 +75,20 @@ public:
 	int32 GetEnemyHealth() const { return Health;}
 	void SetEnemyHealth(int32 NewHealth) {Health = NewHealth;}
 
-	virtual void TryToDamagePlayer_Implementation() override;
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	
+	virtual void TryToDamagePlayer_Implementation() override;
 
+	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
+	
+	
+
+	
+	// ==================================== Testing Functions ======================================================
+
+	
 };
 

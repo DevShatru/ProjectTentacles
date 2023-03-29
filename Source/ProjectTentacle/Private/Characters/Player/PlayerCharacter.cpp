@@ -40,22 +40,6 @@ FGenericTeamId APlayerCharacter::GetGenericTeamId() const
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// // Set up gameplay key bindings
-	// check(PlayerInputComponent);
-	// PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-	// PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
-	// PlayerInputComponent->BindAction("Evade", IE_Pressed, this, &APlayerCharacter::TryEvade);
-	// PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &APlayerCharacter::TryMeleeAttack);
-	// PlayerInputComponent->BindAction("Dodge", IE_Pressed, this, &APlayerCharacter::TryDodge);
-	//
-	// // We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// // "turn" handles devices that provide an absolute delta, such as a mouse.
-	// // "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	// PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	// PlayerInputComponent->BindAxis("TurnRate", this, &APlayerCharacter::TurnAtRate);
-	// PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	// PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -102,37 +86,6 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	DashingDoubleKickTimeLine.TickTimeline(DeltaSeconds);
 	CloseToPerformFinisherTimeLine.TickTimeline(DeltaSeconds);
 	DodgeLerpingTimeLine.TickTimeline(DeltaSeconds);
-}
-
-float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
-	AActor* DamageCauser)
-{
-	if(CurrentActionState == EActionState::Evade)
-	{
-		StopAnimMontage();
-		BeginCounterAttack(DamageCauser);
-	}
-
-	if(CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::Attack)
-	{
-		if(CurrentActionState == EActionState::Attack)
-		{
-			StopAnimMontage();	
-		}
-
-		// TODO: Damage player
-
-		// Player Play receiving damage montage
-		if(ReceiveDamageMontage == nullptr) return DamageAmount;
-
-		CurrentActionState = EActionState::Recovering;
-	
-		CurrentPlayingMontage = ReceiveDamageMontage;
-		
-		PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
-	}
-	
-	return DamageAmount;
 }
 
 
@@ -579,25 +532,41 @@ void APlayerCharacter::DamagingTarget_Implementation()
 
 	if(TargetActor == nullptr) return;
 
-	switch (CurrentAttackType)
+	IDamageInterface::Execute_ReceiveDamageFromPlayer(TargetActor, 1, this, CurrentAttackType);
+}
+
+void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser,
+	EEnemyAttackType EnemyAttackType)
+{
+	IDamageInterface::ReceiveDamageFromEnemy_Implementation(DamageAmount, DamageCauser, EnemyAttackType);
+
+	// TODO: Check EnemyAttackType before performing counter
+	if(CurrentActionState == EActionState::Evade)
 	{
-		case EPlayerAttackType::ShortFlipKick:
-			TargetActor->PlayDamageReceiveAnimation(0);
-			break;
-		case EPlayerAttackType::FlyingKick:
-			TargetActor->PlayDamageReceiveAnimation(1);
-			break;
-		case EPlayerAttackType::FlyingPunch:
-			TargetActor->PlayDamageReceiveAnimation(2);
-			break;
-		case EPlayerAttackType::SpinKick:
-			TargetActor->PlayDamageReceiveAnimation(3);
-			break;
-		case EPlayerAttackType::DashingDoubleKick:
-			TargetActor->PlayDamageReceiveAnimation(4);
-			break;
-		default: ;
+		StopAnimMontage();
+		BeginCounterAttack(DamageCauser);
 	}
+
+	
+	if(CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::Attack)
+	{
+		if(CurrentActionState == EActionState::Attack)
+		{
+			StopAnimMontage();	
+		}
+
+		// TODO: Damage player
+
+		// Player Play receiving damage montage
+		if(ReceiveDamageMontage == nullptr) return;
+
+		CurrentActionState = EActionState::Recovering;
+	
+		CurrentPlayingMontage = ReceiveDamageMontage;
+		
+		PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
+	}
+
 }
 
 
