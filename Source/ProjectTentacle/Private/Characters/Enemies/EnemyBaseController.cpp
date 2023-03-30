@@ -62,6 +62,16 @@ TArray<AEnemyBase*> AEnemyBaseController::GetAllies() const
 	return OwningEncounter->GetAlliesForPawn(GetPawn());
 }
 
+void AEnemyBaseController::RegisterOnAttackQueue()
+{
+	OwningEncounter->RegisterOnBasicAttackQueue(this);
+}
+
+void AEnemyBaseController::BeginAttack()
+{
+	// Begin attack montage here
+}
+
 
 void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 {

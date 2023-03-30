@@ -39,6 +39,16 @@ void AEnemyBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+float AEnemyBase::GetAttackCompletionTime() const
+{
+	return AttackCompletionTime;
+}
+
+float AEnemyBase::GetAttackCounterableTime() const
+{
+	return AttackCounterableTime;
+}
+
 void AEnemyBase::TryGetOwnController()
 {
 	if(OwnController) return;

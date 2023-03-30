@@ -22,7 +22,14 @@ public:
 	// Register encounters and targets
 	void RegisterOwningEncounter(class AEncounterVolume* NewOwningEncounter);
 	void EngageTarget(AActor* Target);
+
+	// Get list of allies for Encounter
 	TArray<class AEnemyBase*> GetAllies() const;
+
+	// Queue unit for attack
+	virtual void RegisterOnAttackQueue();
+
+	virtual void BeginAttack();
 
 protected:
 	// Base behavior tree, run on start

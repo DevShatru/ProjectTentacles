@@ -15,6 +15,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditDefaultsOnly, Category=Combat)
+	float AttackCompletionTime = 2.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category=Combat)
+	float AttackCounterableTime = 1.4f;
+	
+
 public:	
 	// Sets default values for this character's properties
 	AEnemyBase();
@@ -25,6 +32,9 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	float GetAttackCompletionTime() const;
+	float GetAttackCounterableTime() const;
 
 private:
 	class AEnemyBaseController* OwnController;

@@ -5,7 +5,9 @@
 
 #include "NavigationInvokerComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "Characters/Enemies/EnemyBaseController.h"
 
+FTimerManager* AEncounterVolume::WorldTimerManager = nullptr;
 // Sets default values
 AEncounterVolume::AEncounterVolume()
 {
@@ -40,12 +42,30 @@ TArray<AEnemyBase*> AEncounterVolume::GetAlliesForPawn(APawn* Pawn)
 	return AlliesForPawn;
 }
 
+void AEncounterVolume::RegisterOnBasicAttackQueue(AEnemyBaseController* RegisteringController)
+{
+	if(AttackQueueBasic.Num() == 0)
+	{
+		// Start timer to handle the queue
+		StartBasicQueueTimer();
+	}
+
+	AttackQueueBasic.Add(RegisteringController);
+}
+
 // Called when the game starts or when spawned
 void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
+	WorldTimerManager = &GetWorldTimerManager();
 	bIsEncounterActive = false;
 	RegisterEncounterForUnits();
+}
+
+void AEncounterVolume::BeginAttackBasic()
+{
+	const int8 RandomIndex = FMath::RandRange(0, AttackQueueBasic.Num() - 1);
+	AttackQueueBasic[RandomIndex]->BeginAttack();
 }
 
 // Register this encounter with contained units
@@ -64,4 +84,13 @@ void AEncounterVolume::EngageContainedUnits(AActor* Target)
 	{
 		ContainedUnit->EngageTarget(Target);
 	}
+}
+
+void AEncounterVolume::StartBasicQueueTimer()
+{
+	if(!WorldTimerManager)
+	{
+		WorldTimerManager = &GetWorldTimerManager();
+	}
+	WorldTimerManager->SetTimer(BasicQueueTimer, this, &AEncounterVolume::BeginAttackBasic, AttackStartDelay, false, AttackStartDelay);
 }

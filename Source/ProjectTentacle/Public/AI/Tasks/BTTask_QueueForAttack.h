@@ -16,6 +16,8 @@ class PROJECTTENTACLE_API UBTTask_QueueForAttack : public UBTTask_BlackboardBase
 	
 public:
 	UBTTask_QueueForAttack();
+
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
 	
 };
