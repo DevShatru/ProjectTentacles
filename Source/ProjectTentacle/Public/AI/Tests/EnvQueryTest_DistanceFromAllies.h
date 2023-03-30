@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "EnvironmentQuery/EnvQueryTest.h"
-#include "DistanceFromAllies.generated.h"
+#include "EnvQueryTest_DistanceFromAllies.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API UDistanceFromAllies : public UEnvQueryTest
+class PROJECTTENTACLE_API UEnvQueryTest_DistanceFromAllies : public UEnvQueryTest
 {
 	GENERATED_BODY()
 	virtual void RunTest(FEnvQueryInstance& QueryInstance) const override;

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
-#include "FindPatrolPoint.generated.h"
+#include "BTTask_FindPatrolPoint.generated.h"
 
 /**
  * 
@@ -12,12 +12,12 @@
 class UNavigationSystemV1;
 
 UCLASS()
-class PROJECTTENTACLE_API UFindPatrolPoint : public UBTTask_BlackboardBase
+class PROJECTTENTACLE_API UBTTask_FindPatrolPoint : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 	
 public:
-	UFindPatrolPoint();
+	UBTTask_FindPatrolPoint();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
 protected:

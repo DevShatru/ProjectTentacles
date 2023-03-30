@@ -1,19 +1,19 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "AI/Tasks/FindPatrolPoint.h"
+#include "AI/Tasks/BTTask_FindPatrolPoint.h"
 #include "NavigationSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-UFindPatrolPoint::UFindPatrolPoint()
+UBTTask_FindPatrolPoint::UBTTask_FindPatrolPoint()
 {
 	NodeName = "Find Patrol Point";
 
 	//Ensure selected key is a vector
-	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UFindPatrolPoint, BlackboardKey));
+	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_FindPatrolPoint, BlackboardKey));
 }
 
-EBTNodeResult::Type UFindPatrolPoint::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_FindPatrolPoint::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	// Cache NavSystem Reference
 	NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());

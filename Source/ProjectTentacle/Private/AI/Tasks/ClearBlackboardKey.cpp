@@ -1,15 +1,15 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "AI/Tasks/ClearBlackboardKey.h"
+#include "AI/Tasks/BTTask_ClearBlackboardKey.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-UClearBlackboardKey::UClearBlackboardKey()
+UBTTask_ClearBlackboardKey::UBTTask_ClearBlackboardKey()
 {
 	NodeName = "Clear Blackboard Key";
 }
 
-EBTNodeResult::Type UClearBlackboardKey::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_ClearBlackboardKey::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	OwnerComp.GetBlackboardComponent()->ClearValue(BlackboardKey.SelectedKeyName);
 	return EBTNodeResult::Succeeded;

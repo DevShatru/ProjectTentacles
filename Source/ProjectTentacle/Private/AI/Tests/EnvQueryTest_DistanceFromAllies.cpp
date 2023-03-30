@@ -1,12 +1,12 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "AI/Tests/DistanceFromAllies.h"
+#include "AI/Tests/EnvQueryTest_DistanceFromAllies.h"
 
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"
 
-void UDistanceFromAllies::RunTest(FEnvQueryInstance& QueryInstance) const
+void UEnvQueryTest_DistanceFromAllies::RunTest(FEnvQueryInstance& QueryInstance) const
 {
 	UObject* OwnerAsObject = QueryInstance.Owner.Get();
 	if(!OwnerAsObject) return;
@@ -33,12 +33,12 @@ void UDistanceFromAllies::RunTest(FEnvQueryInstance& QueryInstance) const
 	}
 }
 
-FText UDistanceFromAllies::GetDescriptionDetails() const
+FText UEnvQueryTest_DistanceFromAllies::GetDescriptionDetails() const
 {
 	return FText::FromString("Calculates square distance from all allies of the querier in the same encounter");
 }
 
-FText UDistanceFromAllies::GetDescriptionTitle() const
+FText UEnvQueryTest_DistanceFromAllies::GetDescriptionTitle() const
 {
 	return FText::FromString("Distance from Allies");
 }

@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTDecorator.h"
-#include "TargetInRange.generated.h"
+#include "BTDecorator_TargetInRange.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API UTargetInRange : public UBTDecorator
+class PROJECTTENTACLE_API UBTDecorator_TargetInRange : public UBTDecorator
 {
 	GENERATED_BODY()
 
 public:
-	UTargetInRange();
+	UBTDecorator_TargetInRange();
 
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 	

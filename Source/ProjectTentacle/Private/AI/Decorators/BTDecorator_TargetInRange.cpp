@@ -1,19 +1,19 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "AI/Decorators/TargetInRange.h"
+#include "AI/Decorators/BTDecorator_TargetInRange.h"
 
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-UTargetInRange::UTargetInRange()
+UBTDecorator_TargetInRange::UBTDecorator_TargetInRange()
 {
 	NodeName = "Target in Range";
 	//Ensure selected key is a vector
-	TargetBlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UTargetInRange, TargetBlackboardKey), AActor::StaticClass());
+	TargetBlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTDecorator_TargetInRange, TargetBlackboardKey), AActor::StaticClass());
 }
 
-bool UTargetInRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
+bool UBTDecorator_TargetInRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
 	const APawn* OwningPawn = OwnerComp.GetAIOwner()->GetPawn();
 	if(!OwningPawn) return false;
