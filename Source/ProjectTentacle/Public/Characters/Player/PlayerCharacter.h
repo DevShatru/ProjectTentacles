@@ -62,21 +62,8 @@ private:
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	void LookUpAtRate(float Rate);
 	
-	virtual void TurnAtRate(float Rate);
-
-	/** Called for forwards/backward input */
-	void MoveForward(float Value);
-
-	/** Called for side to side input */
-	void MoveRight(float Value);
-
 	// ================================================== Melee Attack ================================================
-	UFUNCTION()
-	void TryMeleeAttack();
-	
 	void BeginMeleeAttack();
 
 	void FinishEnemy();
@@ -91,16 +78,12 @@ protected:
 	void StartAttackMovementTimeline(EPlayerAttackType CurrentAttackType);
 	
 	// ====================================================== Evade ===================================================
-	UFUNCTION()
-	void TryEvade();
-
 	void BeginEvade();
 
 	// ================================================== Counter ======================================================
 	void BeginCounterAttack(AActor* CounteringTarget);
 
 	// ================================================== Dodge ========================================================
-	void TryDodge();
 
 	void BeginDodge();
 
@@ -236,11 +219,33 @@ protected:
 	
 public:
 
+	
+
 	APlayerCharacter();
 	
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
+
+
+	// ================================================= Input ===================================================
+	void LookUpAtRate(float Rate);
+	
+	virtual void TurnAtRate(float Rate);
+
+	/** Called for forwards/backward input */
+	void MoveForward(float Value);
+
+	/** Called for side to side input */
+	void MoveRight(float Value);
+
+	void TryMeleeAttack();
+	
+	void TryEvade();
+	
+	void TryDodge();
+	
+
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
