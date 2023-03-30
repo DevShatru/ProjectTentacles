@@ -1,7 +1,7 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "Characters/Enemies/Context/EnvQueryContext_Player.h"
+#include "AI/Context/EnvQueryContext_Player.h"
 
 #include "EngineUtils.h"
 #include "Characters/Player/PlayerCharacter.h"

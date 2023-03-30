@@ -1,7 +1,7 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "Characters/Enemies/Tasks/FindPatrolPoint.h"
+#include "AI/Tasks/FindPatrolPoint.h"
 #include "NavigationSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 

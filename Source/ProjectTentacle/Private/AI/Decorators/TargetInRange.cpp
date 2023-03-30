@@ -1,7 +1,7 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "Characters/Enemies/Decorators/TargetInRange.h"
+#include "AI/Decorators/TargetInRange.h"
 
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"

@@ -1,7 +1,7 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "Characters/Enemies/Tests/DistanceFromAllies.h"
+#include "AI/Tests/DistanceFromAllies.h"
 
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"

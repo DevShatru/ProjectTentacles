@@ -1,7 +1,7 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "Characters/Enemies/Tasks/ClearBlackboardKey.h"
+#include "AI/Tasks/ClearBlackboardKey.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UClearBlackboardKey::UClearBlackboardKey()
