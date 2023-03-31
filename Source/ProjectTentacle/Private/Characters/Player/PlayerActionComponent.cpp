@@ -435,6 +435,7 @@ AAttackTargetTester* UPlayerActionComponent::GetTargetEnemy(TArray<AAttackTarget
 	return ReturnTarget;
 }
 
+
 // ========================================== Timeline Function =========================================
 void UPlayerActionComponent::MovingAttackMovement(float Alpha)
 {
@@ -486,16 +487,23 @@ void UPlayerActionComponent::ExecutePlayerAction(EActionState ExecutingAction)
 void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageCauser,
 	EEnemyAttackType ReceivingAttackType)
 {
-	// TODO: Check EnemyAttackType before performing counter
-
+	// early return if player is dodging, since player is not getting damaged when dodging
 	EActionState PlayerCurrentAction = PlayerOwnerRef->GetCurrentActionState();
+
+	if(PlayerCurrentAction == EActionState::Dodge) return;
 	
-	if(PlayerCurrentAction == EActionState::Evade)
+	
+	// TODO: Check EnemyAttackType before performing counter
+	
+	if(IsPlayerCountering(PlayerCurrentAction, ReceivingAttackType))
 	{
 		PlayerOwnerRef->StopAnimMontage();
 		BeginCounterAttack(DamageCauser);
+		return;
 	}
-	else if(PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack)
+	
+
+	if(IsPlayerCanBeDamaged(PlayerCurrentAction, ReceivingAttackType))
 	{
 		if(PlayerCurrentAction == EActionState::Attack)
 		{
@@ -503,6 +511,7 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 		}
 
 		// TODO: Damage player
+		
 
 		// Player Play receiving damage montage
 		if(ReceiveDamageMontage == nullptr) return;
@@ -516,4 +525,16 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 	}
 }
 
+bool UPlayerActionComponent::IsPlayerCountering(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType)
+{
+	// return true if player is in counter state and enemy's incoming attack is counterable
+	return PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::AbleToCounter;
+}
+
+bool UPlayerActionComponent::IsPlayerCanBeDamaged(EActionState PlayerCurrentAction,
+	EEnemyAttackType ReceivingAttackType)
+{
+	// return true if player is standing or attacking or player is countering but incoming attack is not counterable
+	return PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack || (PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::UnableToCounter);
+}
 

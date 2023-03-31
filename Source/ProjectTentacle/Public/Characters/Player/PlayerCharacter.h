@@ -7,6 +7,7 @@
 #include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "Components/TimelineComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "PlayerCharacter.generated.h"
 
 
@@ -113,11 +114,13 @@ public:
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
 
 	APlayerCharacter();
+
+	// ================================================= 
 	
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
-
+	
 
 	// ================================================= Input ===================================================
 	void LookUpAtRate(float Rate);
@@ -145,8 +148,11 @@ public:
 	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}
 
-	// ================================================= Interface implementation =========================================
+	int32 GetCurrentCharacterHealth() const {return CharacterCurrentHealth;}
+	void HealthReduction(int32 ReducingAmount) {CharacterCurrentHealth = UKismetMathLibrary::Clamp((CharacterCurrentHealth - ReducingAmount),0, CharacterMaxHealth);}
 
+	// ================================================= Interface implementation =========================================
+	
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
 

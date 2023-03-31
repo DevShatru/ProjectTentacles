@@ -19,67 +19,67 @@ public:
 
 protected:
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* ShortFlipKickCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* FlyingKickCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* FlyingPunchCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* SpinKickCurve;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* DashingDoubleKickCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* CloseToPerformFinisherCurve;
 	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* CurrentPlayingMontage;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=AnimMontages)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* EvadeAnimMontage;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=AnimMontages)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	TArray<UAnimMontage*> MeleeAttackMontages;
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_Setting)
 	float MaxAngleForFacingEnemy = 45.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_Setting)
 	float DetectionRange = 400.0f;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
 	TArray<TEnumAsByte<EObjectTypeQuery>> FilterType;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
 	UClass* FilteringClass;
 	
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=FinisherMontages)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* FinisherAnimMontages;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DamageReceiveMontages)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat_AnimMontages)
 	UAnimMontage* ReceiveDamageMontage;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DamageReceiveMontages)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* CounterAttackMontages;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DodgeSetting)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge_Setting)
 	float DodgeDistance = 250.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DodgeSetting)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge_Setting)
 	UCurveFloat* DodgeLerpingCurve;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DodgeSetting)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Dodge_Setting)
 	UAnimMontage* BackFlipMontage;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DodgeSetting)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Dodge_Setting)
 	UAnimMontage* FrontRollingMontage;
 	
 	FVector MovingStartPos;
@@ -121,8 +121,9 @@ protected:
 	void InstantRotation(FVector RotatingVector);
 
 	AAttackTargetTester* GetTargetEnemy(TArray<AAttackTargetTester*> OpponentsAroundSelf);
-	
-	
+
+	static bool IsPlayerCountering(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
+	static bool IsPlayerCanBeDamaged(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
 	
 
 	// Attack Animation Timeline
@@ -147,6 +148,7 @@ protected:
 	
 public:
 
+	
 
 	UFUNCTION()
 	void ExecutePlayerAction(EActionState ExecutingAction);
