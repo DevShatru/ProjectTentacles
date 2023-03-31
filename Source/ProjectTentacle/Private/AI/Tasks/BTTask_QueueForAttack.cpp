@@ -2,6 +2,7 @@
 
 
 #include "AI/Tasks/BTTask_QueueForAttack.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBaseController.h"
 
 UBTTask_QueueForAttack::UBTTask_QueueForAttack()
@@ -17,6 +18,7 @@ EBTNodeResult::Type UBTTask_QueueForAttack::ExecuteTask(UBehaviorTreeComponent& 
 
 	if(!OwnController) return EBTNodeResult::Failed;
 
+	OwnerComp.GetBlackboardComponent()->SetValueAsBool(BlackboardKey.SelectedKeyName, true);
 	OwnController->RegisterOnAttackQueue();
 	return EBTNodeResult::Succeeded;
 }
