@@ -7,7 +7,7 @@
 #include "BTTask_RunAttackMelee.generated.h"
 
 /**
- * 
+ * Task to execute the unit's attack and report to encounter when completed
  */
 UCLASS()
 class PROJECTTENTACLE_API UBTTask_RunAttackMelee : public UBTTaskNode
@@ -28,10 +28,8 @@ protected:
 	void AttackCompletionTimeLimit();
 	
 private:
+	// Cache values for owning BTComp, and Unit's pawn
 	UPROPERTY()
 	UBehaviorTreeComponent* OwningComp;
-
 	class AEnemyBase* OwnPawn;
-
-	FTimerManager* WorldTimerManager;
 };
