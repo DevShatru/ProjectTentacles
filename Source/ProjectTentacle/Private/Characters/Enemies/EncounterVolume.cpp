@@ -53,18 +53,34 @@ void AEncounterVolume::RegisterOnBasicAttackQueue(AEnemyBaseController* Register
 	AttackQueueBasic.Add(RegisteringController);
 }
 
+void AEncounterVolume::RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController)
+{
+	LastAttacker = RegisteringController;
+	StartBasicQueueTimer();
+}
+
 // Called when the game starts or when spawned
 void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	WorldTimerManager = &GetWorldTimerManager();
 	bIsEncounterActive = false;
+	LastAttacker = nullptr;
+	
 	RegisterEncounterForUnits();
 }
 
+// Select random unit to attack
 void AEncounterVolume::BeginAttackBasic()
 {
-	const int8 RandomIndex = FMath::RandRange(0, AttackQueueBasic.Num() - 1);
+	int8 RandomIndex;
+
+	// Don't let same unit attack twice in a row
+	do
+	{
+		RandomIndex = FMath::RandRange(0, AttackQueueBasic.Num() - 1);
+	} while(LastAttacker == AttackQueueBasic[RandomIndex]);
+	
 	AttackQueueBasic[RandomIndex]->BeginAttack();
 }
 
@@ -86,6 +102,7 @@ void AEncounterVolume::EngageContainedUnits(AActor* Target)
 	}
 }
 
+// Start cooldown and pop attacker after timer
 void AEncounterVolume::StartBasicQueueTimer()
 {
 	if(!WorldTimerManager)

@@ -26,6 +26,9 @@ public:
 
 	// Register basic unit (melee or ranged) on attack queue
 	void RegisterOnBasicAttackQueue(class AEnemyBaseController* RegisteringController);
+	
+	// Register when a basic unit has completed it's attack
+	void RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController);
 
 protected:
 	// Called when the game starts or when spawned
@@ -70,5 +73,6 @@ private:
 	static FTimerManager* WorldTimerManager;
 	// Start timer for basic queue
 	void StartBasicQueueTimer();
-	
+
+	AEnemyBaseController* LastAttacker;
 };
