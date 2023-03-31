@@ -82,6 +82,7 @@ void AEncounterVolume::BeginAttackBasic()
 	} while(LastAttacker == AttackQueueBasic[RandomIndex]);
 	
 	AttackQueueBasic[RandomIndex]->BeginAttack();
+	AttackQueueBasic.RemoveAt(RandomIndex);
 }
 
 // Register this encounter with contained units
