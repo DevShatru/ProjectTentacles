@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GenericTeamAgentInterface.h"
 #include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "PlayerCharacter.generated.h"
@@ -49,32 +50,20 @@ public:
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter
+class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
 private:
 	void InitializeTimeLineComp();
-
+	static FGenericTeamId TeamId;
+	virtual FGenericTeamId GetGenericTeamId() const override;
 	
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	void LookUpAtRate(float Rate);
 	
-	virtual void TurnAtRate(float Rate);
-
-	/** Called for forwards/backward input */
-	void MoveForward(float Value);
-
-	/** Called for side to side input */
-	void MoveRight(float Value);
-
 	// ================================================== Melee Attack ================================================
-	UFUNCTION()
-	void TryMeleeAttack();
-	
 	void BeginMeleeAttack();
 
 	void FinishEnemy();
@@ -88,14 +77,21 @@ protected:
 	
 	void StartAttackMovementTimeline(EPlayerAttackType CurrentAttackType);
 	
-	// ====================================================== Dodge ===================================================
-	UFUNCTION()
-	void TryDodge();
+	// ====================================================== Evade ===================================================
+	void BeginEvade();
+
+	// ================================================== Counter ======================================================
+	void BeginCounterAttack(AActor* CounteringTarget);
+
+	// ================================================== Dodge ========================================================
 
 	void BeginDodge();
 
+	FVector DecideDodgingDirection(FVector PlayerFaceDir);
 
-	// ================================================= Utility ======================================================
+	UAnimMontage* DecideDodgingMontage(FVector PlayerDodgingDirection);
+	
+	// ================================================== Utility ======================================================
 	TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
 
 	 void InstantRotation(FVector RotatingVector);
@@ -133,6 +129,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
 	UCurveFloat* CloseToPerformFinisherCurve;
 	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingForwardKey;
 	
@@ -168,6 +165,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=FinisherMontages)
 	UAnimMontage* FinisherAnimMontages;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DamageReceiveMontages)
+	UAnimMontage* ReceiveDamageMontage;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DamageReceiveMontages)
+	UAnimMontage* CounterAttackMontages;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DodgeSetting)
+	float DodgeDistance = 250.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DodgeSetting)
+	UCurveFloat* DodgeLerpingCurve;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DodgeSetting)
+	UAnimMontage* BackFlipMontage;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DodgeSetting)
+	UAnimMontage* FrontRollingMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
@@ -176,9 +190,9 @@ protected:
 	FTimerHandle RightInputTimerHandle;
 
 	
-	FVector MovingAttackStart;
+	FVector MovingStartPos;
 	
-	FVector MovingAttackEnd;
+	FVector MovingEndPos;
 
 	
 	
@@ -191,7 +205,7 @@ protected:
 	FTimeline SpinKickTimeLine;
 	FTimeline DashingDoubleKickTimeLine;
 	FTimeline CloseToPerformFinisherTimeLine;
-
+	FTimeline DodgeLerpingTimeLine;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
 	FVector CurrentInputForward = FVector(0,0,0);
@@ -199,7 +213,13 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
 	FVector CurrentInputRight = FVector(0,0,0);
 	
+	// Register as visual stimulus for enemies
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	class UAIPerceptionStimuliSourceComponent* StimuliSource;
+	
 public:
+
+	
 
 	APlayerCharacter();
 	
@@ -207,6 +227,28 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+
+	// ================================================= Input ===================================================
+	void LookUpAtRate(float Rate);
+	
+	virtual void TurnAtRate(float Rate);
+
+	/** Called for forwards/backward input */
+	void MoveForward(float Value);
+
+	/** Called for side to side input */
+	void MoveRight(float Value);
+
+	void TryMeleeAttack();
+	
+	void TryEvade();
+	
+	void TryDodge();
+	
+
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
 };

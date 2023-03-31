@@ -3,7 +3,9 @@
 
 #include "Characters/Base/AttackTargetTester.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 enum class EPlayerAttackType : uint8;
 
@@ -64,6 +66,33 @@ void AAttackTargetTester::PlayDamageReceiveAnimation(int32 AttackTypIndex)
 void AAttackTargetTester::PlayFinishedAnimation()
 {
 	PlayAnimMontage(FinishedAnimation,1,NAME_None);
+
+}
+
+void AAttackTargetTester::TryToDamagePlayer_Implementation()
+{
+	ICharacterActionInterface::TryToDamagePlayer_Implementation();
+	
+	
+	const UWorld* World = GetWorld();
+	if(World == nullptr) return;
+
+	const FVector HeadSocketLocation = GetMesh()->GetSocketLocation("Head");
+
+	TArray<AActor*> FoundActorList;
+
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	
+	UKismetSystemLibrary::SphereOverlapActors(World, HeadSocketLocation, 120, FilterType, FilteringClass, IgnoreActors,FoundActorList);
+
+	if(FoundActorList.Num() != 0)
+	{
+		for (AActor* EachFoundActor : FoundActorList)
+		{
+			UGameplayStatics::ApplyDamage(EachFoundActor, 30, GetController(), this, DamageType);
+		}
+	}
 
 }
 

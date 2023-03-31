@@ -19,7 +19,8 @@ enum class EActionState: uint8
 	Recovering = 3 UMETA(DisplayName = "RECOVERING"),
 	ReceivedDamage = 4 UMETA(DisplayName = "RECEIVEDDAMAGE"),
 	SpecialAttack = 5 UMETA(DisplayName = "SPECIALATTACK"),
-	WaitForCombo = 6 UMETA(DisplayName = "WAITFORCOMBO")
+	WaitForCombo = 6 UMETA(DisplayName = "WAITFORCOMBO"),
+	Dodge = 7 UMETA(DisplayName = "DODGE")
 };
 
 
@@ -55,11 +56,13 @@ protected:
 	UAnimMontage* CurrentPlayingMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=AnimMontages)
-	UAnimMontage* DodgeAnimMontage;
-
+	UAnimMontage* EvadeAnimMontage;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=AnimMontages)
 	TArray<UAnimMontage*> MeleeAttackMontages;
 
+	UPROPERTY()
+	ACharacter* TargetCharacter;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -71,9 +74,11 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-
+	ACharacter* GetCurrentTarget() const {return TargetCharacter;}
+	void SetCurrentTarget(ACharacter* Target) {TargetCharacter = Target;}
+	
 	// ================================================= Interface implementation =========================================
-
+	
 	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
 
 	virtual void StartWaitForCombo_Implementation() override;
