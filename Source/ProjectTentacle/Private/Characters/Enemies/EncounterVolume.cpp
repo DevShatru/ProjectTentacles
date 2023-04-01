@@ -5,7 +5,9 @@
 
 #include "NavigationInvokerComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "Characters/Enemies/EnemyBaseController.h"
 
+FTimerManager* AEncounterVolume::WorldTimerManager = nullptr;
 // Sets default values
 AEncounterVolume::AEncounterVolume()
 {
@@ -40,12 +42,47 @@ TArray<AEnemyBase*> AEncounterVolume::GetAlliesForPawn(APawn* Pawn)
 	return AlliesForPawn;
 }
 
+void AEncounterVolume::RegisterOnBasicAttackQueue(AEnemyBaseController* RegisteringController)
+{
+	if(AttackQueueBasic.Num() == 0)
+	{
+		// Start timer to handle the queue
+		StartBasicQueueTimer();
+	}
+
+	AttackQueueBasic.Add(RegisteringController);
+}
+
+void AEncounterVolume::RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController)
+{
+	LastAttacker = RegisteringController;
+	StartBasicQueueTimer();
+}
+
 // Called when the game starts or when spawned
 void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
+	WorldTimerManager = &GetWorldTimerManager();
 	bIsEncounterActive = false;
+	LastAttacker = nullptr;
+	
 	RegisterEncounterForUnits();
+}
+
+// Select random unit to attack
+void AEncounterVolume::BeginAttackBasic()
+{
+	int8 RandomIndex;
+
+	// Don't let same unit attack twice in a row
+	do
+	{
+		RandomIndex = FMath::RandRange(0, AttackQueueBasic.Num() - 1);
+	} while(LastAttacker == AttackQueueBasic[RandomIndex]);
+	
+	AttackQueueBasic[RandomIndex]->BeginAttack();
+	AttackQueueBasic.RemoveAt(RandomIndex);
 }
 
 // Register this encounter with contained units
@@ -64,4 +101,14 @@ void AEncounterVolume::EngageContainedUnits(AActor* Target)
 	{
 		ContainedUnit->EngageTarget(Target);
 	}
+}
+
+// Start cooldown and pop attacker after timer
+void AEncounterVolume::StartBasicQueueTimer()
+{
+	if(!WorldTimerManager)
+	{
+		WorldTimerManager = &GetWorldTimerManager();
+	}
+	WorldTimerManager->SetTimer(BasicQueueTimer, this, &AEncounterVolume::BeginAttackBasic, AttackStartDelay, false, AttackStartDelay);
 }

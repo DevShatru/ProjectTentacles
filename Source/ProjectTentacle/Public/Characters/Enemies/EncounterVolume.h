@@ -21,7 +21,14 @@ public:
 	// Try to start the encounter, if it hasn't already
 	void TryTriggerEncounter(AActor* Target);
 
+	// Return list of contained units excluding passed pawn
 	TArray<AEnemyBase*> GetAlliesForPawn(APawn* Pawn);
+
+	// Register basic unit (melee or ranged) on attack queue
+	void RegisterOnBasicAttackQueue(class AEnemyBaseController* RegisteringController);
+	
+	// Register when a basic unit has completed it's attack
+	void RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController);
 
 protected:
 	// Called when the game starts or when spawned
@@ -39,11 +46,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSet<AEnemyBase*> ContainedUnits;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
+	float AttackStartDelay = 3.0f;
+
 	// Attack queue for melee and ranged units
-	TQueue<AEnemyBase*> AttackQueueBasic;
+	TArray<AEnemyBaseController*> AttackQueueBasic;
 
 	// Attack queue for brutes
-	TQueue<AEnemyBase*> AttackQueueHeavy;
+	TArray<AEnemyBaseController*> AttackQueueHeavy;
+
+	// Pop random enemy from the queue and command them to attack
+	UFUNCTION()
+	void BeginAttackBasic();
 
 private:
 	// Register the encounter object with each contained units
@@ -52,4 +66,13 @@ private:
 	void EngageContainedUnits(AActor* Target);
 	// Track whether the encounter has started yet
 	unsigned int bIsEncounterActive:1;
+	// Timer handle for basic attack queue
+	FTimerHandle BasicQueueTimer;
+
+	// Cache reference to world timer manager
+	static FTimerManager* WorldTimerManager;
+	// Start timer for basic queue
+	void StartBasicQueueTimer();
+
+	AEnemyBaseController* LastAttacker;
 };

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "EnumClassesForCharacters.h"
-#include "WidgetDelegationInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Image.h"
 #include "Widget_EnemyAttackIndicator.generated.h"
