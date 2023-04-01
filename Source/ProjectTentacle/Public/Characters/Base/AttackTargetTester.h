@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "CharacterActionInterface.h"
+#include "Characters/Base/Widget_EnemyAttackIndicator.h"
 #include "DamageInterface.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
 #include "AttackTargetTester.generated.h"
 
 
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnUpdatingEnemyAttackType, EEnemyAttackType, NewAttackType);
 
 UCLASS()
 class PROJECTTENTACLE_API AAttackTargetTester : public ACharacter , public ICharacterActionInterface, public IDamageInterface
@@ -23,6 +26,21 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	
+	FOnUpdatingEnemyAttackType OnUpdatingEnemyAttackIndicator;
+
+	UPROPERTY()
+	UWidget_EnemyAttackIndicator* AttackIndicatorRef;
+	
+	UFUNCTION(BlueprintCallable)
+	void ExecuteAttack();
+	
+	void SetAttackType();
+	
+
+	// 
+	UPROPERTY(VisibleAnywhere)
+	UWidgetComponent* EnemyAttackIndicatorWidgetComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
 	UAnimMontage* ReceiveShortFlipKick;
@@ -60,6 +78,14 @@ protected:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
 	int32 BaseDamageAmount = 2;
+
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackAnimations)
+	UAnimMontage* CounterableAttackMontage;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackAnimations)
+	UAnimMontage* NotCounterableAttackMontage;
+
 	
 public:	
 	// Called every frame
@@ -70,10 +96,15 @@ public:
 	void PlayDamageReceiveAnimation(int32 AttackTypIndex);
 
 	void PlayFinishedAnimation();
+	
 
 
+	// ============================================= Get and Set functions ================================================
 	int32 GetEnemyHealth() const { return Health;}
 	void SetEnemyHealth(int32 NewHealth) {Health = NewHealth;}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	EEnemyAttackType GetEnemyStoredAttackType() const {return CurrentAttackType;}
 
 	
 	// Called to bind functionality to input

@@ -14,14 +14,62 @@ AAttackTargetTester::AAttackTargetTester()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
+	EnemyAttackIndicatorWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT( "EnemyAttackIndicatorWidget" ));
+	EnemyAttackIndicatorWidgetComponent->AttachToComponent( RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
 // Called when the game starts or when spawned
 void AAttackTargetTester::BeginPlay()
 {
 	Super::BeginPlay();
+	UUserWidget* ReturnWidget = EnemyAttackIndicatorWidgetComponent->GetWidget();
+	UWidget_EnemyAttackIndicator* CastedWidget = Cast<UWidget_EnemyAttackIndicator>(ReturnWidget);
 	
+	if(CastedWidget)
+	{
+		AttackIndicatorRef = CastedWidget;
+		OnUpdatingEnemyAttackIndicator.BindDynamic(AttackIndicatorRef, &UWidget_EnemyAttackIndicator::OnReceivingNewAttackType);
+	}
+
+
+}
+
+void AAttackTargetTester::ExecuteAttack()
+{
+	SetAttackType();
+
+
+	if(AttackIndicatorRef)
+	{
+		OnUpdatingEnemyAttackIndicator.Execute(CurrentAttackType);
+	}
+	
+	switch (CurrentAttackType)
+	{
+		case EEnemyAttackType::AbleToCounter:
+			if(CounterableAttackMontage == nullptr) return;
+			PlayAnimMontage(CounterableAttackMontage, 1, "Default");
+			break;
+		case EEnemyAttackType::UnableToCounter:
+			if(NotCounterableAttackMontage == nullptr) return;
+			PlayAnimMontage(NotCounterableAttackMontage, 1, "Default");
+			break;
+		default: break;
+	}
+}
+
+void AAttackTargetTester::SetAttackType()
+{
+	int32 CounterableRndInt = UKismetMathLibrary::RandomInteger(2);
+
+	if(CounterableRndInt == 0)
+	{
+		CurrentAttackType = EEnemyAttackType::UnableToCounter;
+		return;
+	}
+	
+	CurrentAttackType = EEnemyAttackType::AbleToCounter;
 }
 
 // Called every frame
@@ -77,7 +125,14 @@ void AAttackTargetTester::TryToDamagePlayer_Implementation()
 	const UWorld* World = GetWorld();
 	if(World == nullptr) return;
 
-	const FVector HeadSocketLocation = GetMesh()->GetSocketLocation("Head");
+	
+	FName AttackSocketName;
+	if(CurrentAttackType == EEnemyAttackType::AbleToCounter)
+		AttackSocketName = "Head";
+	else
+		AttackSocketName = "RightLeg";
+	
+	const FVector HeadSocketLocation = GetMesh()->GetSocketLocation(AttackSocketName);
 
 	TArray<AActor*> FoundActorList;
 
