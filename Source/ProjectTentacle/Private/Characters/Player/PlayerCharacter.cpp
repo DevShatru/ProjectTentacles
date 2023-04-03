@@ -59,6 +59,8 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	
 	if(PlayerControl->WasInputKeyJustReleased(MovingLeftKey) || PlayerControl->WasInputKeyJustReleased(MovingRightKey))
 		InputDirection.SetInputDirectionX(0.0f);
+
+	
 }
 
 
@@ -310,6 +312,24 @@ void APlayerCharacter::TryDodge()
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Dodge);
 	}
 }
+
+void APlayerCharacter::SetTargetActor(AAttackTargetTester* NewTargetActor)
+{
+	// if target actor is not null ptr, unshow its target icon
+	if(TargetActor != nullptr)
+	{
+		if(TargetActor->GetClass()->ImplementsInterface(UEnemyWidgetInterface::StaticClass()))
+			IEnemyWidgetInterface::Execute_UnShowPlayerTargetIndicator(TargetActor);
+	}
+	
+	
+	if(NewTargetActor->GetClass()->ImplementsInterface(UEnemyWidgetInterface::StaticClass()))
+		IEnemyWidgetInterface::Execute_ShowPlayerTargetIndicator(NewTargetActor);
+	
+	TargetActor = NewTargetActor;
+}
+
+
 //
 // void APlayerCharacter::BeginDodge()
 // {
@@ -500,14 +520,19 @@ void APlayerCharacter::TryDodge()
 // }
 
 
+// =============================================== Utility ================================================
+
+
+
+
 // =========================================== Interface Function =========================================
 void APlayerCharacter::DamagingTarget_Implementation()
 {
 	Super::DamagingTarget_Implementation();
 
-	if(TargetActor == nullptr) return;
+	if(DamagingActor == nullptr) return;
 
-	IDamageInterface::Execute_ReceiveDamageFromPlayer(TargetActor, 1, this, CurrentAttackType);
+	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, 1, this, CurrentAttackType);
 }
 
 void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser,

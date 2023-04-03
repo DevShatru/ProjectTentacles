@@ -76,6 +76,10 @@ protected:
 	AAttackTargetTester* TargetActor;
 
 	UPROPERTY()
+	AAttackTargetTester* DamagingActor;
+	
+
+	UPROPERTY()
 	EPlayerAttackType CurrentAttackType;
 
 	
@@ -139,11 +143,19 @@ public:
 	
 	void TryDodge();
 
+	// ================================================= Utility Functions ================================================
+
+
+
+	
 	// ================================================= Get And Set Functions ============================================
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}
 
 	AAttackTargetTester* GetTargetActor() const {return TargetActor;}
-	void SetTargetActor(AAttackTargetTester* NewTargetActor) {TargetActor = NewTargetActor;}
+	void SetTargetActor(AAttackTargetTester* NewTargetActor);
+
+	AAttackTargetTester* GetDamagingActor() const {return DamagingActor;}
+	void SetDamagingActor(AAttackTargetTester* NewDamagingActor) {DamagingActor = NewDamagingActor;}
 
 	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}

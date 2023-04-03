@@ -133,6 +133,8 @@ protected:
 	UAnimMontage* DecideDodgingMontage(FVector PlayerDodgingDirection);
 	
 	// ================================================== Utility ======================================================
+	void TryToUpdateTarget();
+	
 	TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
 
 	void InstantRotation(FVector RotatingVector);
@@ -148,7 +150,11 @@ protected:
 	void InitializeOwnerRef();
 	void InitializeTimelineComp();
 
-
+	
+	// ============================================= Tick function =====================================================
+	
+	
+	
 	
 public:
 

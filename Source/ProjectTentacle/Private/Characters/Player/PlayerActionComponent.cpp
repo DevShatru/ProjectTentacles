@@ -70,6 +70,11 @@ void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	DashingDoubleKickTimeLine.TickTimeline(DeltaTime);
 	CloseToPerformFinisherTimeLine.TickTimeline(DeltaTime);
 	DodgeLerpingTimeLine.TickTimeline(DeltaTime);
+
+	const float PlayerStoredInputX = PlayerOwnerRef->GetPlayerInputDir().GetInputDirectionX();
+	const float PlayerStoredInputY = PlayerOwnerRef->GetPlayerInputDir().GetInputDirectionY();
+	if(PlayerStoredInputX != 0.0f || PlayerStoredInputY != 0.0f)
+		TryToUpdateTarget();
 }
 
 // ====================================================== Attack ==============================================
@@ -77,6 +82,10 @@ void UPlayerActionComponent::BeginMeleeAttack()
 {
 	// Reference validation check
 	if(PlayerOwnerRef == nullptr) return;
+
+	// if player is not having target, return;
+	AAttackTargetTester* RegisteredTarget = PlayerOwnerRef->GetTargetActor();
+	if(PlayerOwnerRef->GetTargetActor() == nullptr) return;
 	
 	// Get max number of attack animation montage array
 	const int32 MAttackMontagesNum = MeleeAttackMontages.Num();
@@ -90,22 +99,9 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	// 
 	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(MAttackRndIndex);
 
-	// Get All enemy around player
-	TArray<AAttackTargetTester*> OpponentAroundSelf = GetAllOpponentAroundSelf();
 
-	// if there is no opponent around, simply return
-	if(OpponentAroundSelf.Num() == 0) return;
-
-	// Get target direction to face to
-	AAttackTargetTester* ResultFacingEnemy = GetTargetEnemy(OpponentAroundSelf);
-
-	// if there is no direction, return
-	if(ResultFacingEnemy == nullptr) return;
 	
-
-	// Store target actor and selected attack type references for later anim notify usage
-	PlayerOwnerRef->SetTargetActor(ResultFacingEnemy);
-	const FVector TargetActorPos = ResultFacingEnemy->GetActorLocation();
+	const FVector TargetActorPos = RegisteredTarget->GetActorLocation();
 	const FVector PlayerPos = PlayerOwnerRef->GetActorLocation();
 
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
@@ -116,7 +112,7 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActorPos - PlayerPos);
 	const FVector FacingPlayerDir = UKismetMathLibrary::Normal(PlayerPos - TargetActorPos);
 	InstantRotation(FacingEnemyDir);
-	ResultFacingEnemy->InstantRotation(FacingPlayerDir);
+	RegisteredTarget->InstantRotation(FacingPlayerDir);
 
 	// set lerping start and end position to variable
 	SetAttackMovementPositions(TargetActorPos);
@@ -126,7 +122,7 @@ void UPlayerActionComponent::BeginMeleeAttack()
 
 	// TODO: Need To ReadWrite 
 	// Check if Enemy is dying or now, if is, finish him
-	int32 EnemyCurrentHealth = ResultFacingEnemy->GetEnemyHealth();
+	int32 EnemyCurrentHealth = RegisteredTarget->GetEnemyHealth();
 
 	if(EnemyCurrentHealth <= 1)
 	{
@@ -135,8 +131,10 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	}
 	
 	EnemyCurrentHealth--;
-	ResultFacingEnemy->SetEnemyHealth(EnemyCurrentHealth);
+	RegisteredTarget->SetEnemyHealth(EnemyCurrentHealth);
 
+	// Set damaging actor
+	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
 	
 	// Player attack montage
 	CurrentPlayingMontage = MeleeAttackMontages[MAttackRndIndex];
@@ -329,6 +327,26 @@ UAnimMontage* UPlayerActionComponent::DecideDodgingMontage(FVector PlayerDodging
 }
 
 // ==================================================== Utility ===============================================
+
+void UPlayerActionComponent::TryToUpdateTarget()
+{
+	// Get All enemy around player
+	TArray<AAttackTargetTester*> OpponentAroundSelf = GetAllOpponentAroundSelf();
+	
+	// if there is no opponent around, simply return
+	if(OpponentAroundSelf.Num() == 0) return;
+	
+	// Get target direction to face to
+	AAttackTargetTester* ResultFacingEnemy = GetTargetEnemy(OpponentAroundSelf);
+	
+	// if there is no direction, return
+	if(ResultFacingEnemy == nullptr) return;
+	
+	// if result is not saved target enemy, update it for later usage
+	if(ResultFacingEnemy && PlayerOwnerRef->GetTargetActor() != ResultFacingEnemy)
+		PlayerOwnerRef->SetTargetActor(ResultFacingEnemy);
+}
+
 TArray<AAttackTargetTester*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 {
 	TArray<AActor*> FoundActorList;
