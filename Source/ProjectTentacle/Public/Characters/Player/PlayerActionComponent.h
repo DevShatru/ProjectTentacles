@@ -17,8 +17,33 @@ public:
 	// Sets default values for this component's properties
 	UPlayerActionComponent();
 
-protected:
+private:
+
+	// Attack Animation Timeline
+	// Timeline
+	FTimeline ShortFlipKickTimeLine;
+	FTimeline FlyingKickTimeLine;
+	FTimeline FlyingPunchTimeLine;
+	FTimeline SpinKickTimeLine;
+	FTimeline DashingDoubleKickTimeLine;
+	FTimeline CloseToPerformFinisherTimeLine;
+	FTimeline DodgeLerpingTimeLine;
+
+	// Stored positions for later lerp usage
+	FVector MovingStartPos;
+	FVector MovingEndPos;
 	
+protected:
+
+
+	// Owner Ref
+	UPROPERTY()
+	APlayerCharacter* PlayerOwnerRef;
+	
+	UPROPERTY()
+	UAnimMontage* CurrentPlayingMontage;
+
+	// ================================================= Attack Variable Setting ================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* ShortFlipKickCurve;
 
@@ -37,17 +62,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* CloseToPerformFinisherCurve;
 	
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* CurrentPlayingMontage;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
-	UAnimMontage* EvadeAnimMontage;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
-	TArray<UAnimMontage*> MeleeAttackMontages;
-
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_Setting)
 	float MaxAngleForFacingEnemy = 45.0f;
 	
@@ -60,6 +74,12 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
 	UClass* FilteringClass;
 	
+	// ================================================= Combat Variable Setting ================================================
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
+	UAnimMontage* EvadeAnimMontage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
+	TArray<UAnimMontage*> MeleeAttackMontages;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* FinisherAnimMontages;
@@ -70,6 +90,7 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* CounterAttackMontages;
 
+	// ================================================= Dodge Variable Setting ================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge_Setting)
 	float DodgeDistance = 250.0f;
 	
@@ -82,10 +103,6 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Dodge_Setting)
 	UAnimMontage* FrontRollingMontage;
 	
-	FVector MovingStartPos;
-	
-	FVector MovingEndPos;
-
 	
 	// ================================================== Melee Attack ================================================
 	void BeginMeleeAttack();
@@ -124,32 +141,20 @@ protected:
 
 	static bool IsPlayerCountering(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
 	static bool IsPlayerCanBeDamaged(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
-	
-
-	// Attack Animation Timeline
-	// Timeline
-	FTimeline ShortFlipKickTimeLine;
-	FTimeline FlyingKickTimeLine;
-	FTimeline FlyingPunchTimeLine;
-	FTimeline SpinKickTimeLine;
-	FTimeline DashingDoubleKickTimeLine;
-	FTimeline CloseToPerformFinisherTimeLine;
-	FTimeline DodgeLerpingTimeLine;
 
 
-	// Called when the game starts
+	// ================================ Functions called when the game starts ==========================================
 	virtual void BeginPlay() override;
 	void InitializeOwnerRef();
 	void InitializeTimelineComp();
 
-	UPROPERTY()
-	APlayerCharacter* PlayerOwnerRef;
 
 	
 public:
 
 	
 
+	// ================================================= Delegate Functions =================================================
 	UFUNCTION()
 	void ExecutePlayerAction(EActionState ExecutingAction);
 	

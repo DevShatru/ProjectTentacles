@@ -6,6 +6,8 @@
 #include "CharacterActionInterface.h"
 #include "Characters/Base/Widget_EnemyAttackIndicator.h"
 #include "DamageInterface.h"
+#include "EnemyWidgetInterface.h"
+#include "Widget_EnemyTargetIconWidget.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
 #include "AttackTargetTester.generated.h"
@@ -14,7 +16,7 @@
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnUpdatingEnemyAttackType, EEnemyAttackType, NewAttackType);
 
 UCLASS()
-class PROJECTTENTACLE_API AAttackTargetTester : public ACharacter , public ICharacterActionInterface, public IDamageInterface
+class PROJECTTENTACLE_API AAttackTargetTester : public ACharacter, public ICharacterActionInterface, public IDamageInterface, public IEnemyWidgetInterface
 {
 	GENERATED_BODY()
 
@@ -31,6 +33,9 @@ protected:
 
 	UPROPERTY()
 	UWidget_EnemyAttackIndicator* AttackIndicatorRef;
+
+	UPROPERTY()
+	UWidget_EnemyTargetIconWidget* EnemyTargetWidgetRef;
 	
 	UFUNCTION(BlueprintCallable)
 	void ExecuteAttack();
@@ -42,6 +47,10 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UWidgetComponent* EnemyAttackIndicatorWidgetComponent;
 
+	// 
+	UPROPERTY(VisibleAnywhere)
+	UWidgetComponent* EnemyTargetedIconWidgetComponent;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
 	UAnimMontage* ReceiveShortFlipKick;
 
@@ -106,17 +115,18 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	EEnemyAttackType GetEnemyStoredAttackType() const {return CurrentAttackType;}
 
-	
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	
+	// ================================================== Interface Functions ============================================
 	virtual void TryToDamagePlayer_Implementation() override;
 
 	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
-	
-	
 
+	virtual void ShowEnemyAttackIndicator_Implementation() override;
+
+	virtual void UnShowEnemyAttackIndicator_Implementation() override;
+
+	virtual void ShowPlayerTargetIndicator_Implementation() override;
+	
+	virtual void UnShowPlayerTargetIndicator_Implementation() override;
 	
 	// ==================================== Testing Functions ======================================================
 

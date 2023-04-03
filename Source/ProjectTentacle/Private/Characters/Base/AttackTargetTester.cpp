@@ -16,23 +16,35 @@ AAttackTargetTester::AAttackTargetTester()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	EnemyAttackIndicatorWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT( "EnemyAttackIndicatorWidget" ));
+	EnemyTargetedIconWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT( "EnemyTargetedIconWidget" ));
 	EnemyAttackIndicatorWidgetComponent->AttachToComponent( RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	EnemyTargetedIconWidgetComponent->AttachToComponent( RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
 // Called when the game starts or when spawned
 void AAttackTargetTester::BeginPlay()
 {
 	Super::BeginPlay();
-	UUserWidget* ReturnWidget = EnemyAttackIndicatorWidgetComponent->GetWidget();
-	UWidget_EnemyAttackIndicator* CastedWidget = Cast<UWidget_EnemyAttackIndicator>(ReturnWidget);
+	UUserWidget* ReturnAttackIndicatorWidget = EnemyAttackIndicatorWidgetComponent->GetWidget();
+	UWidget_EnemyAttackIndicator* CastedAttackIndicatorWidget = Cast<UWidget_EnemyAttackIndicator>(ReturnAttackIndicatorWidget);
+
+	// const FString WidgetName = EnemyAttackIndicatorWidgetComponent->GetUserWidgetObject()->GetName();
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("EnemyAttackIndicatorWidgetComponent %s"), *WidgetName));	
+
 	
-	if(CastedWidget)
+	if(CastedAttackIndicatorWidget)
 	{
-		AttackIndicatorRef = CastedWidget;
+		AttackIndicatorRef = CastedAttackIndicatorWidget;
 		OnUpdatingEnemyAttackIndicator.BindDynamic(AttackIndicatorRef, &UWidget_EnemyAttackIndicator::OnReceivingNewAttackType);
 	}
 
+	UUserWidget* ReturnTargetedIconWidget = EnemyTargetedIconWidgetComponent->GetWidget();
+	UWidget_EnemyTargetIconWidget* CastedTargetedIconWidget = Cast<UWidget_EnemyTargetIconWidget>(ReturnTargetedIconWidget);
 
+	if(CastedTargetedIconWidget)
+	{
+		EnemyTargetWidgetRef = CastedTargetedIconWidget;
+	}
 }
 
 void AAttackTargetTester::ExecuteAttack()
@@ -179,10 +191,36 @@ void AAttackTargetTester::ReceiveDamageFromPlayer_Implementation(int32 DamageAmo
 
 }
 
-// Called to bind functionality to input
-void AAttackTargetTester::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AAttackTargetTester::ShowEnemyAttackIndicator_Implementation()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	IEnemyWidgetInterface::ShowEnemyAttackIndicator_Implementation();
 
+	if(AttackIndicatorRef)
+		AttackIndicatorRef->ShowIndicator();
+	
+		
 }
 
+void AAttackTargetTester::UnShowEnemyAttackIndicator_Implementation()
+{
+	IEnemyWidgetInterface::UnShowEnemyAttackIndicator_Implementation();
+
+	if(AttackIndicatorRef)
+		AttackIndicatorRef->UnShowIndicator();
+}
+
+void AAttackTargetTester::ShowPlayerTargetIndicator_Implementation()
+{
+	IEnemyWidgetInterface::ShowPlayerTargetIndicator_Implementation();
+
+	if(EnemyTargetWidgetRef)
+		EnemyTargetWidgetRef->ShowIndicator();
+}
+
+void AAttackTargetTester::UnShowPlayerTargetIndicator_Implementation()
+{
+	IEnemyWidgetInterface::UnShowPlayerTargetIndicator_Implementation();
+
+	if(EnemyTargetWidgetRef)
+		EnemyTargetWidgetRef->UnShowIndicator();
+}
