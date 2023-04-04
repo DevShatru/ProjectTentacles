@@ -3,16 +3,95 @@
 
 #include "Characters/Base/Widget_EnemyAttackIndicator.h"
 
-void UWidget_EnemyAttackIndicator::OnReceivingNewAttackType(EEnemyAttackType NewAttackType)
+void UWidget_EnemyAttackIndicator::OnReceivingNewAttackType(EEnemyAttackType NewAttackType, EEnemyAttackAnimMontages NewAnimMontage)
 {
-	FLinearColor LinearColor = FLinearColor(0,0,0,1);
+	CurrentPlayingAnimMontage = NewAnimMontage;
+}
 
-	LinearColor.R = 1.0f;
-	
-	if(NewAttackType == EEnemyAttackType::AbleToCounter)
+void UWidget_EnemyAttackIndicator::StoreWidgetAnimation()
+{
+	// Clear map first
+	WidgetAnimMap.Empty();
+
+	// Get Uproperty class reference as start point
+	UProperty* Prop = GetClass()->PropertyLink;
+
+	// while the property is not nullptr
+	while (Prop)
 	{
-		LinearColor.G = 1.0f;
+		// continue if if Property Class is UObjectProperty
+		if(Prop->GetClass() == UObjectProperty::StaticClass())
+		{
+			// Cast propert to UObjectProperty class
+			UObjectProperty* ObjectProp = Cast<UObjectProperty>(Prop);
+
+			// Check if property class is UWidgetAnimation class
+			if (ObjectProp->PropertyClass == UWidgetAnimation::StaticClass())
+			{
+				// Get Uobject in this property container and cast it to UWidgetAnimation pointer
+				UObject* ObjectInContainer = ObjectProp->GetObjectPropertyValue_InContainer(this);
+				UWidgetAnimation* WidgetAnimation = Cast<UWidgetAnimation>(ObjectInContainer);
+
+				// Validation check to casted result
+				if (WidgetAnimation && WidgetAnimation->MovieScene)
+				{
+					// get FName and pointer and allocate into WidgetAnimMap
+					const FName AnimName = WidgetAnimation->MovieScene->GetFName();
+					WidgetAnimMap.Add(AnimName, WidgetAnimation);
+				}
+			}
+		}
+
+		// cheange to next property
+		Prop = Prop->PropertyLinkNext;
 	}
 	
-	IndicationImage->Brush.TintColor = FSlateColor(LinearColor);
+	
+}
+
+UWidgetAnimation* UWidget_EnemyAttackIndicator::GetAnimationByName(FName AnimationName)
+{
+	UWidgetAnimation* const* WidgetAnimation = WidgetAnimMap.Find(AnimationName);
+
+	// return Widget Animation reference when it is valid, else, return nullptr
+	if(WidgetAnimation) return *WidgetAnimation;
+		
+	return nullptr;
+}
+
+void UWidget_EnemyAttackIndicator::TryPlayIndicationAnimation()
+{
+	StopAllAnimations();
+	
+	switch (CurrentPlayingAnimMontage)
+	{
+		case EEnemyAttackAnimMontages::MMAKick:
+			if(YellowToRedAnim_MMAKick)
+				
+				PlayAnimation(YellowToRedAnim_MMAKick, 0.0f, 1, EUMGSequencePlayMode::Forward, 1.0f, true);
+			break;
+		
+		case EEnemyAttackAnimMontages::HeadButt:
+			if(AllGreenAnim_HeadButt)
+				PlayAnimation(AllGreenAnim_HeadButt, 0.0f, 1, EUMGSequencePlayMode::Forward, 1.0f, true);
+			break;
+		default: break;
+	}
+}
+
+void UWidget_EnemyAttackIndicator::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	StoreWidgetAnimation();
+
+	YellowToRedAnim_MMAKick = GetAnimationByName(TEXT("YellowToRedAnim_MMAKick"));
+	AllGreenAnim_HeadButt = GetAnimationByName(TEXT("AllGreenAnim_HeadButt"));
+}
+
+void UWidget_EnemyAttackIndicator::ShowIndicator()
+{
+	Super::ShowIndicator();
+	
+	TryPlayIndicationAnimation();
 }

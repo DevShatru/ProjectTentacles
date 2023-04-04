@@ -27,10 +27,6 @@ void AAttackTargetTester::BeginPlay()
 	Super::BeginPlay();
 	UUserWidget* ReturnAttackIndicatorWidget = EnemyAttackIndicatorWidgetComponent->GetWidget();
 	UWidget_EnemyAttackIndicator* CastedAttackIndicatorWidget = Cast<UWidget_EnemyAttackIndicator>(ReturnAttackIndicatorWidget);
-
-	// const FString WidgetName = EnemyAttackIndicatorWidgetComponent->GetUserWidgetObject()->GetName();
-	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("EnemyAttackIndicatorWidgetComponent %s"), *WidgetName));	
-
 	
 	if(CastedAttackIndicatorWidget)
 	{
@@ -47,43 +43,93 @@ void AAttackTargetTester::BeginPlay()
 		EnemyTargetWidgetRef = CastedTargetedIconWidget;
 		EnemyTargetWidgetRef->UnShowIndicator();
 	}
+
+	// timeline binding
+	FOnTimelineFloat MovingAttackPosUpdate;
+	MovingAttackPosUpdate.BindDynamic(this, &AAttackTargetTester::UpdateAttackingPosition);
+	AttackMovingTimeline.AddInterpFloat(AttackMovingCurve, MovingAttackPosUpdate);
+	
 }
 
 void AAttackTargetTester::ExecuteAttack()
 {
-	SetAttackType();
+	// SetAttackType and get the result enum of it
+	EEnemyAttackAnimMontages ResultEnemyAnimMontage = SetAttackType();
 
-
+	
 	if(AttackIndicatorRef)
 	{
-		OnUpdatingEnemyAttackIndicator.Execute(CurrentAttackType);
+		// execute delegate function to update variables in Indicator widget class
+		OnUpdatingEnemyAttackIndicator.Execute(CurrentAttackType, ResultEnemyAnimMontage);
 	}
+
+	// Save lerp start and end position for later timeline function usage
+	SelfAttackStartPos = GetActorLocation();
+
+	// Get Player Position
+	const ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	FVector PlayerCurrentPos = PlayerCharacter->GetActorLocation();
 	
+	const FVector DestinationPos = CalculateDestinationForAttackMoving(PlayerCurrentPos);
+	AttackMovingDestination = DestinationPos;
+	
+	// switch case on current attack type to fire different animation 
 	switch (CurrentAttackType)
 	{
 		case EEnemyAttackType::AbleToCounter:
 			if(CounterableAttackMontage == nullptr) return;
 			PlayAnimMontage(CounterableAttackMontage, 1, "Default");
+			AttackMovingTimeline.PlayFromStart();
 			break;
 		case EEnemyAttackType::UnableToCounter:
 			if(NotCounterableAttackMontage == nullptr) return;
 			PlayAnimMontage(NotCounterableAttackMontage, 1, "Default");
+			AttackMovingTimeline.PlayFromStart();
 			break;
 		default: break;
 	}
+
 }
 
-void AAttackTargetTester::SetAttackType()
+EEnemyAttackAnimMontages AAttackTargetTester::SetAttackType()
 {
 	int32 CounterableRndInt = UKismetMathLibrary::RandomInteger(2);
 
 	if(CounterableRndInt == 0)
 	{
 		CurrentAttackType = EEnemyAttackType::UnableToCounter;
-		return;
+		return EEnemyAttackAnimMontages::MMAKick;
 	}
 	
 	CurrentAttackType = EEnemyAttackType::AbleToCounter;
+	return EEnemyAttackAnimMontages::HeadButt;
+}
+
+
+FVector AAttackTargetTester::CalculateDestinationForAttackMoving(FVector PlayerPos)
+{
+	// Get direction from self to player
+	FVector OffsetWithoutZ = PlayerPos - SelfAttackStartPos;
+	OffsetWithoutZ.Z = 0;
+	const FVector DirFromSelfToPlayer = UKismetMathLibrary::Normal(OffsetWithoutZ);
+
+	const FVector SupposedAttackMovingDestination = SelfAttackStartPos + (DirFromSelfToPlayer * AttackMovingDistance);
+
+	
+	// Hit result
+	FHitResult Hit;
+	// Empty array of ignoring actor, maybe add Enemies classes to be ignored
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	
+	// Capsule trace by channel
+	const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, SelfAttackStartPos, SupposedAttackMovingDestination, UEngineTypes::ConvertToTraceType(ECC_Visibility),false, IgnoreActors,  EDrawDebugTrace::Persistent,Hit,true);
+
+	if(!bHit) return SupposedAttackMovingDestination;
+
+	const FVector DirFromPlayerToSelf = DirFromSelfToPlayer * -1;
+	
+	return Hit.ImpactPoint + (DirFromPlayerToSelf * OffsetFromPlayer);
 }
 
 // Called every frame
@@ -91,6 +137,7 @@ void AAttackTargetTester::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	AttackMovingTimeline.TickTimeline(DeltaTime);
 }
 
 void AAttackTargetTester::InstantRotation(FVector RotatingVector)
@@ -131,6 +178,20 @@ void AAttackTargetTester::PlayFinishedAnimation()
 
 }
 
+// ============================================= Timeline function ====================================================
+
+void AAttackTargetTester::UpdateAttackingPosition(float Alpha)
+{
+	const FVector CharacterCurrentPos = GetActorLocation();
+	
+	const FVector LerpPos = UKismetMathLibrary::VLerp(SelfAttackStartPos,AttackMovingDestination, Alpha);
+
+	const FVector MovingPos = FVector(LerpPos.X, LerpPos.Y, CharacterCurrentPos.Z);
+
+	SetActorLocation(MovingPos);
+}
+
+// ================================================== Interface Functions ============================================
 void AAttackTargetTester::TryToDamagePlayer_Implementation()
 {
 	ICharacterActionInterface::TryToDamagePlayer_Implementation();
@@ -199,8 +260,6 @@ void AAttackTargetTester::ShowEnemyAttackIndicator_Implementation()
 
 	if(AttackIndicatorRef)
 		AttackIndicatorRef->ShowIndicator();
-	
-		
 }
 
 void AAttackTargetTester::UnShowEnemyAttackIndicator_Implementation()

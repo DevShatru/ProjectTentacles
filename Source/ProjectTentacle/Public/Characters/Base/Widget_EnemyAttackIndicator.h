@@ -14,8 +14,34 @@ UCLASS(Blueprintable)
 class PROJECTTENTACLE_API UWidget_EnemyAttackIndicator : public UWidget_EnemyBaseUserWidget
 {
 	GENERATED_BODY()
+
+private:
+	
+protected:
+	EEnemyAttackAnimMontages CurrentPlayingAnimMontage;
+
+	UPROPERTY()
+	TMap<FName, UWidgetAnimation*> WidgetAnimMap;
+
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation* YellowToRedAnim_MMAKick;
+
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation* AllGreenAnim_HeadButt;
+	
 public:
 	UFUNCTION()
-	void OnReceivingNewAttackType(EEnemyAttackType NewAttackType);
+	void OnReceivingNewAttackType(EEnemyAttackType NewAttackType, EEnemyAttackAnimMontages NewAnimMontage);
+
+	void StoreWidgetAnimation();
+	
+	UWidgetAnimation* GetAnimationByName(FName AnimationName);
+
+	void TryPlayIndicationAnimation();
+
+	virtual void NativeConstruct() override;
+
+	virtual void ShowIndicator() override;
+
 	
 };

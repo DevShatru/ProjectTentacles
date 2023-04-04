@@ -33,3 +33,10 @@ enum class EEnemyAttackType: uint8
 	AbleToCounter = 0 UMETA(DisplayName = "AbleToCounter"),
 	UnableToCounter = 1 UMETA(DisplayName = "UnableToCounter"),
 };
+
+UENUM(BlueprintType)
+enum class EEnemyAttackAnimMontages: uint8
+{
+	HeadButt = 0 UMETA(DisplayName = "HeadButt"),
+	MMAKick = 1 UMETA(DisplayName = "MMAKick"),
+};
