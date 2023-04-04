@@ -4,24 +4,10 @@
 
 
 #include "CoreMinimal.h"
-//#include "CharacterActionInterface.h"
 #include "CharacterActionInterface.h"
-#include "Components/TimelineComponent.h"
+#include "EnumClassesForCharacters.h"
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
-
-UENUM(BlueprintType)
-enum class EActionState: uint8
-{
-	Idle = 0 UMETA(DisplayName = "IDLE"),
-	Evade = 1 UMETA(DisplayName = "EVADE"),
-	Attack = 2 UMETA(DisplayName = "ATTACK"),
-	Recovering = 3 UMETA(DisplayName = "RECOVERING"),
-	ReceivedDamage = 4 UMETA(DisplayName = "RECEIVEDDAMAGE"),
-	SpecialAttack = 5 UMETA(DisplayName = "SPECIALATTACK"),
-	WaitForCombo = 6 UMETA(DisplayName = "WAITFORCOMBO"),
-	Dodge = 7 UMETA(DisplayName = "DODGE")
-};
 
 
 UCLASS()
@@ -43,6 +29,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
+		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=CharacterProperty)
 	EActionState CurrentActionState = EActionState::Idle;
 
@@ -51,15 +38,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=CharacterProperty)
 	float CharacterMaxHealth = 100;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* CurrentPlayingMontage;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=AnimMontages)
-	UAnimMontage* EvadeAnimMontage;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=AnimMontages)
-	TArray<UAnimMontage*> MeleeAttackMontages;
 
 	UPROPERTY()
 	ACharacter* TargetCharacter;
@@ -76,6 +54,13 @@ public:
 
 	ACharacter* GetCurrentTarget() const {return TargetCharacter;}
 	void SetCurrentTarget(ACharacter* Target) {TargetCharacter = Target;}
+
+
+	// ================================================= Get And Set Functions ============================================
+	EActionState GetCurrentActionState() const {return CurrentActionState;}
+	void SetCurrentActionState(EActionState NewActionState) {CurrentActionState = NewActionState;}
+	
+	
 	
 	// ================================================= Interface implementation =========================================
 	
