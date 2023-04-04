@@ -142,7 +142,7 @@ void APlayerCharacter::TryDodge()
 	}
 }
 
-void APlayerCharacter::SetTargetActor(AAttackTargetTester* NewTargetActor)
+void APlayerCharacter::SetTargetActor(AEnemyBase* NewTargetActor)
 {
 	// if target actor is not null ptr, unshow its target icon
 	if(TargetActor != nullptr)

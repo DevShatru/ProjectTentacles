@@ -67,7 +67,6 @@ void UWidget_EnemyAttackIndicator::TryPlayIndicationAnimation()
 	{
 		case EEnemyAttackAnimMontages::MMAKick:
 			if(YellowToRedAnim_MMAKick)
-				
 				PlayAnimation(YellowToRedAnim_MMAKick, 0.0f, 1, EUMGSequencePlayMode::Forward, 1.0f, true);
 			break;
 		

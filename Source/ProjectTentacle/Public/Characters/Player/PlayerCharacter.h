@@ -6,6 +6,7 @@
 #include "GenericTeamAgentInterface.h"
 #include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
+#include "Characters/Enemies/EnemyBase.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerCharacter.generated.h"
@@ -73,10 +74,10 @@ protected:
 	UAnimMontage* CurrentPlayingMontage;
 
 	UPROPERTY()
-	AAttackTargetTester* TargetActor;
+	AEnemyBase* TargetActor;
 
 	UPROPERTY()
-	AAttackTargetTester* DamagingActor;
+	AEnemyBase* DamagingActor;
 	
 
 	UPROPERTY()
@@ -151,11 +152,11 @@ public:
 	// ================================================= Get And Set Functions ============================================
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}
 
-	AAttackTargetTester* GetTargetActor() const {return TargetActor;}
-	void SetTargetActor(AAttackTargetTester* NewTargetActor);
+	AEnemyBase* GetTargetActor() const {return TargetActor;}
+	void SetTargetActor(AEnemyBase* NewTargetActor);
 
-	AAttackTargetTester* GetDamagingActor() const {return DamagingActor;}
-	void SetDamagingActor(AAttackTargetTester* NewDamagingActor) {DamagingActor = NewDamagingActor;}
+	AEnemyBase* GetDamagingActor() const {return DamagingActor;}
+	void SetDamagingActor(AEnemyBase* NewDamagingActor) {DamagingActor = NewDamagingActor;}
 
 	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}

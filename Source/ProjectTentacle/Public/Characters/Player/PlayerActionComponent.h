@@ -135,11 +135,11 @@ protected:
 	// ================================================== Utility ======================================================
 	void TryToUpdateTarget();
 	
-	TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
-
+	TArray<AEnemyBase*> GetAllOpponentAroundSelf();
+	
 	void InstantRotation(FVector RotatingVector);
 
-	AAttackTargetTester* GetTargetEnemy(TArray<AAttackTargetTester*> OpponentsAroundSelf);
+	AEnemyBase* GetTargetEnemy(TArray<AEnemyBase*> OpponentsAroundSelf);
 
 	static bool IsPlayerCountering(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
 	static bool IsPlayerCanBeDamaged(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
