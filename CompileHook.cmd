@@ -1,19 +1,24 @@
 @echo off
-:: set MSBUILD=C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
 
-:: Default location for Unreal's build batch script
-set BUILD_SCRIPT="C:\Program Files\Epic Games\UE_4.27\Engine\Build\BatchFiles\Build.bat"
+:: Project name
+set SOLUTION=ProjectTentacle
+:: Default MSBuild location
+set MSBUILD=%ProgramFiles%\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe
+:: UE4 Version Selector, used to regenerate project files in case they are missing
+set UEVersionSelect=%ProgramFiles(x86)%\Epic Games\Launcher\Engine\Binaries\Win64\UnrealVersionSelector.exe
 
-:: Find full path for our *.uproject file, assuming we're running from project root
-:: Couldn't find a nice way to do this without either a loop or a temp file
-for /f "delims=" %%a in ('dir /s /b *.uproject') do set "PROJECT_DIR=%%a"
+:: If solution already exists, skip generation
+if exist %SOLUTION%.sln goto :soutiongenerated
 
-:: Build command lifted from Rider
-:: Should run after branch change or merge
-%BUILD_SCRIPT% ProjectTentacleEditor Win64 Development -Project=%PROJECT_DIR% -WaitMutex -FromMsBuild
+:: Generate solution files
+"%UEVersionSelect%" /projectfiles %~dp0\%SOLUTION%.uproject
+
+:: Once solution is generated, run msbuild with relevant params
+:soutiongenerated
+"%MSBUILD%" %SOLUTION%.sln /p:Configuration=Development /p:Platform="Win64"
 
 :: Unset env variables and turn echo back on
-set BUILD_SCRIPT=
-set PROJECT_DIR=
-:: set MSBUILD=
+set MSBUILD=
+set SOLUTION=
+set UEVersionSelect=
 @echo on
