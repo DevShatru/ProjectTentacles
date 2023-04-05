@@ -43,6 +43,7 @@ public:
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnExecutingPlayerAction, EActionState, ExecutingAction);
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAmount, AActor*, DamageCauser, EEnemyAttackType, ReceivingAttackType);
+DECLARE_DYNAMIC_DELEGATE(FOnClearingComboCount);
 
 
 /**
@@ -56,6 +57,11 @@ class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGene
 private:
 	static FGenericTeamId TeamId;
 	virtual FGenericTeamId GetGenericTeamId() const override;
+
+	void StopRegenerateStamina();
+	void WaitToRegenStamina();
+	void BeginRegenerateStamina();
+	void RegeneratingStamina();
 	
 protected:
 	// APawn interface
@@ -70,28 +76,53 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
+
+	// Current playing reference to be check if valid
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* CurrentPlayingMontage;
 
+	// Actor variables to set targeting and damaging actor for the incoming damage 
 	UPROPERTY()
 	AEnemyBase* TargetActor;
 
 	UPROPERTY()
 	AEnemyBase* DamagingActor;
 	
-
+	
 	UPROPERTY()
 	EPlayerAttackType CurrentAttackType;
 
-	
+	// Animation montages
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
 	UAnimMontage* EvadeAnimMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
 	TArray<UAnimMontage*> MeleeAttackMontages;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float CurrentStamina = 100.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float MaxStamina = 100.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float CostForEachDodge = 25.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float MinTimeToStartRegen = 3.0f;
+
+	float StaminaRegenTickTime = 0.1f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float StaminaRegenPerSecond = 10.0f;
+
+	// Timer handle for waiting to regen and regening
+	FTimerHandle RegenWaitingTimerHandle;
+	FTimerHandle RegenStaminaTimerHandle;
 	
 	
+	// input key variables to check
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingForwardKey;
 	
@@ -104,7 +135,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingRightKey;
 
-	
+	// Input direction structure	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
 	
@@ -114,10 +145,11 @@ protected:
 
 public:
 
+	// Delegate signature
 	FOnExecutingPlayerAction OnExecutePlayerAction;
-
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
-
+	FOnClearingComboCount OnClearingComboCount;
+	
 	APlayerCharacter();
 
 	// ================================================= 
@@ -152,6 +184,9 @@ public:
 	// ================================================= Get And Set Functions ============================================
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}
 
+	float GetCurrentStamina() const {return CurrentStamina;}
+	void SetStamina(float NewStamina) {CurrentStamina = NewStamina;}
+	
 	AEnemyBase* GetTargetActor() const {return TargetActor;}
 	void SetTargetActor(AEnemyBase* NewTargetActor);
 
@@ -171,4 +206,11 @@ public:
 
 	UFUNCTION()
 	virtual void ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType EnemyAttackType) override;
+
+	UFUNCTION()
+	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
+
+	
+
+	
 };

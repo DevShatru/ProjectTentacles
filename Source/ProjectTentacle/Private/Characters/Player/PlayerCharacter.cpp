@@ -35,6 +35,7 @@ FGenericTeamId APlayerCharacter::GetGenericTeamId() const
 	return TeamId;
 }
 
+
 // =================================== Begin Play, Set up InputComponent, Tick ==============================
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -123,7 +124,7 @@ void APlayerCharacter::TryMeleeAttack()
 	
 }
 
-// // ====================================================== Evade ===============================================
+// ====================================================== Evade ===============================================
 void APlayerCharacter::TryEvade()
 {
 	// if player is able to dodge, make dodge
@@ -135,10 +136,15 @@ void APlayerCharacter::TryEvade()
 void APlayerCharacter::TryDodge()
 {
 	// if player is able to dodge, make dodge
-	if(CurrentActionState == EActionState::Idle)
+	if(CurrentActionState == EActionState::Idle && CurrentStamina > CostForEachDodge)
 	{
 		StopAnimMontage();	
+		StopRegenerateStamina();
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Dodge);
+
+		CurrentStamina -= CostForEachDodge;
+		
+		WaitToRegenStamina();
 	}
 }
 
@@ -156,6 +162,53 @@ void APlayerCharacter::SetTargetActor(AEnemyBase* NewTargetActor)
 		IEnemyWidgetInterface::Execute_ShowPlayerTargetIndicator(NewTargetActor);
 	
 	TargetActor = NewTargetActor;
+}
+
+// =============================================== Stamina Regen ================================================
+void APlayerCharacter::WaitToRegenStamina()
+{
+	const UWorld* World = GetWorld();
+	if(World == nullptr) return;
+		
+	World->GetTimerManager().SetTimer(RegenWaitingTimerHandle,this, &APlayerCharacter::BeginRegenerateStamina, MinTimeToStartRegen, false, -1);
+}
+
+void APlayerCharacter::BeginRegenerateStamina()
+{
+	const UWorld* World = GetWorld();
+	if(World == nullptr) return;
+	
+	World->GetTimerManager().SetTimer(RegenStaminaTimerHandle,this, &APlayerCharacter::RegeneratingStamina, StaminaRegenTickTime, true, -1);
+
+	// 	return;
+	// }
+	//
+	// const bool bIsTimerPaused = World->GetTimerManager().IsTimerPaused(RegenStaminaTimerHandle);
+	//
+	// if(bIsTimerPaused)
+	// {
+	// 	World->GetTimerManager().UnPauseTimer(RegenStaminaTimerHandle);
+	// }
+	//
+}
+
+void APlayerCharacter::RegeneratingStamina()
+{
+	const float StaminaRegenPerCustomTick = StaminaRegenPerSecond * StaminaRegenTickTime;
+
+	CurrentStamina = UKismetMathLibrary::FClamp(CurrentStamina + StaminaRegenPerCustomTick, 0 ,MaxStamina);
+	
+	if(CurrentStamina >= MaxStamina)
+		StopRegenerateStamina();
+}
+
+void APlayerCharacter::StopRegenerateStamina()
+{
+	const UWorld* World = GetWorld();
+	if(World == nullptr) return;
+	
+	World->GetTimerManager().ClearTimer(RegenWaitingTimerHandle);
+	World->GetTimerManager().ClearTimer(RegenStaminaTimerHandle);
 }
 
 
@@ -181,6 +234,13 @@ void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount,
 	IDamageInterface::ReceiveDamageFromEnemy_Implementation(DamageAmount, DamageCauser, EnemyAttackType);
 
 	bool bExecuted = OnReceivingIncomingDamage.ExecuteIfBound(DamageAmount, DamageCauser, EnemyAttackType);
+}
+
+void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
+{
+	Super::ActionEnd_Implementation(BufferingCheck);
+
+	const bool bExecuted = OnClearingComboCount.ExecuteIfBound();
 }
 
 

@@ -42,6 +42,7 @@ void UPlayerActionComponent::InitializeOwnerRef()
 
 	PlayerOwnerRef->OnExecutePlayerAction.BindDynamic(this, &UPlayerActionComponent::ExecutePlayerAction);
 	PlayerOwnerRef->OnReceivingIncomingDamage.BindDynamic(this, &UPlayerActionComponent::ReceivingDamage);
+	PlayerOwnerRef->OnClearingComboCount.BindDynamic(this, &UPlayerActionComponent::ResetComboCount);
 }
 
 void UPlayerActionComponent::InitializeTimelineComp()
@@ -63,19 +64,21 @@ void UPlayerActionComponent::InitializeTimelineComp()
 void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	ShortFlipKickTimeLine.TickTimeline(DeltaTime);
-	FlyingKickTimeLine.TickTimeline(DeltaTime);
-	FlyingPunchTimeLine.TickTimeline(DeltaTime);
-	SpinKickTimeLine.TickTimeline(DeltaTime);
-	DashingDoubleKickTimeLine.TickTimeline(DeltaTime);
-	CloseToPerformFinisherTimeLine.TickTimeline(DeltaTime);
-	DodgeLerpingTimeLine.TickTimeline(DeltaTime);
 
 	const float PlayerStoredInputX = PlayerOwnerRef->GetPlayerInputDir().GetInputDirectionX();
 	const float PlayerStoredInputY = PlayerOwnerRef->GetPlayerInputDir().GetInputDirectionY();
 	if(PlayerStoredInputX != 0.0f || PlayerStoredInputY != 0.0f)
 		TryToUpdateTarget();
+	
+	const float DeltaWithComboBonus = DeltaTime * (1 + (CurrentComboCount * ComboSpeedMotiplier));
+	ShortFlipKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	FlyingKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	FlyingPunchTimeLine.TickTimeline(DeltaWithComboBonus);
+	SpinKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	DashingDoubleKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	CloseToPerformFinisherTimeLine.TickTimeline(DeltaWithComboBonus);
+	DodgeLerpingTimeLine.TickTimeline(DeltaTime);
+
 }
 
 // ====================================================== Attack ==============================================
@@ -117,6 +120,10 @@ void UPlayerActionComponent::BeginMeleeAttack()
 
 	// set lerping start and end position to variable
 	SetAttackMovementPositions(TargetActorPos);
+
+	// if current action state is waiting for combo, it means player land a successful combo, combo count increment
+	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::WaitForCombo)
+		ComboCountIncrement();
 	
 	// change current action state enum
 	PlayerOwnerRef->SetCurrentActionState(EActionState::Attack);
@@ -139,10 +146,20 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	
 	// Player attack montage
 	CurrentPlayingMontage = MeleeAttackMontages[MAttackRndIndex];
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Default");
+
+	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
+
+
+	
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
 
 	// Start attack movement timeline depends on the result of playering montage
 	StartAttackMovementTimeline(SelectedAttackType);
+}
+
+void UPlayerActionComponent::ComboCountIncrement()
+{
+	CurrentComboCount = UKismetMathLibrary::Clamp((CurrentComboCount+1), 0, MaxComboCount);
 }
 
 void UPlayerActionComponent::FinishEnemy()
@@ -152,7 +169,9 @@ void UPlayerActionComponent::FinishEnemy()
 	
 	// Player attack montage
 	CurrentPlayingMontage = FinisherAnimMontages;
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Default");
+
+	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
 
 	CurrentTarget->PlayFinishedAnimation();
 	CloseToPerformFinisherTimeLine.PlayFromStart();
@@ -198,6 +217,14 @@ void UPlayerActionComponent::StartAttackMovementTimeline(EPlayerAttackType Attac
 		default:
 			break;
 	}
+}
+
+float UPlayerActionComponent::CalculateCurrentComboSpeed()
+{
+	
+	float ComboSpeedBonus = static_cast<float>(CurrentComboCount) * ComboSpeedMotiplier;
+	
+	return 1 + ComboSpeedBonus;
 }
 
 // ====================================================== Evade ===============================================
