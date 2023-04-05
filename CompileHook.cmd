@@ -15,8 +15,11 @@ if exist %SOLUTION%.sln goto :soutiongenerated
 
 :: Once solution is generated, run msbuild with relevant params
 :soutiongenerated
-"%MSBUILD%" %SOLUTION%.sln /p:Configuration=Development /p:Platform="Win64"
-
+@echo on
+echo %MSBUILD%
+echo %SOLUTION%.sln
+"%MSBUILD%" %~dp0\%SOLUTION%.sln /p:Configuration=Development /p:Platform="Win64"
+@echo off
 :: Unset env variables and turn echo back on
 set MSBUILD=
 set SOLUTION=
