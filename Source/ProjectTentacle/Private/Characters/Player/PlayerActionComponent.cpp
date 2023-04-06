@@ -69,7 +69,8 @@ void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	const float PlayerStoredInputY = PlayerOwnerRef->GetPlayerInputDir().GetInputDirectionY();
 	if(PlayerStoredInputX != 0.0f || PlayerStoredInputY != 0.0f)
 		TryToUpdateTarget();
-	
+
+	// delta time will change due to player's combo time
 	const float DeltaWithComboBonus = DeltaTime * (1 + (CurrentComboCount * ComboSpeedMotiplier));
 	ShortFlipKickTimeLine.TickTimeline(DeltaWithComboBonus);
 	FlyingKickTimeLine.TickTimeline(DeltaWithComboBonus);
@@ -138,9 +139,6 @@ void UPlayerActionComponent::BeginMeleeAttack()
 		return;
 	}
 	
-	EnemyCurrentHealth--;
-	RegisteredTarget->SetEnemyHealth(EnemyCurrentHealth);
-
 	// Set damaging actor
 	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
 	

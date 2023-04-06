@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/EnemyBase.h"
 
+#include "BehaviorTree/BehaviorTree.h"
 #include "Characters/Enemies/EnemyBaseController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -49,7 +50,7 @@ void AEnemyBase::BeginPlay()
 		// Bind function and unshow the indicator
 		AttackIndicatorRef = CastedAttackIndicatorWidget;
 		OnUpdatingEnemyAttackIndicator.BindDynamic(AttackIndicatorRef, &UWidget_EnemyAttackIndicator::OnReceivingNewAttackType);
-		//AttackIndicatorRef->UnShowIndicator();
+		AttackIndicatorRef->UnShowIndicator();
 	}
 
 	// Get target icon widget reference
@@ -60,13 +61,29 @@ void AEnemyBase::BeginPlay()
 	{
 		// set variable to casted widget and hide indicator
 		EnemyTargetWidgetRef = CastedTargetedIconWidget;
-		//EnemyTargetWidgetRef->UnShowIndicator();
+		EnemyTargetWidgetRef->UnShowIndicator();
 	}
 
 	// timeline binding
 	FOnTimelineFloat MovingAttackPosUpdate;
 	MovingAttackPosUpdate.BindDynamic(this, &AEnemyBase::UpdateAttackingPosition);
 	AttackMovingTimeline.AddInterpFloat(AttackMovingCurve, MovingAttackPosUpdate);
+}
+
+void AEnemyBase::InitializeBTAndBBComponent()
+{
+	AController* EnemyController = GetController();
+	if(Controller == nullptr) return;
+		
+	AEnemyBaseController* CastedEnemyBaseController =  Cast<AEnemyBaseController>(EnemyController);
+	if(CastedEnemyBaseController == nullptr) return;
+
+	if(CurrentEnemyBaseController == nullptr)
+		CurrentEnemyBaseController = CastedEnemyBaseController;
+	
+
+	if(BBComponent == nullptr && BTComponent != nullptr)
+		BBComponent = BTComponent->GetBlackboardComponent();
 }
 
 // Called every frame
@@ -169,7 +186,7 @@ FVector AEnemyBase::CalculateDestinationForAttackMoving(FVector PlayerPos)
 	IgnoreActors.Add(this);
 	
 	// Capsule trace by channel
-	const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, SelfAttackStartPos, SupposedAttackMovingDestination, UEngineTypes::ConvertToTraceType(ECC_Visibility),false, IgnoreActors,  EDrawDebugTrace::Persistent,Hit,true);
+	const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, SelfAttackStartPos, SupposedAttackMovingDestination, UEngineTypes::ConvertToTraceType(ECC_Visibility),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
 
 	if(!bHit) return SupposedAttackMovingDestination;
 
@@ -223,6 +240,14 @@ void AEnemyBase::UpdateAttackingPosition(float Alpha)
 }
 
 
+void AEnemyBase::ActionEnd_Implementation(bool BufferingCheck)
+{
+	ICharacterActionInterface::ActionEnd_Implementation(BufferingCheck);
+
+	if(BTComponent)
+		const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
+
+}
 
 // ================================================== Interface Functions ============================================
 void AEnemyBase::TryToDamagePlayer_Implementation()
@@ -265,6 +290,9 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 
+	Health = UKismetMathLibrary::Clamp((Health - DamageAmount),0,MaxHealth);
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Enemy Remaining Health %i"), Health));
+	
 	switch (PlayerAttackType)
 	{
 	case EPlayerAttackType::ShortFlipKick:
