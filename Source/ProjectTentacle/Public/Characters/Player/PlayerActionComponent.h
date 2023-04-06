@@ -73,7 +73,24 @@ protected:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
 	UClass* FilteringClass;
+
+
 	
+	// ================================================= Combo Setting ==========================================================
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
+	int32 CurrentComboCount = 0;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
+	int32 MaxComboCount = 3;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
+	float ComboSpeedMotiplier = 0.3f;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
+	float ComboCountExistTime = 5.0f;	
+
+	FTimerHandle ComboResetTimerHandle;
+
 	// ================================================= Combat Variable Setting ================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* EvadeAnimMontage;
@@ -107,6 +124,8 @@ protected:
 	// ================================================== Melee Attack ================================================
 	void BeginMeleeAttack();
 
+	void ComboCountIncrement();
+
 	void FinishEnemy();
 	
 	void SetAttackMovementPositions(FVector TargetPos);
@@ -117,6 +136,14 @@ protected:
 	EPlayerAttackType GetAttackTypeByRndNum(int32 RndNum);
 	
 	void StartAttackMovementTimeline(EPlayerAttackType CurrentAttackType);
+
+	float CalculateCurrentComboSpeed();
+
+	UFUNCTION()
+	void WaitToResetComboCount();
+
+	UFUNCTION()
+	void ResetComboCount() {CurrentComboCount = 0;}
 	
 	// ====================================================== Evade ===================================================
 	void BeginEvade();
@@ -135,11 +162,11 @@ protected:
 	// ================================================== Utility ======================================================
 	void TryToUpdateTarget();
 	
-	TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
-
+	TArray<AEnemyBase*> GetAllOpponentAroundSelf();
+	
 	void InstantRotation(FVector RotatingVector);
 
-	AAttackTargetTester* GetTargetEnemy(TArray<AAttackTargetTester*> OpponentsAroundSelf);
+	AEnemyBase* GetTargetEnemy(TArray<AEnemyBase*> OpponentsAroundSelf);
 
 	static bool IsPlayerCountering(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
 	static bool IsPlayerCanBeDamaged(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);

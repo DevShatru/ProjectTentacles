@@ -18,5 +18,17 @@ public:
 	UBTTask_WaitForTrigger();
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Precision;
+	
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	
+private:
+	
+	float TurnSpeed;
+	AActor* FocalActor;
+	AAIController* Controller;
+	APawn* Pawn;
+
+	float CalculateFlatAngle(const FVector& VectorA, const FVector& VectorB);
 };
