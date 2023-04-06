@@ -42,7 +42,7 @@ void UPlayerActionComponent::InitializeOwnerRef()
 
 	PlayerOwnerRef->OnExecutePlayerAction.BindDynamic(this, &UPlayerActionComponent::ExecutePlayerAction);
 	PlayerOwnerRef->OnReceivingIncomingDamage.BindDynamic(this, &UPlayerActionComponent::ReceivingDamage);
-	PlayerOwnerRef->OnClearingComboCount.BindDynamic(this, &UPlayerActionComponent::ResetComboCount);
+	PlayerOwnerRef->OnClearingComboCount.BindDynamic(this, &UPlayerActionComponent::WaitToResetComboCount);
 }
 
 void UPlayerActionComponent::InitializeTimelineComp()
@@ -122,9 +122,6 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	// set lerping start and end position to variable
 	SetAttackMovementPositions(TargetActorPos);
 
-	// if current action state is waiting for combo, it means player land a successful combo, combo count increment
-	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::WaitForCombo)
-		ComboCountIncrement();
 	
 	// change current action state enum
 	PlayerOwnerRef->SetCurrentActionState(EActionState::Attack);
@@ -132,6 +129,14 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	// TODO: Need To ReadWrite 
 	// Check if Enemy is dying or now, if is, finish him
 	int32 EnemyCurrentHealth = RegisteredTarget->GetEnemyHealth();
+	
+	// Set damaging actor
+	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
+
+	// Stop combo count reset timer handle
+	const UWorld* World = GetWorld();
+	if(!World) return;
+	World->GetTimerManager().ClearTimer(ComboResetTimerHandle);
 
 	if(EnemyCurrentHealth <= 1)
 	{
@@ -139,20 +144,20 @@ void UPlayerActionComponent::BeginMeleeAttack()
 		return;
 	}
 	
-	// Set damaging actor
-	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
+
 	
-	// Player attack montage
+	// Play attack montage
 	CurrentPlayingMontage = MeleeAttackMontages[MAttackRndIndex];
 
 	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
-
-
 	
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
 
 	// Start attack movement timeline depends on the result of playering montage
 	StartAttackMovementTimeline(SelectedAttackType);
+	
+	// combo count increment
+	ComboCountIncrement();
 }
 
 void UPlayerActionComponent::ComboCountIncrement()
@@ -223,6 +228,16 @@ float UPlayerActionComponent::CalculateCurrentComboSpeed()
 	float ComboSpeedBonus = static_cast<float>(CurrentComboCount) * ComboSpeedMotiplier;
 	
 	return 1 + ComboSpeedBonus;
+}
+
+void UPlayerActionComponent::WaitToResetComboCount()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	FTimerManager& WorldTimerManager = World->GetTimerManager();
+
+	WorldTimerManager.SetTimer(ComboResetTimerHandle,this, &UPlayerActionComponent::ResetComboCount, ComboCountExistTime, false, -1);
 }
 
 // ====================================================== Evade ===============================================

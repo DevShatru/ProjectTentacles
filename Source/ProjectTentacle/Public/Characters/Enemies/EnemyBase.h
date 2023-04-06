@@ -27,7 +27,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void InitializeBTAndBBComponent();
+	void InitializeWidgetComponents();
+	
+	void InitializeEnemyControllerRef();
 	
 
 	UPROPERTY(EditDefaultsOnly, Category=Combat)
@@ -61,9 +63,7 @@ protected:
 
 	UPROPERTY()
 	UBehaviorTreeComponent* BTComponent;
-
-	UPROPERTY()
-	UBlackboardComponent* BBComponent;
+	
 	
 	// Enemy Property variable
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
@@ -117,6 +117,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
 	UCurveFloat* AttackMovingCurve;
 
+	bool IsAttacking = false;
+	
 	// Attacking Animation
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Animations)
 	UAnimMontage* CounterableAttackMontage;

@@ -41,6 +41,13 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitializeWidgetComponents();
+
+	InitializeEnemyControllerRef();
+}
+
+void AEnemyBase::InitializeWidgetComponents()
+{
 	// Get attack indicator widget reference
 	UUserWidget* ReturnAttackIndicatorWidget = EnemyAttackIndicatorWidgetComponent->GetWidget();
 	UWidget_EnemyAttackIndicator* CastedAttackIndicatorWidget = Cast<UWidget_EnemyAttackIndicator>(ReturnAttackIndicatorWidget);
@@ -70,20 +77,19 @@ void AEnemyBase::BeginPlay()
 	AttackMovingTimeline.AddInterpFloat(AttackMovingCurve, MovingAttackPosUpdate);
 }
 
-void AEnemyBase::InitializeBTAndBBComponent()
+void AEnemyBase::InitializeEnemyControllerRef()
 {
+	
+	// Get enemy base controller
 	AController* EnemyController = GetController();
 	if(Controller == nullptr) return;
 		
 	AEnemyBaseController* CastedEnemyBaseController =  Cast<AEnemyBaseController>(EnemyController);
 	if(CastedEnemyBaseController == nullptr) return;
 
+	// Assign Enemy base controller
 	if(CurrentEnemyBaseController == nullptr)
 		CurrentEnemyBaseController = CastedEnemyBaseController;
-	
-
-	if(BBComponent == nullptr && BTComponent != nullptr)
-		BBComponent = BTComponent->GetBlackboardComponent();
 }
 
 // Called every frame
@@ -134,6 +140,8 @@ void AEnemyBase::ExecuteAttack()
 	
 	const FVector DestinationPos = CalculateDestinationForAttackMoving(PlayerCurrentPos);
 	AttackMovingDestination = DestinationPos;
+
+	IsAttacking = true;
 	
 	// switch case on current attack type to fire different animation 
 	switch (CurrentAttackType)
@@ -244,6 +252,8 @@ void AEnemyBase::ActionEnd_Implementation(bool BufferingCheck)
 {
 	ICharacterActionInterface::ActionEnd_Implementation(BufferingCheck);
 
+	IsAttacking = false;
+	
 	if(BTComponent)
 		const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
 
@@ -289,10 +299,26 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	EPlayerAttackType PlayerAttackType)
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
-
-	Health = UKismetMathLibrary::Clamp((Health - DamageAmount),0,MaxHealth);
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Enemy Remaining Health %i"), Health));
 	
+	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate 
+	if(IsAttacking)
+	{
+		IsAttacking = false;
+		
+		StopAnimMontage();
+		
+		if(AttackIndicatorRef)
+			AttackIndicatorRef->UnShowIndicator();
+		
+		if(BTComponent)
+			const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
+	}
+	
+
+	// clamp health that is deducted 
+	Health = UKismetMathLibrary::Clamp((Health - DamageAmount),0,MaxHealth);
+
+	// Switch case on player's attack type to play different damage receive animation
 	switch (PlayerAttackType)
 	{
 	case EPlayerAttackType::ShortFlipKick:

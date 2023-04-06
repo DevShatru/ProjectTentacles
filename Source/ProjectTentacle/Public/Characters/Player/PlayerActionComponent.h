@@ -86,8 +86,10 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
 	float ComboSpeedMotiplier = 0.3f;
 
-	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
+	float ComboCountExistTime = 5.0f;	
 
+	FTimerHandle ComboResetTimerHandle;
 
 	// ================================================= Combat Variable Setting ================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
@@ -136,6 +138,9 @@ protected:
 	void StartAttackMovementTimeline(EPlayerAttackType CurrentAttackType);
 
 	float CalculateCurrentComboSpeed();
+
+	UFUNCTION()
+	void WaitToResetComboCount();
 
 	UFUNCTION()
 	void ResetComboCount() {CurrentComboCount = 0;}
