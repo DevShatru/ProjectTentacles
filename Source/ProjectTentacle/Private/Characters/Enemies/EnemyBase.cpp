@@ -4,6 +4,7 @@
 #include "Characters/Enemies/EnemyBase.h"
 
 #include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBaseController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -90,6 +91,10 @@ void AEnemyBase::InitializeEnemyControllerRef()
 	// Assign Enemy base controller
 	if(CurrentEnemyBaseController == nullptr)
 		CurrentEnemyBaseController = CastedEnemyBaseController;
+
+	UBlackboardComponent* CastedBBComponent = CastedEnemyBaseController->GetBlackboardComponent();
+	if(CastedBBComponent)
+		BBComponent = CastedBBComponent;
 }
 
 // Called every frame

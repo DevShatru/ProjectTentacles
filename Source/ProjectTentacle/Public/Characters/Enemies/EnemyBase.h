@@ -30,7 +30,6 @@ protected:
 	void InitializeWidgetComponents();
 	
 	void InitializeEnemyControllerRef();
-	
 
 	UPROPERTY(EditDefaultsOnly, Category=Combat)
 	float AttackCompletionTime = 2.0f;
@@ -64,6 +63,8 @@ protected:
 	UPROPERTY()
 	UBehaviorTreeComponent* BTComponent;
 	
+	UPROPERTY()
+	UBlackboardComponent* BBComponent;
 	
 	// Enemy Property variable
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
@@ -176,6 +177,9 @@ public:
 	int32 GetEnemyHealth() const { return Health;}
 	void SetEnemyHealth(int32 NewHealth) {Health = NewHealth;}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UBlackboardComponent* GetBBComponent() const {return BBComponent;}
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	EEnemyAttackType GetEnemyStoredAttackType() const {return CurrentAttackType;}
 
