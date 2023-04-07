@@ -3,6 +3,7 @@
 
 #include "Characters/Player/PlayerActionComponent.h"
 
+#include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Player/PlayerCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -41,6 +42,7 @@ void UPlayerActionComponent::InitializeOwnerRef()
 
 	PlayerOwnerRef->OnExecutePlayerAction.BindDynamic(this, &UPlayerActionComponent::ExecutePlayerAction);
 	PlayerOwnerRef->OnReceivingIncomingDamage.BindDynamic(this, &UPlayerActionComponent::ReceivingDamage);
+	PlayerOwnerRef->OnClearingComboCount.BindDynamic(this, &UPlayerActionComponent::WaitToResetComboCount);
 }
 
 void UPlayerActionComponent::InitializeTimelineComp()
@@ -62,19 +64,22 @@ void UPlayerActionComponent::InitializeTimelineComp()
 void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	ShortFlipKickTimeLine.TickTimeline(DeltaTime);
-	FlyingKickTimeLine.TickTimeline(DeltaTime);
-	FlyingPunchTimeLine.TickTimeline(DeltaTime);
-	SpinKickTimeLine.TickTimeline(DeltaTime);
-	DashingDoubleKickTimeLine.TickTimeline(DeltaTime);
-	CloseToPerformFinisherTimeLine.TickTimeline(DeltaTime);
-	DodgeLerpingTimeLine.TickTimeline(DeltaTime);
 
 	const float PlayerStoredInputX = PlayerOwnerRef->GetPlayerInputDir().GetInputDirectionX();
 	const float PlayerStoredInputY = PlayerOwnerRef->GetPlayerInputDir().GetInputDirectionY();
 	if(PlayerStoredInputX != 0.0f || PlayerStoredInputY != 0.0f)
 		TryToUpdateTarget();
+
+	// delta time will change due to player's combo time
+	const float DeltaWithComboBonus = DeltaTime * (1 + (CurrentComboCount * ComboSpeedMotiplier));
+	ShortFlipKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	FlyingKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	FlyingPunchTimeLine.TickTimeline(DeltaWithComboBonus);
+	SpinKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	DashingDoubleKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	CloseToPerformFinisherTimeLine.TickTimeline(DeltaWithComboBonus);
+	DodgeLerpingTimeLine.TickTimeline(DeltaTime);
+
 }
 
 // ====================================================== Attack ==============================================
@@ -84,7 +89,7 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	if(PlayerOwnerRef == nullptr) return;
 
 	// if player is not having target, return;
-	AAttackTargetTester* RegisteredTarget = PlayerOwnerRef->GetTargetActor();
+	AEnemyBase* RegisteredTarget = PlayerOwnerRef->GetTargetActor();
 	if(PlayerOwnerRef->GetTargetActor() == nullptr) return;
 	
 	// Get max number of attack animation montage array
@@ -116,6 +121,7 @@ void UPlayerActionComponent::BeginMeleeAttack()
 
 	// set lerping start and end position to variable
 	SetAttackMovementPositions(TargetActorPos);
+
 	
 	// change current action state enum
 	PlayerOwnerRef->SetCurrentActionState(EActionState::Attack);
@@ -123,6 +129,14 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	// TODO: Need To ReadWrite 
 	// Check if Enemy is dying or now, if is, finish him
 	int32 EnemyCurrentHealth = RegisteredTarget->GetEnemyHealth();
+	
+	// Set damaging actor
+	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
+
+	// Stop combo count reset timer handle
+	const UWorld* World = GetWorld();
+	if(!World) return;
+	World->GetTimerManager().ClearTimer(ComboResetTimerHandle);
 
 	if(EnemyCurrentHealth <= 1)
 	{
@@ -130,28 +144,37 @@ void UPlayerActionComponent::BeginMeleeAttack()
 		return;
 	}
 	
-	EnemyCurrentHealth--;
-	RegisteredTarget->SetEnemyHealth(EnemyCurrentHealth);
 
-	// Set damaging actor
-	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
 	
-	// Player attack montage
+	// Play attack montage
 	CurrentPlayingMontage = MeleeAttackMontages[MAttackRndIndex];
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Default");
+
+	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
+	
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
 
 	// Start attack movement timeline depends on the result of playering montage
 	StartAttackMovementTimeline(SelectedAttackType);
+	
+	// combo count increment
+	ComboCountIncrement();
+}
+
+void UPlayerActionComponent::ComboCountIncrement()
+{
+	CurrentComboCount = UKismetMathLibrary::Clamp((CurrentComboCount+1), 0, MaxComboCount);
 }
 
 void UPlayerActionComponent::FinishEnemy()
 {
-	AAttackTargetTester* CurrentTarget = PlayerOwnerRef->GetTargetActor();
+	AEnemyBase* CurrentTarget = PlayerOwnerRef->GetTargetActor();
 	if(CurrentTarget == nullptr) return;
 	
 	// Player attack montage
 	CurrentPlayingMontage = FinisherAnimMontages;
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Default");
+
+	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
 
 	CurrentTarget->PlayFinishedAnimation();
 	CloseToPerformFinisherTimeLine.PlayFromStart();
@@ -199,6 +222,24 @@ void UPlayerActionComponent::StartAttackMovementTimeline(EPlayerAttackType Attac
 	}
 }
 
+float UPlayerActionComponent::CalculateCurrentComboSpeed()
+{
+	
+	float ComboSpeedBonus = static_cast<float>(CurrentComboCount) * ComboSpeedMotiplier;
+	
+	return 1 + ComboSpeedBonus;
+}
+
+void UPlayerActionComponent::WaitToResetComboCount()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	FTimerManager& WorldTimerManager = World->GetTimerManager();
+
+	WorldTimerManager.SetTimer(ComboResetTimerHandle,this, &UPlayerActionComponent::ResetComboCount, ComboCountExistTime, false, -1);
+}
+
 // ====================================================== Evade ===============================================
 
 void UPlayerActionComponent::BeginEvade()
@@ -234,7 +275,7 @@ void UPlayerActionComponent::BeginCounterAttack(AActor* CounteringTarget)
 
 	PlayerOwnerRef->SetCurrentActionState(EActionState::SpecialAttack);
 
-	AAttackTargetTester* CastedTarget = Cast<AAttackTargetTester>(CounteringTarget);
+	AEnemyBase* CastedTarget = Cast<AEnemyBase>(CounteringTarget);
 	if(CastedTarget == nullptr) return;
 
 	
@@ -331,13 +372,13 @@ UAnimMontage* UPlayerActionComponent::DecideDodgingMontage(FVector PlayerDodging
 void UPlayerActionComponent::TryToUpdateTarget()
 {
 	// Get All enemy around player
-	TArray<AAttackTargetTester*> OpponentAroundSelf = GetAllOpponentAroundSelf();
+	TArray<AEnemyBase*> OpponentAroundSelf = GetAllOpponentAroundSelf();
 	
 	// if there is no opponent around, simply return
 	if(OpponentAroundSelf.Num() == 0) return;
 	
 	// Get target direction to face to
-	AAttackTargetTester* ResultFacingEnemy = GetTargetEnemy(OpponentAroundSelf);
+	AEnemyBase* ResultFacingEnemy = GetTargetEnemy(OpponentAroundSelf);
 	
 	// if there is no direction, return
 	if(ResultFacingEnemy == nullptr) return;
@@ -347,10 +388,10 @@ void UPlayerActionComponent::TryToUpdateTarget()
 		PlayerOwnerRef->SetTargetActor(ResultFacingEnemy);
 }
 
-TArray<AAttackTargetTester*> UPlayerActionComponent::GetAllOpponentAroundSelf()
+TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 {
 	TArray<AActor*> FoundActorList;
-	TArray<AAttackTargetTester*> ReturnActors;
+	TArray<AEnemyBase*> ReturnActors;
 	
 	const UWorld* World = GetWorld();
 	if(World == nullptr) return ReturnActors;
@@ -366,7 +407,7 @@ TArray<AAttackTargetTester*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 	{
 		for (AActor* EachFoundActor : FoundActorList)
 		{
-			AAttackTargetTester* FoundCharacter = Cast<AAttackTargetTester>(EachFoundActor);
+			AEnemyBase* FoundCharacter = Cast<AEnemyBase>(EachFoundActor);
 			if(FoundCharacter != nullptr) ReturnActors.Add(FoundCharacter);
 		}
 	}
@@ -381,7 +422,7 @@ void UPlayerActionComponent::InstantRotation(FVector RotatingVector)
 	PlayerOwnerRef->SetActorRotation(InputRotation);
 }
 
-AAttackTargetTester* UPlayerActionComponent::GetTargetEnemy(TArray<AAttackTargetTester*> OpponentsAroundSelf)
+AEnemyBase* UPlayerActionComponent::GetTargetEnemy(TArray<AEnemyBase*> OpponentsAroundSelf)
 {
 	const FInputDirection OwnerInputDirection = PlayerOwnerRef->GetPlayerInputDir();
 
@@ -416,7 +457,7 @@ AAttackTargetTester* UPlayerActionComponent::GetTargetEnemy(TArray<AAttackTarget
 	}
 	
 	// set first one as closest target and iterating from opponents list
-	AAttackTargetTester* ReturnTarget = OpponentsAroundSelf[0];
+	AEnemyBase* ReturnTarget = OpponentsAroundSelf[0];
 	
 	// Set a fake dot product
 	float TargetDotProduct = -1.0f;
