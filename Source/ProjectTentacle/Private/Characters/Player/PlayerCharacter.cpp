@@ -5,7 +5,6 @@
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -36,26 +35,11 @@ FGenericTeamId APlayerCharacter::GetGenericTeamId() const
 	return TeamId;
 }
 
+
 // =================================== Begin Play, Set up InputComponent, Tick ==============================
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// // Set up gameplay key bindings
-	// check(PlayerInputComponent);
-	// PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-	// PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
-	// PlayerInputComponent->BindAction("Evade", IE_Pressed, this, &APlayerCharacter::TryEvade);
-	// PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &APlayerCharacter::TryMeleeAttack);
-	// PlayerInputComponent->BindAction("Dodge", IE_Pressed, this, &APlayerCharacter::TryDodge);
-	//
-	// // We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// // "turn" handles devices that provide an absolute delta, such as a mouse.
-	// // "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	// PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	// PlayerInputComponent->BindAxis("TurnRate", this, &APlayerCharacter::TurnAtRate);
-	// PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	// PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -63,22 +47,6 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	CharacterCurrentHealth = CharacterMaxHealth;
-
-	InitializeTimeLineComp();
-}
-
-void APlayerCharacter::InitializeTimeLineComp()
-{
-	FOnTimelineFloat MovingAttackPosUpdate;
-	MovingAttackPosUpdate.BindDynamic(this, &APlayerCharacter::MovingAttackMovement);
-	ShortFlipKickTimeLine.AddInterpFloat(ShortFlipKickCurve, MovingAttackPosUpdate);
-	FlyingKickTimeLine.AddInterpFloat(FlyingKickCurve, MovingAttackPosUpdate);
-	FlyingPunchTimeLine.AddInterpFloat(FlyingPunchCurve, MovingAttackPosUpdate);
-	SpinKickTimeLine.AddInterpFloat(SpinKickCurve, MovingAttackPosUpdate);
-	DashingDoubleKickTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
-	CloseToPerformFinisherTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
-	DodgeLerpingTimeLine.AddInterpFloat(DodgeLerpingCurve, MovingAttackPosUpdate);
-
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -86,8 +54,7 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	const APlayerController* PlayerControl = GetWorld()->GetFirstPlayerController();
-	
-	// // reset input vector
+	// reset input vector
 	if(PlayerControl->WasInputKeyJustReleased(MovingForwardKey) || PlayerControl->WasInputKeyJustReleased(MovingBackKey))
 		InputDirection.SetInputDirectionY(0.0f);
 	
@@ -95,44 +62,6 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 		InputDirection.SetInputDirectionX(0.0f);
 
 	
-	ShortFlipKickTimeLine.TickTimeline(DeltaSeconds);
-	FlyingKickTimeLine.TickTimeline(DeltaSeconds);
-	FlyingPunchTimeLine.TickTimeline(DeltaSeconds);
-	SpinKickTimeLine.TickTimeline(DeltaSeconds);
-	DashingDoubleKickTimeLine.TickTimeline(DeltaSeconds);
-	CloseToPerformFinisherTimeLine.TickTimeline(DeltaSeconds);
-	DodgeLerpingTimeLine.TickTimeline(DeltaSeconds);
-}
-
-float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
-	AActor* DamageCauser)
-{
-	if(CurrentActionState == EActionState::Evade)
-	{
-		StopAnimMontage();
-		BeginCounterAttack(DamageCauser);
-	}
-
-	if(CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::Attack)
-	{
-		if(CurrentActionState == EActionState::Attack)
-		{
-			StopAnimMontage();	
-		}
-
-		// TODO: Damage player
-
-		// Player Play receiving damage montage
-		if(ReceiveDamageMontage == nullptr) return DamageAmount;
-
-		CurrentActionState = EActionState::Recovering;
-	
-		CurrentPlayingMontage = ReceiveDamageMontage;
-		
-		PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
-	}
-	
-	return DamageAmount;
 }
 
 
@@ -186,390 +115,107 @@ void APlayerCharacter::MoveRight(float Value)
 }
 
 
-// ====================================================== Attack ==============================================
+// // ====================================================== Attack ==============================================
 void APlayerCharacter::TryMeleeAttack()
 {
 	// if player is recovering from action or is dodging, return
 	if(CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::WaitForCombo)
-		BeginMeleeAttack();
-}
-
-void APlayerCharacter::BeginMeleeAttack()
-{
-	// Get max number of attack animation montage array
-	const int32 MAttackMontagesNum = MeleeAttackMontages.Num();
-
-	// Get random number from 0 to max number of attack animation montage array
-	const int32 MAttackRndIndex = UKismetMathLibrary::RandomIntegerInRange(0, MAttackMontagesNum - 1);
+		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Attack);
 	
-	// Validation Check
-	if(MeleeAttackMontages[MAttackRndIndex] == nullptr) return;
-
-	// 
-	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(MAttackRndIndex);
-
-	// Get All enemy around player
-	TArray<AAttackTargetTester*> OpponentAroundSelf = GetAllOpponentAroundSelf();
-
-	// if there is no opponent around, simply return
-	if(OpponentAroundSelf.Num() == 0) return;
-
-	// Get target direction to face to
-	AAttackTargetTester* ResultFacingEnemy = GetTargetEnemy(OpponentAroundSelf);
-
-	// if there is no direction, return
-	if(ResultFacingEnemy == nullptr) return;
-	
-
-	// Store target actor and selected attack type references for later anim notify usage
-	TargetActor = ResultFacingEnemy;
-	const FVector TargetActorPos = TargetActor->GetActorLocation();
-	const FVector PlayerPos = GetActorLocation();
-
-	CurrentAttackType = SelectedAttackType;
-
-	
-	
-	// simply make player and targeted enemy rotate to each other
-	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActorPos - PlayerPos);
-	const FVector FacingPlayerDir = UKismetMathLibrary::Normal(PlayerPos - TargetActorPos);
-	InstantRotation(FacingEnemyDir);
-	TargetActor->InstantRotation(FacingPlayerDir);
-
-	// set lerping start and end position to variable
-	SetAttackMovementPositions(TargetActorPos);
-	
-	// change current action state enum
-	CurrentActionState = EActionState::Attack;
-
-	// TODO: Need To ReadWrite 
-	// Check if Enemy is dying or now, if is, finish him
-	int32 EnemyCurrentHealth = TargetActor->GetEnemyHealth();
-
-	if(EnemyCurrentHealth <= 1)
-	{
-		FinishEnemy();
-		return;
-	}
-	
-	EnemyCurrentHealth--;
-	TargetActor->SetEnemyHealth(EnemyCurrentHealth);
-
-	
-	// Player attack montage
-	CurrentPlayingMontage = MeleeAttackMontages[MAttackRndIndex];
-	PlayAnimMontage(CurrentPlayingMontage, 1, "Default");
-
-	// Start attack movement timeline depends on the result of playering montage
-	StartAttackMovementTimeline(SelectedAttackType);
-}
-
-void APlayerCharacter::FinishEnemy()
-{
-	const FVector TargetPos = TargetActor->GetActorLocation();
-	const FVector SelfPos = GetActorLocation();
-	
-	const FVector TargetToSelfDir = UKismetMathLibrary::Normal(SelfPos - TargetPos);
-
-	// Player attack montage
-	CurrentPlayingMontage = FinisherAnimMontages;
-	PlayAnimMontage(CurrentPlayingMontage, 1, "Default");
-
-	TargetActor->PlayFinishedAnimation();
-	CloseToPerformFinisherTimeLine.PlayFromStart();
-}
-
-void APlayerCharacter::SetAttackMovementPositions(FVector TargetPos)
-{
-	MovingStartPos = GetActorLocation();
-
-	// Get direction from target to player
-	FVector OffsetWithoutZ = MovingStartPos - TargetPos;
-	OffsetWithoutZ.Z = 0;
-	const FVector DirFromTargetToPlayer = UKismetMathLibrary::Normal(OffsetWithoutZ);
-
-	// Get lerp end position
-	MovingEndPos = TargetPos + (DirFromTargetToPlayer * 80);
-}
-
-EPlayerAttackType APlayerCharacter::GetAttackTypeByRndNum(int32 RndNum)
-{
-	return static_cast<EPlayerAttackType>(RndNum);
-}
-
-void APlayerCharacter::StartAttackMovementTimeline(EPlayerAttackType AttackType)
-{
-	switch (AttackType)
-	{
-		case EPlayerAttackType::ShortFlipKick:
-			ShortFlipKickTimeLine.PlayFromStart();
-			break;
-		case EPlayerAttackType::FlyingKick:
-			FlyingKickTimeLine.PlayFromStart();
-			break;
-		case EPlayerAttackType::FlyingPunch:
-			FlyingPunchTimeLine.PlayFromStart();
-			break;
-		case EPlayerAttackType::SpinKick:
-			SpinKickTimeLine.PlayFromStart();
-			break;
-		case EPlayerAttackType::DashingDoubleKick:
-			DashingDoubleKickTimeLine.PlayFromStart();
-			break;
-		default:
-			break;
-	}
 }
 
 // ====================================================== Evade ===============================================
 void APlayerCharacter::TryEvade()
 {
 	// if player is able to dodge, make dodge
-	if(CurrentActionState == EActionState::Idle) BeginEvade();
+	if(CurrentActionState == EActionState::Idle)
+		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Evade);
 }
 
-void APlayerCharacter::BeginEvade()
-{
-	// if evade montage is null pointer, just return
-	if(EvadeAnimMontage == nullptr) return;
-
-	CurrentActionState = EActionState::Evade;
-
-	CurrentPlayingMontage = EvadeAnimMontage;
-
-	const int32 RndPerformIndex = UKismetMathLibrary::RandomIntegerInRange(0,1);
-
-	if(RndPerformIndex == 0)
-	{
-		PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeRight");
-		return;
-	}
-	
-	PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeLeft");
-}
-
-
-
-// ================================================== Counter ======================================================
-void APlayerCharacter::BeginCounterAttack(AActor* CounteringTarget)
-{
-	// if Dodge montage is null pointer, just return
-	if(CounterAttackMontages == nullptr) return;
-
-	CurrentActionState = EActionState::SpecialAttack;
-
-	AAttackTargetTester* CastedTarget = Cast<AAttackTargetTester>(CounteringTarget);
-	if(CastedTarget == nullptr) return;
-
-	TargetActor = CastedTarget;
-	
-	CurrentPlayingMontage = CounterAttackMontages;
-
-	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActor->GetActorLocation() - GetActorLocation());
-	InstantRotation(FacingEnemyDir);
-	
-	PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
-}
-
-// ==================================================== Dodge ===============================================
 
 void APlayerCharacter::TryDodge()
 {
 	// if player is able to dodge, make dodge
-	if(CurrentActionState == EActionState::Idle)
+	if(CurrentActionState == EActionState::Idle && CurrentStamina > CostForEachDodge)
 	{
 		StopAnimMontage();	
-		BeginDodge();
+		StopRegenerateStamina();
+		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Dodge);
+
+		CurrentStamina -= CostForEachDodge;
+		
+		WaitToRegenStamina();
 	}
 }
 
-void APlayerCharacter::BeginDodge()
+void APlayerCharacter::SetTargetActor(AEnemyBase* NewTargetActor)
 {
-	// Get Player facing direction
-	const FVector PlayerFaceDir = GetActorForwardVector();
-
-	// Get dodging direction
-	const FVector PlayerDodgingDir = DecideDodgingDirection(PlayerFaceDir);
-
-	// Get dodging montage depends on dodging direction
-	UAnimMontage* PlayerDodgingMontage = FrontRollingMontage;
-	InstantRotation(PlayerDodgingDir);
-	//UAnimMontage* PlayerDodgingMontage = DecideDodgingMontage(PlayerDodgingDir);
-
-	// Set action state and playing montage to dodging
-	CurrentActionState = EActionState::Dodge;
-	CurrentPlayingMontage = PlayerDodgingMontage;
-
-	// Set moving locations
-	const FVector DodgeStart = GetActorLocation();
-	const FVector DodgingDest = DodgeStart + (PlayerDodgingDir * DodgeDistance);
-	MovingStartPos = DodgeStart;
-	MovingEndPos = DodgingDest;
-
-	
-
-	// Play both lerping timeline and montage
-	PlayAnimMontage(CurrentPlayingMontage, 1 , NAME_None);
-	DodgeLerpingTimeLine.PlayFromStart();
-}
-
-FVector APlayerCharacter::DecideDodgingDirection(FVector PlayerFaceDir)
-{
-	
-	// if input direction is both 0, it means player didn't 
-	if(InputDirection.GetInputDirectionX() == 0 && InputDirection.GetInputDirectionY() == 0)
+	// if target actor is not null ptr, unshow its target icon
+	if(TargetActor != nullptr)
 	{
-		const FVector PlayerBackDir = -1 * PlayerFaceDir;
-		return PlayerBackDir;
+		if(TargetActor->GetClass()->ImplementsInterface(UEnemyWidgetInterface::StaticClass()))
+			IEnemyWidgetInterface::Execute_UnShowPlayerTargetIndicator(TargetActor);
 	}
 	
-	// Get input direction
-	const FVector SelfPos = GetActorLocation();
-	const FRotator Rotation = Controller->GetControlRotation();
-	const FRotator YawRotation(0, Rotation.Yaw, 0);
-	const FVector RightX = UKismetMathLibrary::GetRightVector(YawRotation);
-	const FVector ForwardY = UKismetMathLibrary::GetForwardVector(YawRotation);
-	const FVector RightInputDir = RightX * InputDirection.GetInputDirectionX();
-	const FVector ForwardInputDir = ForwardY * InputDirection.GetInputDirectionY();
-	const FVector InputDest = SelfPos + ((RightInputDir * 50) + (ForwardInputDir * 50));
-	const FVector SelfToInputDestDir = UKismetMathLibrary::GetDirectionUnitVector(SelfPos, InputDest);
-
-	return SelfToInputDestDir;
+	
+	if(NewTargetActor->GetClass()->ImplementsInterface(UEnemyWidgetInterface::StaticClass()))
+		IEnemyWidgetInterface::Execute_ShowPlayerTargetIndicator(NewTargetActor);
+	
+	TargetActor = NewTargetActor;
 }
 
-UAnimMontage* APlayerCharacter::DecideDodgingMontage(FVector PlayerDodgingDirection)
+// =============================================== Stamina Regen ================================================
+void APlayerCharacter::WaitToRegenStamina()
 {
-	// Get Player facing direction
-	const FVector PlayerFaceDir = GetActorForwardVector();
-	
-	const float DotProduct = UKismetMathLibrary::Dot_VectorVector(PlayerFaceDir, PlayerDodgingDirection);
-
-	// Dot product is negative = player is dodging backward
-	if(DotProduct < 0)
-	{
-		InstantRotation((-1 * PlayerDodgingDirection));
-		return BackFlipMontage;
-	}
-
-	InstantRotation(PlayerDodgingDirection);
-	return FrontRollingMontage;
-}
-
-// ==================================================== Utility ===============================================
-TArray<AAttackTargetTester*> APlayerCharacter::GetAllOpponentAroundSelf()
-{
-	TArray<AActor*> FoundActorList;
-	TArray<AAttackTargetTester*> ReturnActors;
-	
 	const UWorld* World = GetWorld();
-	if(World == nullptr) return ReturnActors;
-
-	const FVector SelfPos = GetActorLocation();
-
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(this);
-	
-	UKismetSystemLibrary::SphereOverlapActors(World,SelfPos, DetectionRange, FilterType, FilteringClass, IgnoreActors,FoundActorList);
-
-	if(FoundActorList.Num() != 0)
-	{
-		for (AActor* EachFoundActor : FoundActorList)
-		{
-			AAttackTargetTester* FoundCharacter = Cast<AAttackTargetTester>(EachFoundActor);
-			if(FoundCharacter != nullptr) ReturnActors.Add(FoundCharacter);
-		}
-	}
-	
-	return ReturnActors;
-}
-
-void APlayerCharacter::InstantRotation(FVector RotatingVector)
-{
-	const FRotator InputRotation = UKismetMathLibrary::MakeRotFromX(RotatingVector);
-
-	SetActorRotation(InputRotation);
-}
-
-AAttackTargetTester* APlayerCharacter::GetTargetEnemy(TArray<AAttackTargetTester*> OpponentsAroundSelf)
-{
-	const FVector SelfPos = GetActorLocation();
-
-	FVector SelfToInputDestDir;
-
-	const float InputXValue = InputDirection.GetInputDirectionX(); 
-	const float InputYValue = InputDirection.GetInputDirectionY(); 
-	
-	// find out which way is right
-	if(InputXValue != 0 || InputYValue != 0)
-	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		const FVector RightX = UKismetMathLibrary::GetRightVector(YawRotation);
-		const FVector ForwardY = UKismetMathLibrary::GetForwardVector(YawRotation);
-
-		const FVector RightInputDir = RightX * InputDirection.GetInputDirectionX();
-		const FVector ForwardInputDir = ForwardY * InputDirection.GetInputDirectionY();
+	if(World == nullptr) return;
 		
-		const FVector InputDest = SelfPos + ((RightInputDir * 50) + (ForwardInputDir * 50));
-
-		SelfToInputDestDir = UKismetMathLibrary::GetDirectionUnitVector(SelfPos, InputDest);
-	}
-	else
-	{
-		// if there is no input direction, it means player didn't press movement key, it means attack will happen in front of player
-		SelfToInputDestDir = GetActorForwardVector();
-	}
-	
-	// set first one as closest target and iterating from opponents list
-	AAttackTargetTester* ReturnTarget = OpponentsAroundSelf[0];
-	
-	// Set a fake dot product
-	float TargetDotProduct = -1.0f;
-
-	// TODO: Use dot product to check instead of angle
-	for (int32 i = 0; i < OpponentsAroundSelf.Num(); i++)
-	{
-		FVector EachCharacterPos = OpponentsAroundSelf[i]->GetActorLocation();
-
-		EachCharacterPos.Z = SelfPos.Z;
-
-		const FVector SelfToCharacterDir = UKismetMathLibrary::GetDirectionUnitVector(SelfPos, EachCharacterPos);
-
-
-		const float DotProduct = UKismetMathLibrary::Dot_VectorVector(SelfToInputDestDir, SelfToCharacterDir);
-		
-		// if iterating dot product is not correct
-		if(DotProduct < 0.70f) continue;
-
-		// if iterating dotproduct is bigger than current target dot product, it means iterating actor will more likely be our target
-		if(DotProduct > TargetDotProduct)
-		{
-			ReturnTarget = OpponentsAroundSelf[i];
-			TargetDotProduct = DotProduct;
-		}
-	}
-
-	if(TargetDotProduct < 0.70f)
-	{
-		return nullptr;
-	}
-
-	
-	return ReturnTarget;
+	World->GetTimerManager().SetTimer(RegenWaitingTimerHandle,this, &APlayerCharacter::BeginRegenerateStamina, MinTimeToStartRegen, false, -1);
 }
 
-// ========================================== Timeline Function =========================================
-void APlayerCharacter::MovingAttackMovement(float Alpha)
+void APlayerCharacter::BeginRegenerateStamina()
 {
-	const FVector CharacterCurrentPos = GetActorLocation();
+	const UWorld* World = GetWorld();
+	if(World == nullptr) return;
 	
-	const FVector MovingPos = UKismetMathLibrary::VLerp(MovingStartPos, MovingEndPos, Alpha);
+	World->GetTimerManager().SetTimer(RegenStaminaTimerHandle,this, &APlayerCharacter::RegeneratingStamina, StaminaRegenTickTime, true, -1);
 
-	const FVector LaunchingPos = FVector(MovingPos.X, MovingPos.Y, CharacterCurrentPos.Z);
-
-	SetActorLocation(LaunchingPos);
+	// 	return;
+	// }
+	//
+	// const bool bIsTimerPaused = World->GetTimerManager().IsTimerPaused(RegenStaminaTimerHandle);
+	//
+	// if(bIsTimerPaused)
+	// {
+	// 	World->GetTimerManager().UnPauseTimer(RegenStaminaTimerHandle);
+	// }
+	//
 }
+
+void APlayerCharacter::RegeneratingStamina()
+{
+	const float StaminaRegenPerCustomTick = StaminaRegenPerSecond * StaminaRegenTickTime;
+
+	CurrentStamina = UKismetMathLibrary::FClamp(CurrentStamina + StaminaRegenPerCustomTick, 0 ,MaxStamina);
+	
+	if(CurrentStamina >= MaxStamina)
+		StopRegenerateStamina();
+}
+
+void APlayerCharacter::StopRegenerateStamina()
+{
+	const UWorld* World = GetWorld();
+	if(World == nullptr) return;
+	
+	World->GetTimerManager().ClearTimer(RegenWaitingTimerHandle);
+	World->GetTimerManager().ClearTimer(RegenStaminaTimerHandle);
+}
+
+
+
+// =============================================== Utility ================================================
+
+
 
 
 // =========================================== Interface Function =========================================
@@ -577,27 +223,24 @@ void APlayerCharacter::DamagingTarget_Implementation()
 {
 	Super::DamagingTarget_Implementation();
 
-	if(TargetActor == nullptr) return;
+	if(DamagingActor == nullptr) return;
 
-	switch (CurrentAttackType)
-	{
-		case EPlayerAttackType::ShortFlipKick:
-			TargetActor->PlayDamageReceiveAnimation(0);
-			break;
-		case EPlayerAttackType::FlyingKick:
-			TargetActor->PlayDamageReceiveAnimation(1);
-			break;
-		case EPlayerAttackType::FlyingPunch:
-			TargetActor->PlayDamageReceiveAnimation(2);
-			break;
-		case EPlayerAttackType::SpinKick:
-			TargetActor->PlayDamageReceiveAnimation(3);
-			break;
-		case EPlayerAttackType::DashingDoubleKick:
-			TargetActor->PlayDamageReceiveAnimation(4);
-			break;
-		default: ;
-	}
+	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, 1, this, CurrentAttackType);
+}
+
+void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser,
+	EEnemyAttackType EnemyAttackType)
+{
+	IDamageInterface::ReceiveDamageFromEnemy_Implementation(DamageAmount, DamageCauser, EnemyAttackType);
+
+	bool bExecuted = OnReceivingIncomingDamage.ExecuteIfBound(DamageAmount, DamageCauser, EnemyAttackType);
+}
+
+void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
+{
+	Super::ActionEnd_Implementation(BufferingCheck);
+
+	const bool bExecuted = OnClearingComboCount.ExecuteIfBound();
 }
 
 

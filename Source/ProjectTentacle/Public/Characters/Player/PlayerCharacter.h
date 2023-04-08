@@ -6,17 +6,11 @@
 #include "GenericTeamAgentInterface.h"
 #include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
+#include "Characters/Enemies/EnemyBase.h"
+#include "Components/TimelineComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "PlayerCharacter.generated.h"
 
-UENUM(BlueprintType)
-enum class EPlayerAttackType: uint8
-{
-	ShortFlipKick = 0 UMETA(DisplayName = "ShortFlipKick"),
-	FlyingKick = 1 UMETA(DisplayName = "FlyingKick"),
-	FlyingPunch = 2 UMETA(DisplayName = "FlyingPunch"),
-	SpinKick = 3 UMETA(DisplayName = "SpinKick"),
-	DashingDoubleKick = 4 UMETA(DisplayName = "FlyingKick"),
-};
 
 USTRUCT(BlueprintType)
 struct FInputDirection
@@ -46,60 +40,32 @@ public:
 	void SetInputDirectionY(float InputY) {InputDirectionY = InputY;}
 };
 
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnExecutingPlayerAction, EActionState, ExecutingAction);
+DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAmount, AActor*, DamageCauser, EEnemyAttackType, ReceivingAttackType);
+DECLARE_DYNAMIC_DELEGATE(FOnClearingComboCount);
+
+
 /**
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface
+class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IDamageInterface
 {
 	GENERATED_BODY()
 
 private:
-	void InitializeTimeLineComp();
 	static FGenericTeamId TeamId;
 	virtual FGenericTeamId GetGenericTeamId() const override;
+
+	void StopRegenerateStamina();
+	void WaitToRegenStamina();
+	void BeginRegenerateStamina();
+	void RegeneratingStamina();
 	
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	// ================================================== Melee Attack ================================================
-	void BeginMeleeAttack();
-
-	void FinishEnemy();
-	
-	void SetAttackMovementPositions(FVector TargetPos);
-	
-	UFUNCTION()
-	void MovingAttackMovement(float Alpha);
-	
-	EPlayerAttackType GetAttackTypeByRndNum(int32 RndNum);
-	
-	void StartAttackMovementTimeline(EPlayerAttackType CurrentAttackType);
-	
-	// ====================================================== Evade ===================================================
-	void BeginEvade();
-
-	// ================================================== Counter ======================================================
-	void BeginCounterAttack(AActor* CounteringTarget);
-
-	// ================================================== Dodge ========================================================
-
-	void BeginDodge();
-
-	FVector DecideDodgingDirection(FVector PlayerFaceDir);
-
-	UAnimMontage* DecideDodgingMontage(FVector PlayerDodgingDirection);
-	
-	// ================================================== Utility ======================================================
-	TArray<AAttackTargetTester*> GetAllOpponentAroundSelf();
-
-	 void InstantRotation(FVector RotatingVector);
-
-	AAttackTargetTester* GetTargetEnemy(TArray<AAttackTargetTester*> OpponentsAroundSelf);
-	
-
-
 	
 	
 	/** Camera boom positioning the camera behind the character */
@@ -111,25 +77,52 @@ protected:
 	class UCameraComponent* FollowCamera;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
-	UCurveFloat* ShortFlipKickCurve;
+	// Current playing reference to be check if valid
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* CurrentPlayingMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
-	UCurveFloat* FlyingKickCurve;
+	// Actor variables to set targeting and damaging actor for the incoming damage 
+	UPROPERTY()
+	AEnemyBase* TargetActor;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
-	UCurveFloat* FlyingPunchCurve;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
-	UCurveFloat* SpinKickCurve;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
-	UCurveFloat* DashingDoubleKickCurve;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MovingAttackCurve)
-	UCurveFloat* CloseToPerformFinisherCurve;
+	UPROPERTY()
+	AEnemyBase* DamagingActor;
 	
 	
+	UPROPERTY()
+	EPlayerAttackType CurrentAttackType;
+
+	// Animation montages
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
+	UAnimMontage* EvadeAnimMontage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
+	TArray<UAnimMontage*> MeleeAttackMontages;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float CurrentStamina = 100.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float MaxStamina = 100.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float CostForEachDodge = 25.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float MinTimeToStartRegen = 3.0f;
+
+	float StaminaRegenTickTime = 0.1f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
+	float StaminaRegenPerSecond = 10.0f;
+
+	// Timer handle for waiting to regen and regening
+	FTimerHandle RegenWaitingTimerHandle;
+	FTimerHandle RegenStaminaTimerHandle;
+	
+	
+	// input key variables to check
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingForwardKey;
 	
@@ -142,91 +135,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingRightKey;
 
-
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
-	float MaxAngleForFacingEnemy = 45.0f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
-	float DetectionRange = 400.0f;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
-	TArray<TEnumAsByte<EObjectTypeQuery>> FilterType;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
-	UClass* FilteringClass;
-
-	UPROPERTY()
-	AAttackTargetTester* TargetActor;
-
-	UPROPERTY()
-	EPlayerAttackType CurrentAttackType;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=FinisherMontages)
-	UAnimMontage* FinisherAnimMontages;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DamageReceiveMontages)
-	UAnimMontage* ReceiveDamageMontage;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DamageReceiveMontages)
-	UAnimMontage* CounterAttackMontages;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DodgeSetting)
-	float DodgeDistance = 250.0f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DodgeSetting)
-	UCurveFloat* DodgeLerpingCurve;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DodgeSetting)
-	UAnimMontage* BackFlipMontage;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DodgeSetting)
-	UAnimMontage* FrontRollingMontage;
-	
+	// Input direction structure	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
-
-	FTimerHandle ForwardInputTimerHandle;
-	FTimerHandle RightInputTimerHandle;
-
-	
-	FVector MovingStartPos;
-	
-	FVector MovingEndPos;
-
-	
-	
-
-	// Attack Animation Timeline
-	// Timeline
-	FTimeline ShortFlipKickTimeLine;
-	FTimeline FlyingKickTimeLine;
-	FTimeline FlyingPunchTimeLine;
-	FTimeline SpinKickTimeLine;
-	FTimeline DashingDoubleKickTimeLine;
-	FTimeline CloseToPerformFinisherTimeLine;
-	FTimeline DodgeLerpingTimeLine;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
-	FVector CurrentInputForward = FVector(0,0,0);
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= AttackSetting)
-	FVector CurrentInputRight = FVector(0,0,0);
 	
 	// Register as visual stimulus for enemies
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
-	
+
 public:
 
+	// Delegate signature
+	FOnExecutingPlayerAction OnExecutePlayerAction;
+	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
+	FOnClearingComboCount OnClearingComboCount;
 	
-
 	APlayerCharacter();
+
+	// ================================================= 
 	
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
-
+	
 
 	// ================================================= Input ===================================================
 	void LookUpAtRate(float Rate);
@@ -244,11 +175,42 @@ public:
 	void TryEvade();
 	
 	void TryDodge();
+
+	// ================================================= Utility Functions ================================================
+
+
+
 	
+	// ================================================= Get And Set Functions ============================================
+	FInputDirection GetPlayerInputDir() const {return InputDirection;}
 
+	float GetCurrentStamina() const {return CurrentStamina;}
+	void SetStamina(float NewStamina) {CurrentStamina = NewStamina;}
+	
+	AEnemyBase* GetTargetActor() const {return TargetActor;}
+	void SetTargetActor(AEnemyBase* NewTargetActor);
 
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	AEnemyBase* GetDamagingActor() const {return DamagingActor;}
+	void SetDamagingActor(AEnemyBase* NewDamagingActor) {DamagingActor = NewDamagingActor;}
+
+	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
+	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}
+
+	int32 GetCurrentCharacterHealth() const {return CharacterCurrentHealth;}
+	void HealthReduction(int32 ReducingAmount) {CharacterCurrentHealth = UKismetMathLibrary::Clamp((CharacterCurrentHealth - ReducingAmount),0, CharacterMaxHealth);}
+
+	// ================================================= Interface implementation =========================================
 	
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
+
+	UFUNCTION()
+	virtual void ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType EnemyAttackType) override;
+
+	UFUNCTION()
+	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
+
+	
+
+	
 };

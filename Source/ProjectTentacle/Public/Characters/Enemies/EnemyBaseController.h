@@ -35,6 +35,8 @@ public:
 
 	AEnemyBase* GetOwnPawn();
 
+	UBehaviorTree* GetBehaviorTree() const {return BehaviorTree;}
+
 protected:
 	// Base behavior tree, run on start
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=AI)
