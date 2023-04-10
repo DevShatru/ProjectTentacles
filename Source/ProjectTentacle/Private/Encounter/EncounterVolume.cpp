@@ -28,6 +28,8 @@ void AEncounterVolume::TryTriggerEncounter(AActor* Target)
 	if(bIsEncounterActive) return;
 	bIsEncounterActive = true;
 	EngageContainedUnits(Target);
+	TryCacheTimerManager();
+	WorldTimerManager->SetTimer(SpawnStartTimer, this, &AEncounterVolume::StartSpawn, SpawnStartTime, false, SpawnStartTime);
 }
 
 TArray<AEnemyBase*> AEncounterVolume::GetAlliesForPawn(APawn* Pawn)
@@ -85,6 +87,12 @@ void AEncounterVolume::BeginAttackBasic()
 	AttackQueueBasic.RemoveAt(RandomIndex);
 }
 
+void AEncounterVolume::StartSpawn()
+{
+	if(bIsSpawnStarted) return;
+	bIsSpawnStarted = true;
+}
+
 // Register this encounter with contained units
 void AEncounterVolume::RegisterEncounterForUnits()
 {
@@ -103,12 +111,17 @@ void AEncounterVolume::EngageContainedUnits(AActor* Target)
 	}
 }
 
+void AEncounterVolume::TryCacheTimerManager() const
+{
+	if(WorldTimerManager) return;
+	
+	WorldTimerManager = &GetWorldTimerManager();
+}
+
 // Start cooldown and pop attacker after timer
 void AEncounterVolume::StartBasicQueueTimer()
 {
-	if(!WorldTimerManager)
-	{
-		WorldTimerManager = &GetWorldTimerManager();
-	}
+	TryCacheTimerManager();
+	
 	WorldTimerManager->SetTimer(BasicQueueTimer, this, &AEncounterVolume::BeginAttackBasic, AttackStartDelay, false, AttackStartDelay);
 }

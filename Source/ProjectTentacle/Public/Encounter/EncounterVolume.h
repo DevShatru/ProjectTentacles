@@ -67,6 +67,9 @@ protected:
 	UFUNCTION()
 	void BeginAttackBasic();
 
+	UFUNCTION()
+	void StartSpawn();
+
 private:
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();
@@ -74,13 +77,21 @@ private:
 	void EngageContainedUnits(AActor* Target);
 	// Track whether the encounter has started yet
 	unsigned int bIsEncounterActive:1;
+	// Track if contained spawn points have begun spawning
+	unsigned int bIsSpawnStarted:1;
+	
 	// Timer handle for basic attack queue
 	FTimerHandle BasicQueueTimer;
+	// Timer handle to begin span after elapsed time
+	FTimerHandle SpawnStartTimer;
 
 	// Cache reference to world timer manager
 	static FTimerManager* WorldTimerManager;
+	void TryCacheTimerManager() const;
 	// Start timer for basic queue
 	void StartBasicQueueTimer();
 
+	int8 InitialUnits;
+	int8 DefeatedUnits;
 	AEnemyBaseController* LastAttacker;
 };
