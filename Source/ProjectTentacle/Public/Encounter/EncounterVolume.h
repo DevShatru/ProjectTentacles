@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/Enemies/EncounterVolumeInterface.h"
 #include "GameFramework/Actor.h"
 #include "EncounterVolume.generated.h"
 
@@ -10,7 +11,7 @@ class UNavigationInvokerComponent;
 class AEnemyBase;
 
 UCLASS()
-class PROJECTTENTACLE_API AEncounterVolume : public AActor
+class PROJECTTENTACLE_API AEncounterVolume : public AActor, public IEncounterVolumeInterface
 {
 	GENERATED_BODY()
 	
@@ -34,6 +35,12 @@ public:
 	void RegisterUnitDestroyed(AEnemyBaseController* Unit);
 
 	void AddSpawnedUnitToEncounter(AEnemyBase* Unit);
+
+	// Delegate function to be execute to send all enemy to reposition
+	UFUNCTION()
+	void SendAllEnemyToReposition(bool DoesIncludeHeavy);
+
+	virtual void AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -76,7 +83,6 @@ protected:
 
 	UFUNCTION()
 	void StartSpawn();
-
 private:
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();

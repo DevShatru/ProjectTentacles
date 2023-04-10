@@ -119,6 +119,9 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	InstantRotation(FacingEnemyDir);
 	RegisteredTarget->InstantRotation(FacingPlayerDir);
 
+	
+	MovingStartPos = PlayerOwnerRef->GetActorLocation();
+	
 	// set lerping start and end position to variable
 	SetAttackMovementPositions(TargetActorPos);
 
@@ -182,7 +185,6 @@ void UPlayerActionComponent::FinishEnemy()
 
 void UPlayerActionComponent::SetAttackMovementPositions(FVector TargetPos)
 {
-	MovingStartPos = PlayerOwnerRef->GetActorLocation();
 
 	// Get direction from target to player
 	FVector OffsetWithoutZ = MovingStartPos - TargetPos;
@@ -192,6 +194,7 @@ void UPlayerActionComponent::SetAttackMovementPositions(FVector TargetPos)
 	// Get lerp end position
 	MovingEndPos = TargetPos + (DirFromTargetToPlayer * 80);
 }
+
 
 EPlayerAttackType UPlayerActionComponent::GetAttackTypeByRndNum(int32 RndNum)
 {
@@ -450,11 +453,11 @@ AEnemyBase* UPlayerActionComponent::GetTargetEnemy(TArray<AEnemyBase*> Opponents
 
 		SelfToInputDestDir = UKismetMathLibrary::GetDirectionUnitVector(SelfPos, InputDest);
 	}
-	else
-	{
-		// if there is no input direction, it means player didn't press movement key, it means attack will happen in front of player
-		SelfToInputDestDir = PlayerOwnerRef->GetActorForwardVector();
-	}
+	// else
+	// {
+	// 	// if there is no input direction, it means player didn't press movement key, it means attack will happen in front of player
+	// 	SelfToInputDestDir = PlayerOwnerRef->GetActorForwardVector();
+	// }
 	
 	// set first one as closest target and iterating from opponents list
 	AEnemyBase* ReturnTarget = OpponentsAroundSelf[0];
@@ -462,7 +465,7 @@ AEnemyBase* UPlayerActionComponent::GetTargetEnemy(TArray<AEnemyBase*> Opponents
 	// Set a fake dot product
 	float TargetDotProduct = -1.0f;
 
-	// TODO: Use dot product to check instead of angle
+	// Use dot product to check if this iterate enemy is in front of player 
 	for (int32 i = 0; i < OpponentsAroundSelf.Num(); i++)
 	{
 		FVector EachCharacterPos = OpponentsAroundSelf[i]->GetActorLocation();
@@ -498,6 +501,8 @@ AEnemyBase* UPlayerActionComponent::GetTargetEnemy(TArray<AEnemyBase*> Opponents
 // ========================================== Timeline Function =========================================
 void UPlayerActionComponent::MovingAttackMovement(float Alpha)
 {
+	UpdateTargetPosition();
+	
 	const FVector CharacterCurrentPos = PlayerOwnerRef->GetActorLocation();
 	
 	const FVector MovingPos = UKismetMathLibrary::VLerp(MovingStartPos, MovingEndPos, Alpha);
@@ -506,6 +511,15 @@ void UPlayerActionComponent::MovingAttackMovement(float Alpha)
 
 	PlayerOwnerRef->SetActorLocation(LaunchingPos);
 }
+
+void UPlayerActionComponent::UpdateTargetPosition()
+{
+	// Constantly update damaging target position to FVector MovingEndPos
+	const AEnemyBase* CurrentDamagingTarget = PlayerOwnerRef->GetDamagingActor();
+	const FVector CurrentDamageTargetPos = CurrentDamagingTarget->GetActorLocation();
+	SetAttackMovementPositions(CurrentDamageTargetPos);
+}
+
 
 
 // ========================================================= Delegate Function =================================================

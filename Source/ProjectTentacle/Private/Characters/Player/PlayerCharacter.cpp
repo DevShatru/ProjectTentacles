@@ -56,10 +56,16 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	const APlayerController* PlayerControl = GetWorld()->GetFirstPlayerController();
 	// reset input vector
 	if(PlayerControl->WasInputKeyJustReleased(MovingForwardKey) || PlayerControl->WasInputKeyJustReleased(MovingBackKey))
+	{
+		InputDirection.SetPreviousInputDirectionY(InputDirection.GetInputDirectionY());
 		InputDirection.SetInputDirectionY(0.0f);
+	}
 	
 	if(PlayerControl->WasInputKeyJustReleased(MovingLeftKey) || PlayerControl->WasInputKeyJustReleased(MovingRightKey))
+	{
+		InputDirection.SetPreviousInputDirectionX(InputDirection.GetInputDirectionX());
 		InputDirection.SetInputDirectionX(0.0f);
+	}
 
 	
 }
@@ -90,6 +96,7 @@ void APlayerCharacter::MoveForward(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
 		// Set input direction Y value
+		InputDirection.SetPreviousInputDirectionY(InputDirection.GetInputDirectionY());
 		InputDirection.SetInputDirectionY(Value);
 		
 		if(CurrentActionState == EActionState::Idle) AddMovementInput(Direction, Value);
@@ -107,6 +114,7 @@ void APlayerCharacter::MoveRight(float Value)
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
+		InputDirection.SetPreviousInputDirectionX(InputDirection.GetInputDirectionX());
 		InputDirection.SetInputDirectionX(Value);
 		
 		// add movement in that direction

@@ -4,6 +4,7 @@
 #include "Encounter/EncounterVolume.h"
 
 #include "NavigationInvokerComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"
 #include "Encounter/SpawnPoint.h"
@@ -134,6 +135,32 @@ void AEncounterVolume::StartSpawn()
 		SpawnPoint->SetUnitPool(UnitPool);
 		SpawnPoint->StartSpawningUnits();
 	}
+}
+
+// for loop to send all enemy to reposition
+void AEncounterVolume::SendAllEnemyToReposition(bool DoesIncludeHeavy)
+{
+	for(AEnemyBaseController* EachEnemyBaseController: AttackQueueBasic)
+	{
+		
+		AEnemyBase* EachOwnPawnRef = EachEnemyBaseController->GetOwnPawn();
+
+		if(!EachOwnPawnRef) continue; 
+		
+		UBlackboardComponent* EachOwnBBComp = EachOwnPawnRef->GetBBComponent();
+		if(!EachOwnBBComp) continue; 
+
+		FName BBRepositionBoolName = "bNeedToReposition";
+		
+		EachOwnBBComp->SetValueAsBool(BBRepositionBoolName, true);
+	}
+}
+
+void AEncounterVolume::AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy)
+{
+	IEncounterVolumeInterface::AssignQueueEnemyToReposition_Implementation(DoesIncludeHeavy);
+
+	SendAllEnemyToReposition(DoesIncludeHeavy);
 }
 
 // Register this encounter with contained units
