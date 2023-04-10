@@ -8,6 +8,12 @@
 #include "EnvironmentQuery/Items/EnvQueryItemType_Actor.h"
 
 AActor* UEnvQueryContext_Player::Player = nullptr;
+TArray<UEnvQueryContext_Player*> UEnvQueryContext_Player::AllPlayerContexts = TArray<UEnvQueryContext_Player*>();
+
+UEnvQueryContext_Player::UEnvQueryContext_Player() : Super()
+{
+	AllPlayerContexts.Add(this);
+}
 
 void UEnvQueryContext_Player::ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const
 {
@@ -20,4 +26,15 @@ void UEnvQueryContext_Player::ProvideContext(FEnvQueryInstance& QueryInstance, F
 		}
 	}
 	UEnvQueryItemType_Actor::SetContextHelper(ContextData, Player);
+}
+
+void UEnvQueryContext_Player::BeginDestroy()
+{
+	AllPlayerContexts.Remove(this);
+	if(AllPlayerContexts.Num() == 0)
+	{
+		Player = nullptr;
+	}
+	
+	Super::BeginDestroy();
 }
