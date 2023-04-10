@@ -4,7 +4,7 @@
 #include "Characters/Enemies/EnemyBaseController.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Characters/Enemies/EncounterVolume.h"
+#include "Encounter/EncounterVolume.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"

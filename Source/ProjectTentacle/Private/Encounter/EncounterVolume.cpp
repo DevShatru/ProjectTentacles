@@ -1,7 +1,7 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "Characters/Enemies/EncounterVolume.h"
+#include "Encounter/EncounterVolume.h"
 
 #include "NavigationInvokerComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
