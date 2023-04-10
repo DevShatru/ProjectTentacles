@@ -33,6 +33,8 @@ public:
 	// Fire when a unit is destroyed tp check if we should trigger spawn and update our queues
 	void RegisterUnitDestroyed(AEnemyBaseController* Unit);
 
+	void AddSpawnedUnitToEncounter(AEnemyBase* Unit);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -56,6 +58,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	TSet<class ASpawnPoint*> ContainedSpawnPoints;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	class AUnitPool* UnitPool;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	float SpawnStartTime = 75.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	float SpawnStartEncounterCompletionPercent = 75.0f;
@@ -76,6 +80,8 @@ protected:
 private:
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();
+	// Register the encounter object with each contained spawn point
+	void RegisterEncounterForSpawnPoints();
 	// Engage contained units when encounter starts
 	void EngageContainedUnits(AActor* Target);
 	// Track whether the encounter has started yet
@@ -97,4 +103,5 @@ private:
 	int8 InitialUnits;
 	int8 DefeatedUnits;
 	AEnemyBaseController* LastAttacker;
+	AActor* EncounterTarget;
 };

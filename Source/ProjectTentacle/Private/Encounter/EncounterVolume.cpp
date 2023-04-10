@@ -6,6 +6,7 @@
 #include "NavigationInvokerComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"
+#include "Encounter/SpawnPoint.h"
 
 FTimerManager* AEncounterVolume::WorldTimerManager = nullptr;
 // Sets default values
@@ -73,11 +74,22 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 	// If not
 	++DefeatedUnits;
 	// Check if should start
-	if(static_cast<float>(DefeatedUnits / InitialUnits) > SpawnStartEncounterCompletionPercent / 100.f)
+	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits / InitialUnits);
+	if(CompletionPercentage > SpawnStartEncounterCompletionPercent / 100.f)
 	{
 		TryCacheTimerManager();
 		WorldTimerManager->ClearTimer(SpawnStartTimer);
 		StartSpawn();
+	}
+}
+
+void AEncounterVolume::AddSpawnedUnitToEncounter(AEnemyBase* Unit)
+{
+	ContainedUnits.Add(Unit);
+	Unit->RegisterOwningEncounter(this);
+	if(bIsEncounterActive)
+	{
+		Unit->EngageTarget(EncounterTarget);
 	}
 }
 
@@ -89,20 +101,25 @@ void AEncounterVolume::BeginPlay()
 	bIsEncounterActive = false;
 	bIsSpawnStarted = false;
 	LastAttacker = nullptr;
+	EncounterTarget = nullptr;
 	InitialUnits = ContainedUnits.Num();
 	RegisterEncounterForUnits();
+	RegisterEncounterForSpawnPoints();
 }
 
 // Select random unit to attack
 void AEncounterVolume::BeginAttackBasic()
 {
+	int8 QueueSize = AttackQueueBasic.Num();
+	if (QueueSize == 0) return;
+
 	int8 RandomIndex;
 
 	// Don't let same unit attack twice in a row
 	do
 	{
-		RandomIndex = FMath::RandRange(0, AttackQueueBasic.Num() - 1);
-	} while(LastAttacker == AttackQueueBasic[RandomIndex]);
+		RandomIndex = FMath::RandRange(0, QueueSize - 1);
+	} while(LastAttacker == AttackQueueBasic[RandomIndex] && QueueSize > 1);
 	
 	AttackQueueBasic[RandomIndex]->BeginAttack();
 	AttackQueueBasic.RemoveAt(RandomIndex);
@@ -112,6 +129,11 @@ void AEncounterVolume::StartSpawn()
 {
 	if(bIsSpawnStarted) return;
 	bIsSpawnStarted = true;
+	for(ASpawnPoint* SpawnPoint : ContainedSpawnPoints)
+	{
+		SpawnPoint->SetUnitPool(UnitPool);
+		SpawnPoint->StartSpawningUnits();
+	}
 }
 
 // Register this encounter with contained units
@@ -123,9 +145,18 @@ void AEncounterVolume::RegisterEncounterForUnits()
 	}
 }
 
+void AEncounterVolume::RegisterEncounterForSpawnPoints()
+{
+	for(ASpawnPoint* SpawnPoint : ContainedSpawnPoints)
+	{
+		SpawnPoint->RegisterOwningEncounter(this);
+	}
+}
+
 // Trigger for contained units to engage the target
 void AEncounterVolume::EngageContainedUnits(AActor* Target)
 {
+	EncounterTarget = Target;
 	for(AEnemyBase* ContainedUnit : ContainedUnits)
 	{
 		ContainedUnit->EngageTarget(Target);
