@@ -36,7 +36,18 @@ AEnemyBase* AUnitPool::GetUnitFromPool(EEnemyType Type)
 		}
 	}
 
-	return nullptr;
+	// If we don't find one, spawn a new one
+	switch (Type)
+	{
+	case EEnemyType::Melee:
+			return World->SpawnActor<AEnemyBase>(DefaultMeleeClass);
+		case EEnemyType::Ranged:
+			return World->SpawnActor<AEnemyBase>(DefaultRangedClass);
+		case EEnemyType::Brute:
+			return World->SpawnActor<AEnemyBase>(DefaultBruteClass);
+		default:
+			return nullptr;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -44,6 +55,7 @@ void AUnitPool::BeginPlay()
 {
 	Super::BeginPlay();
 	PooledUnits = TArray<AEnemyBase*>();
+	World = GetWorld();
 }
 
 void AUnitPool::BeginDestroy()

@@ -23,6 +23,16 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void BeginDestroy() override;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Default Classes")
+	TSubclassOf<AEnemyBase> DefaultMeleeClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Default Classes")
+	TSubclassOf<AEnemyBase> DefaultRangedClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Default Classes")
+	TSubclassOf<AEnemyBase> DefaultBruteClass;
+	
 	UPROPERTY()
 	TArray<AEnemyBase*> PooledUnits;
+
+private:
+	UWorld* World;
 };
