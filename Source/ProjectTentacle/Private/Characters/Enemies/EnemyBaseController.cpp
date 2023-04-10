@@ -34,7 +34,6 @@ void AEnemyBaseController::BeginPlay()
 {
 	Super::BeginPlay();
 	EncounterTarget = nullptr;
-	OwnPawn = Cast<AEnemyBase>(GetPawn());
 	if(!BehaviorTree) return;
 
 	// Init blackboard and run master behaviour
@@ -61,12 +60,13 @@ void AEnemyBaseController::EngageTarget(AActor* Target)
 
 TArray<AEnemyBase*> AEnemyBaseController::GetAllies() const
 {
-	return OwningEncounter->GetAlliesForPawn(OwnPawn);
+	return OwningEncounter ? OwningEncounter->GetAlliesForPawn(OwnPawn) : TArray<AEnemyBase*>();
 }
 
 // Add unit to attack queue
 void AEnemyBaseController::RegisterOnAttackQueue()
 {
+	if(!OwningEncounter) return;
 	OwningEncounter->RegisterOnBasicAttackQueue(this);
 }
 
@@ -82,6 +82,7 @@ void AEnemyBaseController::BeginAttack()
 // Register after attack has completed
 void AEnemyBaseController::RegisterCompletedAttack()
 {
+	if(!OwningEncounter) return;
 	OwningEncounter->RegisterCompletedBasicAttack(this);
 }
 
@@ -97,9 +98,15 @@ void AEnemyBaseController::Reset()
 	ClearBlackboard();
 }
 
+void AEnemyBaseController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	OwnPawn = Cast<AEnemyBase>(InPawn);
+}
+
 void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 {
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, Actor->GetHumanReadableName());
+	// GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, Actor->GetHumanReadableName());
 	if(!OwningEncounter) return;
 	OwningEncounter->TryTriggerEncounter(Actor);
 }

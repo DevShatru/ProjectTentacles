@@ -40,6 +40,7 @@ public:
 	virtual void Reset() override;
 
 protected:
+	virtual void OnPossess(APawn* InPawn) override;
 	// Base behavior tree, run on start
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=AI)
 	UBehaviorTree* BehaviorTree;
