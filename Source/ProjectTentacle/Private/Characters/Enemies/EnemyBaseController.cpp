@@ -75,7 +75,8 @@ void AEnemyBaseController::BeginAttack()
 {
 	// Begin attack montage here
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("%s began attack"), *OwnPawn->GetHumanReadableName()));
-	GetBlackboardComponent()->SetValueAsBool("bIsAttacking", true);
+	TryCacheBlackboardComp();
+	Blackboard->SetValueAsBool("bIsAttacking", true);
 }
 
 // Register after attack has completed
@@ -84,7 +85,7 @@ void AEnemyBaseController::RegisterCompletedAttack()
 	OwningEncounter->RegisterCompletedBasicAttack(this);
 }
 
-AEnemyBase* AEnemyBaseController::GetOwnPawn()
+AEnemyBase* AEnemyBaseController::GetOwnPawn() const
 {
 	return OwnPawn;
 }
@@ -94,4 +95,33 @@ void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, Actor->GetHumanReadableName());
 	if(!OwningEncounter) return;
 	OwningEncounter->TryTriggerEncounter(Actor);
+}
+
+void AEnemyBaseController::OnDeath()
+{
+	ClearBlackboard();
+	if(!OwningEncounter) return;
+	OwningEncounter->RegisterUnitDestroyed(this);
+}
+
+void AEnemyBaseController::ClearBlackboard()
+{
+	TryCacheBlackboardComp();
+	for (UBlackboardData* It = Blackboard->GetBlackboardAsset(); It; It = It->Parent)
+	{
+		for (int32 KeyIndex = 0; KeyIndex < It->Keys.Num(); KeyIndex++)
+		{
+			const UBlackboardKeyType* KeyType = It->Keys[KeyIndex].KeyType;
+			if (KeyType)
+			{
+				const int32 UseIdx = KeyIndex + It->GetFirstKeyID();
+				Blackboard->ClearValue(UseIdx);
+			}
+		}
+	}
+}
+
+void AEnemyBaseController::TryCacheBlackboardComp()
+{
+	if(!Blackboard) Blackboard = GetBlackboardComponent();
 }

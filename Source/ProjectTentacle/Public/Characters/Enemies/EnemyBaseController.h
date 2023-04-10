@@ -33,7 +33,7 @@ public:
 
 	void RegisterCompletedAttack();
 
-	AEnemyBase* GetOwnPawn();
+	AEnemyBase* GetOwnPawn() const;
 
 	UBehaviorTree* GetBehaviorTree() const {return BehaviorTree;}
 
@@ -53,6 +53,11 @@ protected:
 	void UpdatePerception(AActor* Actor, FAIStimulus Stimulus);	
 	
 private:
+	void OnDeath();
+	void ClearBlackboard();
+	void TryCacheBlackboardComp();
+
+	UBlackboardComponent* Blackboard;
 	AEnemyBase* OwnPawn;
 	AEncounterVolume* OwningEncounter;
 	AActor* EncounterTarget;
