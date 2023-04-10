@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/Enemies/EnemyType.h"
 #include "GameFramework/Actor.h"
 #include "SpawnPoint.generated.h"
 
@@ -15,6 +16,9 @@ public:
 	// Sets default values for this actor's properties
 	ASpawnPoint();
 	void StartSpawningUnits();
+	void SetUnitPool(class AUnitPool* NewUnitPool);
+	void SpawnUnit();
+	void RegisterOwningEncounter(class AEncounterVolume* EncounterVolume);
 
 protected:
 	// Called when the game starts or when spawned
@@ -44,7 +48,14 @@ protected:
 	TSubclassOf<AEnemyBase> BruteUnitClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=BruteSpawn)
 	float BruteUnitsSpawnWeight = 5.0f;
+
+	UPROPERTY()
+	AUnitPool* UnitPool;
 	
-public:
-	void SpawnUnit();
+private:
+	AEncounterVolume* OwningEncounterVolume;
+	FTimerHandle SpawnTimerHandle;
+	TMap<EEnemyType, int8> UnitsSpawned;
+	unsigned int bShouldSpawnMelee:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1;
+	void CheckUnitsToSpawn();
 };
