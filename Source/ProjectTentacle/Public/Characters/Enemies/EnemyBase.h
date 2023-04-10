@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnemyBaseController.h"
+#include "EnemyType.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "Characters/Base/CharacterActionInterface.h"
 #include "Characters/Base/DamageInterface.h"
@@ -30,7 +31,9 @@ protected:
 	void InitializeWidgetComponents();
 	
 	void InitializeEnemyControllerRef();
-	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Combat)
+	EEnemyType UnitType = EEnemyType::Melee;
 
 	UPROPERTY(EditDefaultsOnly, Category=Combat)
 	float AttackCompletionTime = 2.0f;
@@ -137,6 +140,8 @@ protected:
 
 	
 public:
+
+	EEnemyType GetType() const;
 
 	// public delegate signature for finishing attacking task
 	FOnFinishAttackingTask OnFinishAttackingTask;

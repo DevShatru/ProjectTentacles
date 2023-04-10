@@ -203,6 +203,11 @@ FVector AEnemyBase::CalculateDestinationForAttackMoving(FVector PlayerPos)
 	return Hit.ImpactPoint + (DirFromPlayerToSelf * OffsetFromPlayer);
 }
 
+EEnemyType AEnemyBase::GetType() const
+{
+	return UnitType;
+}
+
 
 void AEnemyBase::PlayDamageReceiveAnimation(int32 AttackTypIndex)
 {
