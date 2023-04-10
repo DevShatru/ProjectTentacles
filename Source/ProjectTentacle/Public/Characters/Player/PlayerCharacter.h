@@ -24,12 +24,20 @@ protected:
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float InputDirectionY;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float PreviousInputDirectionX;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float PreviousInputDirectionY;
 	
 	
 public:
 	
 	FInputDirection()
 	{
+		PreviousInputDirectionX = 0;
+		PreviousInputDirectionY = 0;
 		InputDirectionX = 0;
 		InputDirectionY = 0;
 	}
@@ -38,6 +46,11 @@ public:
 	float GetInputDirectionY() const {return InputDirectionY;}
 	void SetInputDirectionX(float InputX) {InputDirectionX = InputX;}
 	void SetInputDirectionY(float InputY) {InputDirectionY = InputY;}
+
+	float GetPreviousInputDirectionX() const {return PreviousInputDirectionX;}
+	float GetPreviousInputDirectionY() const {return PreviousInputDirectionY;}
+	void SetPreviousInputDirectionX(float NewInputX) {PreviousInputDirectionX = NewInputX;}
+	void SetPreviousInputDirectionY(float NewInputY) {PreviousInputDirectionY = NewInputY;}
 };
 
 
@@ -135,9 +148,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = InputKey)
 	FKey MovingRightKey;
 
-	// Input direction structure	
+	// Current Input direction structure	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
+	
 	
 	// Register as visual stimulus for enemies
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

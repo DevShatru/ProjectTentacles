@@ -129,6 +129,8 @@ protected:
 	void FinishEnemy();
 	
 	void SetAttackMovementPositions(FVector TargetPos);
+
+	void UpdateTargetPosition();
 	
 	UFUNCTION()
 	void MovingAttackMovement(float Alpha);
