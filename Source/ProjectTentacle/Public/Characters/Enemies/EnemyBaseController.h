@@ -37,6 +37,8 @@ public:
 
 	UBehaviorTree* GetBehaviorTree() const {return BehaviorTree;}
 
+	virtual void Reset() override;
+
 protected:
 	// Base behavior tree, run on start
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=AI)

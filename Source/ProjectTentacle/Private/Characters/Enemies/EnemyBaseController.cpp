@@ -90,6 +90,13 @@ AEnemyBase* AEnemyBaseController::GetOwnPawn() const
 	return OwnPawn;
 }
 
+void AEnemyBaseController::Reset()
+{
+	Super::Reset();
+	OwnPawn->Reset();
+	ClearBlackboard();
+}
+
 void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 {
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, Actor->GetHumanReadableName());
@@ -99,7 +106,7 @@ void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 
 void AEnemyBaseController::OnDeath()
 {
-	ClearBlackboard();
+	Reset();
 	if(!OwningEncounter) return;
 	OwningEncounter->RegisterUnitDestroyed(this);
 }
