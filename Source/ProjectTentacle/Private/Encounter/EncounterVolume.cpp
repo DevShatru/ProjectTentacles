@@ -61,14 +61,35 @@ void AEncounterVolume::RegisterCompletedBasicAttack(AEnemyBaseController* Regist
 	StartBasicQueueTimer();
 }
 
+void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
+{
+	// Remove units from queues and set
+	if(AttackQueueBasic.Contains(Unit)) AttackQueueBasic.Remove(Unit);
+	if(AttackQueueHeavy.Contains(Unit)) AttackQueueHeavy.Remove(Unit);
+	if(ContainedUnits.Contains(Unit->GetOwnPawn())) ContainedUnits.Remove(Unit->GetOwnPawn());
+	
+	// Check if spawn has started yet
+	if(bIsSpawnStarted) return;
+	// If not
+	++DefeatedUnits;
+	// Check if should start
+	if(static_cast<float>(DefeatedUnits / InitialUnits) > SpawnStartEncounterCompletionPercent / 100.f)
+	{
+		TryCacheTimerManager();
+		WorldTimerManager->ClearTimer(SpawnStartTimer);
+		StartSpawn();
+	}
+}
+
 // Called when the game starts or when spawned
 void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	WorldTimerManager = &GetWorldTimerManager();
 	bIsEncounterActive = false;
+	bIsSpawnStarted = false;
 	LastAttacker = nullptr;
-	
+	InitialUnits = ContainedUnits.Num();
 	RegisterEncounterForUnits();
 }
 

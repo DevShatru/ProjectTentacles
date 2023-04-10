@@ -29,6 +29,9 @@ public:
 	
 	// Register when a basic unit has completed it's attack
 	void RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController);
+	
+	// Fire when a unit is destroyed tp check if we should trigger spawn and update our queues
+	void RegisterUnitDestroyed(AEnemyBaseController* Unit);
 
 protected:
 	// Called when the game starts or when spawned
