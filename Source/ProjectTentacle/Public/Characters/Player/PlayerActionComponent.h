@@ -99,6 +99,11 @@ protected:
 	TArray<UAnimMontage*> MeleeAttackMontages;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
+	TArray<UAnimMontage*> CloseMeleeAttackMontages;
+	
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* FinisherAnimMontages;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat_AnimMontages)

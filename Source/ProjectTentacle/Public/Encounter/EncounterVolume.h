@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/Enemies/EncounterVolumeInterface.h"
+#include "EncounterVolumeInterface.h"
 #include "GameFramework/Actor.h"
 #include "EncounterVolume.generated.h"
 
