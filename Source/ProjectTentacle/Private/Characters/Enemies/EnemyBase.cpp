@@ -346,6 +346,12 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	case EPlayerAttackType::DashingDoubleKick:
 		PlayDamageReceiveAnimation(4);
 		break;
+	case EPlayerAttackType::FastKick:
+		PlayDamageReceiveAnimation(2);
+		break;
+	case EPlayerAttackType::FastPunch:
+		PlayDamageReceiveAnimation(2);
+		break;
 	default: ;
 	}
 

@@ -62,6 +62,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* CloseToPerformFinisherCurve;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
+	float MaxDistanceToBeClose = 200.0f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_Setting)
 	float MaxAngleForFacingEnemy = 45.0f;
 	
@@ -100,7 +103,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	TArray<UAnimMontage*> CloseMeleeAttackMontages;
-	
+
+	UPROPERTY()
+	UAnimMontage* LastMeleeMontage;
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
@@ -128,6 +133,14 @@ protected:
 	
 	// ================================================== Melee Attack ================================================
 	void BeginMeleeAttack();
+
+	void PerformLongRangeMelee(AEnemyBase* RegisteredTarget);
+
+	void PerformCloseRangeMelee(AEnemyBase* RegisteredTarget);
+
+	UAnimMontage* GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages);
+	
+	bool TargetDistanceCheck(AEnemyBase* Target);
 
 	void ComboCountIncrement();
 

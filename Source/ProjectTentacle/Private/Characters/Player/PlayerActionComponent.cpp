@@ -91,8 +91,38 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	// if player is not having target, return;
 	AEnemyBase* RegisteredTarget = PlayerOwnerRef->GetTargetActor();
 	if(PlayerOwnerRef->GetTargetActor() == nullptr) return;
+
+
+	// Get Current target and player location for later use
+	const FVector TargetActorPos = RegisteredTarget->GetActorLocation();
+	const FVector PlayerPos = PlayerOwnerRef->GetActorLocation();
+
 	
-	// Get max number of attack animation montage array
+	// set lerping start and end position to variable
+	MovingStartPos = PlayerOwnerRef->GetActorLocation();
+	SetAttackMovementPositions(TargetActorPos);
+
+	
+	// simply make player and targeted enemy rotate to each other
+	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActorPos - PlayerPos);
+	const FVector FacingPlayerDir = UKismetMathLibrary::Normal(PlayerPos - TargetActorPos);
+	InstantRotation(FacingEnemyDir);
+	RegisteredTarget->InstantRotation(FacingPlayerDir);
+	
+	const bool bIsClose = TargetDistanceCheck(RegisteredTarget);
+	
+	if(!bIsClose)
+	{
+		PerformLongRangeMelee(RegisteredTarget);
+		return;
+	}
+
+	PerformCloseRangeMelee(RegisteredTarget);
+}
+
+void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
+{
+		// Get max number of attack animation montage array
 	const int32 MAttackMontagesNum = MeleeAttackMontages.Num();
 
 	// Get random number from 0 to max number of attack animation montage array
@@ -100,36 +130,15 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	
 	// Validation Check
 	if(MeleeAttackMontages[MAttackRndIndex] == nullptr) return;
-
-	// 
+	
 	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(MAttackRndIndex);
 
-
-	
-	const FVector TargetActorPos = RegisteredTarget->GetActorLocation();
-	const FVector PlayerPos = PlayerOwnerRef->GetActorLocation();
-
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
-
-	
-	
-	// simply make player and targeted enemy rotate to each other
-	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActorPos - PlayerPos);
-	const FVector FacingPlayerDir = UKismetMathLibrary::Normal(PlayerPos - TargetActorPos);
-	InstantRotation(FacingEnemyDir);
-	RegisteredTarget->InstantRotation(FacingPlayerDir);
-
-	
-	MovingStartPos = PlayerOwnerRef->GetActorLocation();
-	
-	// set lerping start and end position to variable
-	SetAttackMovementPositions(TargetActorPos);
-
 	
 	// change current action state enum
 	PlayerOwnerRef->SetCurrentActionState(EActionState::Attack);
 
-	// TODO: Need To ReadWrite 
+	
 	// Check if Enemy is dying or now, if is, finish him
 	int32 EnemyCurrentHealth = RegisteredTarget->GetEnemyHealth();
 	
@@ -163,6 +172,75 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	ComboCountIncrement();
 }
 
+void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget)
+{
+	UAnimMontage* DecidedMontage = GetDifferentCloseMeleeMontage(CloseMeleeAttackMontages);
+
+	// TODO: set different attack type by fast punch or fast kick
+	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(5);
+	
+	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
+	
+	// change current action state enum
+	PlayerOwnerRef->SetCurrentActionState(EActionState::Attack);
+
+	
+	// Check if Enemy is dying or now, if is, finish him
+	int32 EnemyCurrentHealth = RegisteredTarget->GetEnemyHealth();
+	
+	// Set damaging actor
+	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
+
+	// Stop combo count reset timer handle
+	const UWorld* World = GetWorld();
+	if(!World) return;
+	World->GetTimerManager().ClearTimer(ComboResetTimerHandle);
+
+	if(EnemyCurrentHealth <= 1)
+	{
+		FinishEnemy();
+		return;
+	}
+	
+
+	
+	// Play attack montage
+	CurrentPlayingMontage = DecidedMontage;
+
+	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
+	
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
+	
+	// combo count increment
+	ComboCountIncrement();
+}
+
+UAnimMontage* UPlayerActionComponent::GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages)
+{
+	const int32 MaxNumCloseMeleeMontages = ListOfMeleeMontages.Num(); 
+	
+	UAnimMontage* ReturnMonstage;
+
+	do
+	{
+		const int32 RndIndex = UKismetMathLibrary::RandomInteger(MaxNumCloseMeleeMontages);
+		ReturnMonstage = ListOfMeleeMontages[RndIndex];
+	}
+	while (LastMeleeMontage == ReturnMonstage);
+	
+	return ReturnMonstage;
+}
+
+bool UPlayerActionComponent::TargetDistanceCheck(AEnemyBase* Target)
+{
+	const FVector CurrentPlayerPos = PlayerOwnerRef->GetActorLocation();
+	const FVector CurrentTargetPos = Target->GetActorLocation();
+	
+	const float DistanceToTarget = UKismetMathLibrary::Vector_Distance(CurrentPlayerPos, CurrentTargetPos);
+
+	return DistanceToTarget < MaxDistanceToBeClose;
+}
+
 void UPlayerActionComponent::ComboCountIncrement()
 {
 	CurrentComboCount = UKismetMathLibrary::Clamp((CurrentComboCount+1), 0, MaxComboCount);
@@ -175,9 +253,8 @@ void UPlayerActionComponent::FinishEnemy()
 	
 	// Player attack montage
 	CurrentPlayingMontage = FinisherAnimMontages;
-
-	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
+	
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Default");
 
 	CurrentTarget->PlayFinishedAnimation();
 	CloseToPerformFinisherTimeLine.PlayFromStart();
