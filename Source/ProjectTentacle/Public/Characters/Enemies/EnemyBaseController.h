@@ -33,11 +33,14 @@ public:
 
 	void RegisterCompletedAttack();
 
-	AEnemyBase* GetOwnPawn();
+	AEnemyBase* GetOwnPawn() const;
 
 	UBehaviorTree* GetBehaviorTree() const {return BehaviorTree;}
 
+	virtual void Reset() override;
+
 protected:
+	virtual void OnPossess(APawn* InPawn) override;
 	// Base behavior tree, run on start
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=AI)
 	UBehaviorTree* BehaviorTree;
@@ -53,6 +56,11 @@ protected:
 	void UpdatePerception(AActor* Actor, FAIStimulus Stimulus);	
 	
 private:
+	void OnDeath();
+	void ClearBlackboard();
+	void TryCacheBlackboardComp();
+
+	UBlackboardComponent* Blackboard;
 	AEnemyBase* OwnPawn;
 	AEncounterVolume* OwningEncounter;
 	AActor* EncounterTarget;

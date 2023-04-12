@@ -11,7 +11,9 @@ enum class EPlayerAttackType: uint8
 	FlyingPunch = 2 UMETA(DisplayName = "FlyingPunch"),
 	SpinKick = 3 UMETA(DisplayName = "SpinKick"),
 	DashingDoubleKick = 4 UMETA(DisplayName = "FlyingKick"),
-	None = 5 UMETA(DisplaName = "None")
+	FastKick = 5 UMETA(DisplayName = "FastKick"),
+	FastPunch = 6 UMETA(DisplayName = "FastPunch"),
+	None = 7 UMETA(DisplaName = "None")
 };
 
 UENUM(BlueprintType)

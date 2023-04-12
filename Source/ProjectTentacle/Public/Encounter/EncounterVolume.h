@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EncounterVolumeInterface.h"
 #include "GameFramework/Actor.h"
+#include "WaveParams.h"
 #include "EncounterVolume.generated.h"
 
 class UNavigationInvokerComponent;
@@ -31,13 +32,16 @@ public:
 	// Register when a basic unit has completed it's attack
 	void RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController);
 	
+	// Fire when a unit is destroyed tp check if we should trigger spawn and update our queues
+	void RegisterUnitDestroyed(AEnemyBaseController* Unit);
+
+	void AddSpawnedUnitToEncounter(AEnemyBase* Unit);
+
 	// Delegate function to be execute to send all enemy to reposition
 	UFUNCTION()
 	void SendAllEnemyToReposition(bool DoesIncludeHeavy);
 
 	virtual void AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy) override;
-
-
 
 protected:
 	// Called when the game starts or when spawned
@@ -52,11 +56,18 @@ protected:
 	USceneComponent* Root;
 
 	// Set of all contained units at any time
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	TSet<AEnemyBase*> ContainedUnits;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	float AttackStartDelay = 3.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	class AUnitPool* UnitPool;
+
+	// Wave system setup
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	TArray<FWaveParams> WaveParameters;
 
 	// Attack queue for melee and ranged units
 	TArray<AEnemyBaseController*> AttackQueueBasic;
@@ -68,21 +79,37 @@ protected:
 	UFUNCTION()
 	void BeginAttackBasic();
 
-	
+	UFUNCTION()
+	void StartSpawn();
 private:
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();
+	// Register the encounter object with each contained spawn point
+	void RegisterEncounterForSpawnPoints();
 	// Engage contained units when encounter starts
 	void EngageContainedUnits(AActor* Target);
 	// Track whether the encounter has started yet
 	unsigned int bIsEncounterActive:1;
+	// Track if contained spawn points have begun spawning
+	unsigned int bWaveStartedSpawning:1;
+	
 	// Timer handle for basic attack queue
 	FTimerHandle BasicQueueTimer;
+	// Timer handle to begin span after elapsed time
+	FTimerHandle SpawnStartTimer;
 
 	// Cache reference to world timer manager
 	static FTimerManager* WorldTimerManager;
+	void TryCacheTimerManager() const;
 	// Start timer for basic queue
 	void StartBasicQueueTimer();
+	void TriggerNextWave();
+	void ResetSpawnPoints() const;
 
+	int8 InitialUnits;
+	int8 DefeatedUnits;
+	int8 CurrentWave;
 	AEnemyBaseController* LastAttacker;
+	AActor* EncounterTarget;
+	FWaveParams* CurrentWaveParams;
 };

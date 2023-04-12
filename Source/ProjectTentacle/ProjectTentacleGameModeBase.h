@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/Enemies/EncounterVolume.h"
+#include "Encounter/EncounterVolume.h"
 #include "GameFramework/GameModeBase.h"
 #include "ProjectTentacleGameModeBase.generated.h"
 
