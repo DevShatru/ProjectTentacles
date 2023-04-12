@@ -197,6 +197,7 @@ public:
 	
 	// ================================================= Get And Set Functions ============================================
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}
+	
 
 	float GetCurrentStamina() const {return CurrentStamina;}
 	void SetStamina(float NewStamina) {CurrentStamina = NewStamina;}

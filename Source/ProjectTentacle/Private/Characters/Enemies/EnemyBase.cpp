@@ -309,6 +309,9 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	EPlayerAttackType PlayerAttackType)
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
+
+	// Cancel movement if we take damage
+	OwnController->StopMovement();
 	
 	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate 
 	if(IsAttacking)
@@ -345,6 +348,12 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 		break;
 	case EPlayerAttackType::DashingDoubleKick:
 		PlayDamageReceiveAnimation(4);
+		break;
+	case EPlayerAttackType::FastKick:
+		PlayDamageReceiveAnimation(2);
+		break;
+	case EPlayerAttackType::FastPunch:
+		PlayDamageReceiveAnimation(2);
 		break;
 	default: ;
 	}

@@ -168,6 +168,7 @@ void AEncounterVolume::RegisterEncounterForUnits()
 {
 	for(AEnemyBase* ContainedUnit : ContainedUnits)
 	{
+		if(!ContainedUnit) continue;
 		ContainedUnit->RegisterOwningEncounter(this);
 	}
 }
@@ -176,6 +177,7 @@ void AEncounterVolume::RegisterEncounterForSpawnPoints()
 {
 	for(ASpawnPoint* SpawnPoint : ContainedSpawnPoints)
 	{
+		if(!SpawnPoint) continue;
 		SpawnPoint->RegisterOwningEncounter(this);
 	}
 }
