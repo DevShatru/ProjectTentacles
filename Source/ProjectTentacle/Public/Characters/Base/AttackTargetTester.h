@@ -14,7 +14,7 @@
 #include "AttackTargetTester.generated.h"
 
 
-DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnUpdatingEnemyAttackType, EEnemyAttackType, NewAttackType, EEnemyAttackAnimMontages, NewAttackAnim);
+DECLARE_DYNAMIC_DELEGATE_TwoParams(FOldOnUpdatingEnemyAttackType, EEnemyAttackType, NewAttackType, EEnemyAttackAnimMontages, NewAttackAnim);
 
 UCLASS()
 class PROJECTTENTACLE_API AAttackTargetTester : public ACharacter, public ICharacterActionInterface, public IDamageInterface, public IEnemyWidgetInterface
@@ -30,7 +30,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	
-	FOnUpdatingEnemyAttackType OnUpdatingEnemyAttackIndicator;
+	FOldOnUpdatingEnemyAttackType OnUpdatingEnemyAttackIndicator;
 
 	UPROPERTY()
 	UWidget_EnemyAttackIndicator* AttackIndicatorRef;

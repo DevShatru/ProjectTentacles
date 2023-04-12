@@ -26,6 +26,9 @@ protected:
 	void AttackCounterTimeLimit();
 	UFUNCTION()
 	void AttackCompletionTimeLimit();
+
+	UFUNCTION()
+	void AttackFinishTask(UBehaviorTreeComponent* BehaviorTreeReference, bool bIsSuccess, bool DoesGetInterupted);
 	
 private:
 	// Cache values for owning BTComp, and Unit's pawn

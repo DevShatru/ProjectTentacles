@@ -14,16 +14,16 @@ void UWidget_EnemyAttackIndicator::StoreWidgetAnimation()
 	WidgetAnimMap.Empty();
 
 	// Get Uproperty class reference as start point
-	UProperty* Prop = GetClass()->PropertyLink;
+	FProperty* Prop = GetClass()->PropertyLink;
 
 	// while the property is not nullptr
 	while (Prop)
 	{
-		// continue if if Property Class is UObjectProperty
-		if(Prop->GetClass() == UObjectProperty::StaticClass())
+		// continue if if Property Class is FObjectProperty
+		if(Prop->GetClass() == FProperty::StaticClass())
 		{
-			// Cast propert to UObjectProperty class
-			UObjectProperty* ObjectProp = Cast<UObjectProperty>(Prop);
+			// Cast propert to FObjectProperty class
+			FObjectProperty* ObjectProp = CastField<FObjectProperty>(Prop);
 
 			// Check if property class is UWidgetAnimation class
 			if (ObjectProp->PropertyClass == UWidgetAnimation::StaticClass())
@@ -67,7 +67,6 @@ void UWidget_EnemyAttackIndicator::TryPlayIndicationAnimation()
 	{
 		case EEnemyAttackAnimMontages::MMAKick:
 			if(YellowToRedAnim_MMAKick)
-				
 				PlayAnimation(YellowToRedAnim_MMAKick, 0.0f, 1, EUMGSequencePlayMode::Forward, 1.0f, true);
 			break;
 		
