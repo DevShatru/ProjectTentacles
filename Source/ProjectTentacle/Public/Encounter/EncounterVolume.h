@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EncounterVolumeInterface.h"
 #include "GameFramework/Actor.h"
+#include "WaveParams.h"
 #include "EncounterVolume.generated.h"
 
 class UNavigationInvokerComponent;
@@ -61,15 +62,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	float AttackStartDelay = 3.0f;
 	
-	// Set of all contained spawn points
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
-	TSet<class ASpawnPoint*> ContainedSpawnPoints;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	class AUnitPool* UnitPool;
+
+	// Wave system setup
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
-	float SpawnStartTime = 75.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
-	float SpawnStartEncounterCompletionPercent = 75.0f;
+	TArray<FWaveParams> WaveParameters;
 
 	// Attack queue for melee and ranged units
 	TArray<AEnemyBaseController*> AttackQueueBasic;
@@ -93,7 +91,7 @@ private:
 	// Track whether the encounter has started yet
 	unsigned int bIsEncounterActive:1;
 	// Track if contained spawn points have begun spawning
-	unsigned int bIsSpawnStarted:1;
+	unsigned int bWaveStartedSpawning:1;
 	
 	// Timer handle for basic attack queue
 	FTimerHandle BasicQueueTimer;
@@ -105,9 +103,13 @@ private:
 	void TryCacheTimerManager() const;
 	// Start timer for basic queue
 	void StartBasicQueueTimer();
+	void TriggerNextWave();
+	void ResetSpawnPoints() const;
 
 	int8 InitialUnits;
 	int8 DefeatedUnits;
+	int8 CurrentWave;
 	AEnemyBaseController* LastAttacker;
 	AActor* EncounterTarget;
+	FWaveParams* CurrentWaveParams;
 };
