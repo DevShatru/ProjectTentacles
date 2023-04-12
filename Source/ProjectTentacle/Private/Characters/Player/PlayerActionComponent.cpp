@@ -126,7 +126,10 @@ void UPlayerActionComponent::BeginMeleeAttack()
 void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 {
 	const int32 DecidedIndex = GetDifferentCloseMeleeMontage(MeleeAttackMontages);
-	UAnimMontage* DecidedMontage = CloseMeleeAttackMontages[DecidedIndex];
+
+	if(DecidedIndex < 0 || DecidedIndex >= MeleeAttackMontages.Num()) return;
+	
+	UAnimMontage* DecidedMontage = MeleeAttackMontages[DecidedIndex];
 	
 	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(DecidedIndex);
 
@@ -172,6 +175,9 @@ void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget)
 {
 	const int32 DecidedIndex = GetDifferentCloseMeleeMontage(CloseMeleeAttackMontages);
+
+	if(DecidedIndex < 0 || DecidedIndex >= CloseMeleeAttackMontages.Num()) return;
+
 	UAnimMontage* DecidedMontage = CloseMeleeAttackMontages[DecidedIndex];
 
 	EPlayerAttackType SelectedAttackType;
@@ -222,13 +228,13 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 
 int32 UPlayerActionComponent::GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages)
 {
-	const int32 MaxNumCloseMeleeMontages = ListOfMeleeMontages.Num(); 
-
+	const int32 MaxNumCloseMeleeMontages = ListOfMeleeMontages.Num();
+	
 	int32 RndIndex;
 
 	do
 	{
-		RndIndex = UKismetMathLibrary::RandomInteger(MaxNumCloseMeleeMontages);
+		RndIndex = UKismetMathLibrary::RandomIntegerInRange(0, MaxNumCloseMeleeMontages - 1);
 	}
 	while (LastMeleeMontage == ListOfMeleeMontages[RndIndex]);
 	
