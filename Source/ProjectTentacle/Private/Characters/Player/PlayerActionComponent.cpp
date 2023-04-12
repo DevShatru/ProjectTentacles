@@ -55,7 +55,10 @@ void UPlayerActionComponent::InitializeTimelineComp()
 	SpinKickTimeLine.AddInterpFloat(SpinKickCurve, MovingAttackPosUpdate);
 	DashingDoubleKickTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
 	CloseToPerformFinisherTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
-	DodgeLerpingTimeLine.AddInterpFloat(DodgeLerpingCurve, MovingAttackPosUpdate);
+	
+	FOnTimelineFloat DodgingPosUpdate;
+	DodgingPosUpdate.BindDynamic(this, &UPlayerActionComponent::DodgeMovement);
+	DodgeLerpingTimeLine.AddInterpFloat(DodgeLerpingCurve, DodgingPosUpdate);
 	
 }
 
@@ -71,7 +74,7 @@ void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		TryToUpdateTarget();
 
 	// delta time will change due to player's combo time
-	const float DeltaWithComboBonus = DeltaTime * (1 + (CurrentComboCount * ComboSpeedMotiplier));
+	const float DeltaWithComboBonus = DeltaTime * (1 + (CurrentComboCount * ComboSpeedMultiplier));
 	ShortFlipKickTimeLine.TickTimeline(DeltaWithComboBonus);
 	FlyingKickTimeLine.TickTimeline(DeltaWithComboBonus);
 	FlyingPunchTimeLine.TickTimeline(DeltaWithComboBonus);
@@ -122,16 +125,10 @@ void UPlayerActionComponent::BeginMeleeAttack()
 
 void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 {
-		// Get max number of attack animation montage array
-	const int32 MAttackMontagesNum = MeleeAttackMontages.Num();
-
-	// Get random number from 0 to max number of attack animation montage array
-	const int32 MAttackRndIndex = UKismetMathLibrary::RandomIntegerInRange(0, MAttackMontagesNum - 1);
+	const int32 DecidedIndex = GetDifferentCloseMeleeMontage(MeleeAttackMontages);
+	UAnimMontage* DecidedMontage = CloseMeleeAttackMontages[DecidedIndex];
 	
-	// Validation Check
-	if(MeleeAttackMontages[MAttackRndIndex] == nullptr) return;
-	
-	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(MAttackRndIndex);
+	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(DecidedIndex);
 
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
 	
@@ -159,7 +156,7 @@ void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 
 	
 	// Play attack montage
-	CurrentPlayingMontage = MeleeAttackMontages[MAttackRndIndex];
+	CurrentPlayingMontage = DecidedMontage;
 
 	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
 	
@@ -174,10 +171,18 @@ void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 
 void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget)
 {
-	UAnimMontage* DecidedMontage = GetDifferentCloseMeleeMontage(CloseMeleeAttackMontages);
+	const int32 DecidedIndex = GetDifferentCloseMeleeMontage(CloseMeleeAttackMontages);
+	UAnimMontage* DecidedMontage = CloseMeleeAttackMontages[DecidedIndex];
 
-	// TODO: set different attack type by fast punch or fast kick
-	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(5);
+	EPlayerAttackType SelectedAttackType;
+
+	if(DecidedIndex >= 3)
+		SelectedAttackType = GetAttackTypeByRndNum(5);
+	else
+		SelectedAttackType = GetAttackTypeByRndNum(6);
+	
+		
+	
 	
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
 	
@@ -215,20 +220,19 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 	ComboCountIncrement();
 }
 
-UAnimMontage* UPlayerActionComponent::GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages)
+int32 UPlayerActionComponent::GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages)
 {
 	const int32 MaxNumCloseMeleeMontages = ListOfMeleeMontages.Num(); 
-	
-	UAnimMontage* ReturnMonstage;
+
+	int32 RndIndex;
 
 	do
 	{
-		const int32 RndIndex = UKismetMathLibrary::RandomInteger(MaxNumCloseMeleeMontages);
-		ReturnMonstage = ListOfMeleeMontages[RndIndex];
+		RndIndex = UKismetMathLibrary::RandomInteger(MaxNumCloseMeleeMontages);
 	}
-	while (LastMeleeMontage == ReturnMonstage);
+	while (LastMeleeMontage == ListOfMeleeMontages[RndIndex]);
 	
-	return ReturnMonstage;
+	return RndIndex;
 }
 
 bool UPlayerActionComponent::TargetDistanceCheck(AEnemyBase* Target)
@@ -243,7 +247,7 @@ bool UPlayerActionComponent::TargetDistanceCheck(AEnemyBase* Target)
 
 void UPlayerActionComponent::ComboCountIncrement()
 {
-	CurrentComboCount = UKismetMathLibrary::Clamp((CurrentComboCount+1), 0, MaxComboCount);
+	CurrentComboCount++;
 }
 
 void UPlayerActionComponent::FinishEnemy()
@@ -305,9 +309,10 @@ void UPlayerActionComponent::StartAttackMovementTimeline(EPlayerAttackType Attac
 float UPlayerActionComponent::CalculateCurrentComboSpeed()
 {
 	
-	float ComboSpeedBonus = static_cast<float>(CurrentComboCount) * ComboSpeedMotiplier;
+	const float ExpectedComboSpeedBonus = static_cast<float>(CurrentComboCount) * ComboSpeedMultiplier;
+	const float AdjustedSpeedBonus = UKismetMathLibrary::Clamp(ExpectedComboSpeedBonus, 0, MaxComboSpeedBonus);
 	
-	return 1 + ComboSpeedBonus;
+	return 1 + AdjustedSpeedBonus;
 }
 
 void UPlayerActionComponent::WaitToResetComboCount()
@@ -359,7 +364,7 @@ void UPlayerActionComponent::BeginCounterAttack(AActor* CounteringTarget)
 	if(CastedTarget == nullptr) return;
 
 	
-	PlayerOwnerRef->SetTargetActor(CastedTarget);
+	PlayerOwnerRef->SetDamagingActor(CastedTarget);
 	
 	CurrentPlayingMontage = CounterAttackMontages;
 
@@ -367,6 +372,8 @@ void UPlayerActionComponent::BeginCounterAttack(AActor* CounteringTarget)
 	InstantRotation(FacingEnemyDir);
 	
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
+
+	ComboCountIncrement();
 }
 
 // ==================================================== Dodge ===============================================
@@ -589,6 +596,17 @@ void UPlayerActionComponent::MovingAttackMovement(float Alpha)
 	PlayerOwnerRef->SetActorLocation(LaunchingPos);
 }
 
+void UPlayerActionComponent::DodgeMovement(float Alpha)
+{
+	const FVector CharacterCurrentPos = PlayerOwnerRef->GetActorLocation();
+	
+	const FVector MovingPos = UKismetMathLibrary::VLerp(MovingStartPos, MovingEndPos, Alpha);
+
+	const FVector LaunchingPos = FVector(MovingPos.X, MovingPos.Y, CharacterCurrentPos.Z);
+
+	PlayerOwnerRef->SetActorLocation(LaunchingPos);
+}
+
 void UPlayerActionComponent::UpdateTargetPosition()
 {
 	// Constantly update damaging target position to FVector MovingEndPos
@@ -661,7 +679,7 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 		}
 
 		// TODO: Damage player
-		
+		PlayerOwnerRef->HealthReduction(DamageAmount);
 
 		// Player Play receiving damage montage
 		if(ReceiveDamageMontage == nullptr) return;

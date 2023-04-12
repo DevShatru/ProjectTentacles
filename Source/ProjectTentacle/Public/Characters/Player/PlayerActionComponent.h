@@ -84,11 +84,11 @@ protected:
 	int32 CurrentComboCount = 0;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
-	int32 MaxComboCount = 3;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
-	float ComboSpeedMotiplier = 0.3f;
+	float ComboSpeedMultiplier = 0.3f;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
+	float MaxComboSpeedBonus = 1.5f;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
 	float ComboCountExistTime = 5.0f;	
 
@@ -138,7 +138,7 @@ protected:
 
 	void PerformCloseRangeMelee(AEnemyBase* RegisteredTarget);
 
-	UAnimMontage* GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages);
+	int32 GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages);
 	
 	bool TargetDistanceCheck(AEnemyBase* Target);
 
@@ -152,6 +152,9 @@ protected:
 	
 	UFUNCTION()
 	void MovingAttackMovement(float Alpha);
+
+	UFUNCTION()
+	void DodgeMovement(float Alpha);
 	
 	EPlayerAttackType GetAttackTypeByRndNum(int32 RndNum);
 	
