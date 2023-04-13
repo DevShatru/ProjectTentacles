@@ -18,20 +18,23 @@ class PROJECTTENTACLE_API UWidget_EnemyAttackIndicator : public UWidget_EnemyBas
 private:
 	
 protected:
-	EEnemyAttackAnimMontages CurrentPlayingAnimMontage;
+	EEnemyAttackType CurrentAttackType;
 
 	UPROPERTY()
 	TMap<FName, UWidgetAnimation*> WidgetAnimMap;
 
-	UPROPERTY(Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation* YellowToRedAnim_MMAKick;
-
-	UPROPERTY(Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation* AllGreenAnim_HeadButt;
+	// UPROPERTY(Transient, meta = (BindWidgetAnim))
+	// UWidgetAnimation* YellowToRedAnim_MMAKick;
+	//
+	// UPROPERTY(Transient, meta = (BindWidgetAnim))
+	// UWidgetAnimation* AllGreenAnim_HeadButt;
 	
 public:
 	UFUNCTION()
-	void OnReceivingNewAttackType(EEnemyAttackType NewAttackType, EEnemyAttackAnimMontages NewAnimMontage);
+	void OnReceivingNewAttackType(EEnemyAttackType NewAttackType);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlaySpecificAnimation(EEnemyAttackType NewAttackType);
 
 	void StoreWidgetAnimation();
 	

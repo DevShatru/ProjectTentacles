@@ -19,8 +19,8 @@ void UANS_PlayerCounterChecking::NotifyTick(USkeletalMeshComponent* MeshComp, UA
 	// check if owner class has character action interface
 	if(OwnerRef->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
 	{
-		// if it has character action interface, it means its base character, execute its SwitchToIdleState function
-		ICharacterActionInterface::Execute_TryToDamagePlayer(OwnerRef);
+		// if it has character action interface, it means its base character, execute its TryTriggerPlayerCounter function
+		ICharacterActionInterface::Execute_TryTriggerPlayerCounter(OwnerRef);
 	}
 	
 

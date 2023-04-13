@@ -115,6 +115,12 @@ float AEnemyBase::GetAttackCounterableTime() const
 	return AttackCounterableTime;
 }
 
+void AEnemyBase::OnHideAttackIndicator()
+{
+	if(AttackIndicatorRef)
+		AttackIndicatorRef->UnShowIndicator();
+}
+
 void AEnemyBase::TryGetOwnController()
 {
 	if(OwnController) return;
@@ -133,7 +139,7 @@ void AEnemyBase::ExecuteAttack()
 	if(AttackIndicatorRef)
 	{
 		// execute delegate function to update variables in Indicator widget class
-		OnUpdatingEnemyAttackIndicator.Execute(CurrentAttackType, ResultEnemyAnimMontage);
+		OnUpdatingEnemyAttackIndicator.Execute(CurrentAttackType);
 	}
 
 	// Save lerp start and end position for later timeline function usage
@@ -154,12 +160,12 @@ void AEnemyBase::ExecuteAttack()
 		case EEnemyAttackType::AbleToCounter:
 			if(CounterableAttackMontage != nullptr)
 				PlayAnimMontage(CounterableAttackMontage, 1, "Default");
-			AttackMovingTimeline.PlayFromStart();
+			//AttackMovingTimeline.PlayFromStart();
 			break;
 		case EEnemyAttackType::UnableToCounter:
 			if(NotCounterableAttackMontage != nullptr)
 				PlayAnimMontage(NotCounterableAttackMontage, 1, "Default");
-			AttackMovingTimeline.PlayFromStart();
+			//AttackMovingTimeline.PlayFromStart();
 			break;
 		default: break;
 	}
@@ -172,7 +178,6 @@ EEnemyAttackAnimMontages AEnemyBase::SetAttackType()
 
 	if(CounterableRndInt == 0)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Not Counterable!"));	
 		CurrentAttackType = EEnemyAttackType::UnableToCounter;
 		return EEnemyAttackAnimMontages::MMAKick;
 	}
@@ -208,35 +213,70 @@ FVector AEnemyBase::CalculateDestinationForAttackMoving(FVector PlayerPos)
 	return Hit.ImpactPoint + (DirFromPlayerToSelf * OffsetFromPlayer);
 }
 
-EEnemyType AEnemyBase::GetType() const
+TArray<AActor*> AEnemyBase::GetActorsInFrontOfEnemy()
 {
-	return UnitType;
+	const UWorld* World = GetWorld();
+	
+	FName AttackSocketName;
+	if(CurrentAttackType == EEnemyAttackType::AbleToCounter)
+		AttackSocketName = "RightHand";
+	else
+		AttackSocketName = "RightFoot";
+	
+	const FVector HeadSocketLocation = GetMesh()->GetSocketLocation(AttackSocketName);
+
+	TArray<AActor*> FoundActorList;
+
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	
+	UKismetSystemLibrary::SphereOverlapActors(World, HeadSocketLocation, 120, FilterType, FilteringClass, IgnoreActors,FoundActorList);
+
+	return FoundActorList;
+}
+
+void AEnemyBase::StartCounterAttackAnimation()
+{
+	if(!CounterVictimMontage) return;
+	
+	StopAnimMontage();
+	OnHideAttackIndicator();
+	PlayAnimMontage(CounterVictimMontage,1,"Start");
+}
+
+// ===================================================== Stunning ===========================================
+void AEnemyBase::BeginLyingCountDown()
+{
+	const UWorld* World = GetWorld();
+	if(World == nullptr) return;
+
+	PlayLyingMontage();
+	
+	World->GetTimerManager().SetTimer(GettingUpTimerHandle,this, &AEnemyBase::RecoverFromLying, TimeToGetUp, false, -1);
+}
+
+void AEnemyBase::PlayLyingMontage()
+{
+	if(!CounterVictimMontage) return;
+	
+	StopAnimMontage();
+	PlayAnimMontage(CounterVictimMontage,1,"LyingLoop");
 }
 
 
-void AEnemyBase::PlayDamageReceiveAnimation(int32 AttackTypIndex)
+void AEnemyBase::RecoverFromLying()
 {
-	if(AttackTypIndex > 4) return;
+	if(!GetUpMontage) return;
+
+	CurrentEnemyState = EEnemyCurrentState::Standing;
 	
-	switch (AttackTypIndex)
-	{
-	case 0:
-		PlayAnimMontage(ReceiveShortFlipKick,1,NAME_None);
-		break;
-	case 1:
-		PlayAnimMontage(ReceiveFlyingKick,1,NAME_None);
-		break;
-	case 2:
-		PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
-		break;
-	case 3:
-		PlayAnimMontage(ReceiveSpinKick,1,NAME_None);
-		break;
-	case 4:
-		PlayAnimMontage(ReceiveDashingDoubleKick,1,NAME_None);
-		break;
-	default: break;
-	}
+	StopAnimMontage();
+	PlayAnimMontage(GetUpMontage,1,"Default");
+}
+
+EEnemyType AEnemyBase::GetType() const
+{
+	return UnitType;
 }
 
 void AEnemyBase::PlayFinishedAnimation()
@@ -274,25 +314,7 @@ void AEnemyBase::TryToDamagePlayer_Implementation()
 {
 	ICharacterActionInterface::TryToDamagePlayer_Implementation();
 	
-	
-	const UWorld* World = GetWorld();
-	if(World == nullptr) return;
-
-	
-	FName AttackSocketName;
-	if(CurrentAttackType == EEnemyAttackType::AbleToCounter)
-		AttackSocketName = "Head";
-	else
-		AttackSocketName = "RightLeg";
-	
-	const FVector HeadSocketLocation = GetMesh()->GetSocketLocation(AttackSocketName);
-
-	TArray<AActor*> FoundActorList;
-
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(this);
-	
-	UKismetSystemLibrary::SphereOverlapActors(World, HeadSocketLocation, 120, FilterType, FilteringClass, IgnoreActors,FoundActorList);
+	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy();
 
 	if(FoundActorList.Num() != 0)
 	{
@@ -302,11 +324,28 @@ void AEnemyBase::TryToDamagePlayer_Implementation()
 			//UGameplayStatics::ApplyDamage(EachFoundActor, 30, GetController(), this, DamageType);
 		}
 	}
+}
+
+void AEnemyBase::TryTriggerPlayerCounter_Implementation()
+{
+	ICharacterActionInterface::TryTriggerPlayerCounter_Implementation();
+
+	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy();
+
+	if(FoundActorList.Num() != 0)
+	{
+		for (AActor* EachFoundActor : FoundActorList)
+		{
+			ICharacterActionInterface::Execute_ReceiveAttackInCounterState(EachFoundActor, this);
+		}
+	}
 
 }
 
+// ===================================================== Damage Receive ========================================================
+
 void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
-	EPlayerAttackType PlayerAttackType)
+                                                        EPlayerAttackType PlayerAttackType)
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 
@@ -314,50 +353,135 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	OwnController->StopMovement();
 	
 	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate 
-	if(IsAttacking)
+	if(IsAttacking && PlayerAttackType != EPlayerAttackType::CounterAttack)
 	{
 		IsAttacking = false;
 		
 		StopAnimMontage();
 		
-		if(AttackIndicatorRef)
-			AttackIndicatorRef->UnShowIndicator();
+		OnHideAttackIndicator();
 		
 		if(BTComponent)
 			const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
 	}
 	
+	HealthReduction(DamageAmount);
 
+	if(Health >= 1)
+	{
+		PlayReceiveDamageAnimation(PlayerAttackType);
+		return;
+	}
+	
+	OnDeath();
+}
+
+void AEnemyBase::HealthReduction(float DamageAmount)
+{
 	// clamp health that is deducted 
 	Health = UKismetMathLibrary::Clamp((Health - DamageAmount),0,MaxHealth);
+}
 
+void AEnemyBase::OnDeath()
+{
+	// TODO: remove self from Encounter volume list
+	
+	// TODO: detach controller and reset behaviour tree
+	
+	// TODO: Clear from player's target reference
+	
+	
+	// TODO: flip death bool to prevent getting selected
+	IsDead = true;
+	
+	RagDollPhysicsOnDead();
+
+	// TODO: Dissolve after few seconds
+}
+
+void AEnemyBase::RagDollPhysicsOnDead()
+{
+	USkeletalMeshComponent* SelfCharacterMesh = GetMesh();
+
+	SelfCharacterMesh->SetSimulatePhysics(true);
+	
+	
+	const ACharacter* PlayerCharacterClass = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+	const FVector PlayerPos = PlayerCharacterClass->GetActorLocation();
+	const FVector SelfPos = GetActorLocation();
+	const FVector DirFromPlayerToSelf = UKismetMathLibrary::Normal((SelfPos - PlayerPos));
+	
+	SelfCharacterMesh->AddImpulse(DirFromPlayerToSelf * 5000,"Spine1",true);
+	
+	UCharacterMovementComponent* SelfCharacterMovement = GetCharacterMovement();
+	SelfCharacterMovement->DisableMovement();
+}
+
+void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType)
+{
 	// Switch case on player's attack type to play different damage receive animation
-	switch (PlayerAttackType)
+	switch (ReceivedAttackType)
 	{
-	case EPlayerAttackType::ShortFlipKick:
-		PlayDamageReceiveAnimation(0);
-		break;
-	case EPlayerAttackType::FlyingKick:
-		PlayDamageReceiveAnimation(1);
-		break;
-	case EPlayerAttackType::FlyingPunch:
-		PlayDamageReceiveAnimation(2);
-		break;
-	case EPlayerAttackType::SpinKick:
-		PlayDamageReceiveAnimation(3);
-		break;
-	case EPlayerAttackType::DashingDoubleKick:
-		PlayDamageReceiveAnimation(4);
-		break;
-	case EPlayerAttackType::FastKick:
-		PlayDamageReceiveAnimation(2);
-		break;
-	case EPlayerAttackType::FastPunch:
-		PlayDamageReceiveAnimation(2);
-		break;
-	default: ;
+		case EPlayerAttackType::ShortFlipKick:
+			PlayAnimMontage(ReceiveShortFlipKick,1,NAME_None);
+		case EPlayerAttackType::FlyingKick:
+			PlayAnimMontage(ReceiveFlyingKick,1,NAME_None);
+			break;
+		case EPlayerAttackType::FlyingPunch:
+			PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
+			break;
+		case EPlayerAttackType::SpinKick:
+			PlayAnimMontage(ReceiveSpinKick,1,NAME_None);
+			break;
+		case EPlayerAttackType::DashingDoubleKick:
+			PlayAnimMontage(ReceiveDashingDoubleKick,1,NAME_None);
+			break;
+		case EPlayerAttackType::FastKick:
+			PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
+			break;
+		case EPlayerAttackType::FastPunch:
+			PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
+			break;
+		default: break;
 	}
+}
 
+// ===================================================== On Death ========================================================
+
+
+
+
+
+void AEnemyBase::PlayDeathAnimation(EPlayerAttackType ReceivedAttackType)
+{
+	switch (ReceivedAttackType)
+	{
+		case EPlayerAttackType::ShortFlipKick: break;
+		case EPlayerAttackType::FlyingKick: break;
+		case EPlayerAttackType::FlyingPunch: break;
+		case EPlayerAttackType::SpinKick: break;
+		case EPlayerAttackType::DashingDoubleKick: break;
+		case EPlayerAttackType::CounterAttack: break;
+		case EPlayerAttackType::FastKick: break;
+		case EPlayerAttackType::FastPunch: break;
+		default: ;
+	}
+}
+
+void AEnemyBase::StartLyingOnTheGround_Implementation()
+{
+	ICharacterActionInterface::StartLyingOnTheGround_Implementation();
+
+	CurrentEnemyState = EEnemyCurrentState::Lying;
+	
+	BeginLyingCountDown();
+}
+
+void AEnemyBase::RepeatLyingOnTheGround_Implementation()
+{
+	ICharacterActionInterface::RepeatLyingOnTheGround_Implementation();
+
+	PlayLyingMontage();
 }
 
 void AEnemyBase::ShowEnemyAttackIndicator_Implementation()
@@ -372,8 +496,7 @@ void AEnemyBase::UnShowEnemyAttackIndicator_Implementation()
 {
 	IEnemyWidgetInterface::UnShowEnemyAttackIndicator_Implementation();
 
-	if(AttackIndicatorRef)
-		AttackIndicatorRef->UnShowIndicator();
+	OnHideAttackIndicator();
 }
 
 void AEnemyBase::ShowPlayerTargetIndicator_Implementation()

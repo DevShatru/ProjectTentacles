@@ -72,16 +72,16 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 
 
 // ==================================================== Movement ==============================================
-void APlayerCharacter::LookUpAtRate(float Rate)
+void APlayerCharacter::LookUpAtRate(float Value)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	AddControllerPitchInput(Value * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void APlayerCharacter::TurnAtRate(float Rate)
+void APlayerCharacter::TurnAtRate(float Value)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void APlayerCharacter::MoveForward(float Value)
@@ -236,8 +236,18 @@ void APlayerCharacter::DamagingTarget_Implementation()
 	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, 1, this, CurrentAttackType);
 }
 
+void APlayerCharacter::ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget)
+{
+	Super::ReceiveAttackInCounterState_Implementation(CounteringTarget);
+
+	// if player is in evade state, it means player will trigger counter action
+	if(CurrentActionState == EActionState::Evade)
+		bool bExecuted = OnTriggeringCounter.ExecuteIfBound(CounteringTarget);
+}
+
+
 void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser,
-	EEnemyAttackType EnemyAttackType)
+                                                             EEnemyAttackType EnemyAttackType)
 {
 	IDamageInterface::ReceiveDamageFromEnemy_Implementation(DamageAmount, DamageCauser, EnemyAttackType);
 

@@ -3,9 +3,9 @@
 
 #include "Characters/Base/Widget_EnemyAttackIndicator.h"
 
-void UWidget_EnemyAttackIndicator::OnReceivingNewAttackType(EEnemyAttackType NewAttackType, EEnemyAttackAnimMontages NewAnimMontage)
+void UWidget_EnemyAttackIndicator::OnReceivingNewAttackType(EEnemyAttackType NewAttackType)
 {
-	CurrentPlayingAnimMontage = NewAnimMontage;
+	CurrentAttackType = NewAttackType;
 }
 
 void UWidget_EnemyAttackIndicator::StoreWidgetAnimation()
@@ -62,30 +62,29 @@ UWidgetAnimation* UWidget_EnemyAttackIndicator::GetAnimationByName(FName Animati
 void UWidget_EnemyAttackIndicator::TryPlayIndicationAnimation()
 {
 	StopAllAnimations();
-	
-	switch (CurrentPlayingAnimMontage)
-	{
-		case EEnemyAttackAnimMontages::MMAKick:
-			if(YellowToRedAnim_MMAKick)
-				PlayAnimation(YellowToRedAnim_MMAKick, 0.0f, 1, EUMGSequencePlayMode::Forward, 1.0f, true);
-			break;
-		
-		case EEnemyAttackAnimMontages::HeadButt:
-			if(AllGreenAnim_HeadButt)
-				PlayAnimation(AllGreenAnim_HeadButt, 0.0f, 1, EUMGSequencePlayMode::Forward, 1.0f, true);
-			break;
-		default: break;
-	}
+
+	PlaySpecificAnimation(CurrentAttackType);
+
+	// switch (CurrentAttackType)
+	// {
+	// 	case EEnemyAttackType::AbleToCounter:
+	// 		break;
+	// 	case EEnemyAttackType::UnableToCounter:
+	// 		PlaySpecificAnimation(YellowToRedAnim_MMAKick);
+	// 		break;
+	// 	default:
+	// 		break;
+	// }
 }
 
 void UWidget_EnemyAttackIndicator::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	StoreWidgetAnimation();
-
-	YellowToRedAnim_MMAKick = GetAnimationByName(TEXT("YellowToRedAnim_MMAKick"));
-	AllGreenAnim_HeadButt = GetAnimationByName(TEXT("AllGreenAnim_HeadButt"));
+	// StoreWidgetAnimation();
+	//
+	// YellowToRedAnim_MMAKick = GetAnimationByName(TEXT("YellowToRedAnim_MMAKick"));
+	// AllGreenAnim_HeadButt = GetAnimationByName(TEXT("AllGreenAnim_HeadButt"));
 }
 
 void UWidget_EnemyAttackIndicator::ShowIndicator()
