@@ -56,6 +56,7 @@ public:
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnExecutingPlayerAction, EActionState, ExecutingAction);
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAmount, AActor*, DamageCauser, EEnemyAttackType, ReceivingAttackType);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggeringCounter, AActor*, DamageCauser);
 DECLARE_DYNAMIC_DELEGATE(FOnClearingComboCount);
 
 
@@ -162,6 +163,7 @@ public:
 	// Delegate signature
 	FOnExecutingPlayerAction OnExecutePlayerAction;
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
+	FOnTriggeringCounter OnTriggeringCounter;
 	FOnClearingComboCount OnClearingComboCount;
 	
 	APlayerCharacter();
@@ -192,7 +194,7 @@ public:
 
 	// ================================================= Utility Functions ================================================
 
-
+	
 
 	
 	// ================================================= Get And Set Functions ============================================
@@ -219,6 +221,9 @@ public:
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
 
+	UFUNCTION()
+	virtual void ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget) override;
+	
 	UFUNCTION()
 	virtual void ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType EnemyAttackType) override;
 
