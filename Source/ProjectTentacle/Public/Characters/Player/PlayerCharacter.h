@@ -4,10 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GenericTeamAgentInterface.h"
-#include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "Characters/Enemies/EnemyBase.h"
-#include "Components/TimelineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerCharacter.generated.h"
 

@@ -88,6 +88,11 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::Standing;
+
+	bool IsDead = false;
+	
+	
+
 	
 	// Receiving Damage Animations
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
@@ -155,6 +160,21 @@ protected:
 	
 	TArray<AActor*> GetActorsInFrontOfEnemy();
 
+	// ===================================================== Receive Damage =================================================
+	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
+	
+	void PlayDeathAnimation(EPlayerAttackType ReceivedAttackType);
+
+	void HealthReduction(float DamageAmount);
+
+	
+	// ===================================================== On Death =======================================================
+	void OnDeath();
+
+	void RagDollPhysicsOnDead();
+
+	
+	
 	// ===================================================== Stunning ===========================================
 
 	void BeginLyingCountDown();
@@ -194,9 +214,7 @@ public:
 	
 	// Instantly rotate to desired direction
 	void InstantRotation(FVector RotatingVector);
-
-	void PlayDamageReceiveAnimation(int32 AttackTypIndex);
-
+	
 	void PlayFinishedAnimation();
 	
 
@@ -207,6 +225,8 @@ public:
 	
 
 	// ============================================= Get and Set functions ================================================
+	bool GetIsDead() const { return IsDead;}
+	
 	int32 GetEnemyHealth() const { return Health;}
 	void SetEnemyHealth(int32 NewHealth) {Health = NewHealth;}
 

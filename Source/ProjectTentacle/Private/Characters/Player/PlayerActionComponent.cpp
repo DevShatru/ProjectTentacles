@@ -141,11 +141,11 @@ void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 
 	ClearComboResetTimer();
 
-	if(EnemyCurrentHealth <= 1)
-	{
-		FinishEnemy();
-		return;
-	}
+	// if(EnemyCurrentHealth <= 1)
+	// {
+	// 	FinishEnemy();
+	// 	return;
+	// }
 	
 
 	
@@ -195,11 +195,11 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 
 	ClearComboResetTimer();
 
-	if(EnemyCurrentHealth <= 1)
-	{
-		FinishEnemy();
-		return;
-	}
+	// if(EnemyCurrentHealth <= 1)
+	// {
+	// 	FinishEnemy();
+	// 	return;
+	// }
 	
 
 	
@@ -499,7 +499,12 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 		for (AActor* EachFoundActor : FoundActorList)
 		{
 			AEnemyBase* FoundCharacter = Cast<AEnemyBase>(EachFoundActor);
-			if(FoundCharacter != nullptr) ReturnActors.Add(FoundCharacter);
+			if(FoundCharacter != nullptr)
+			{
+				// TODO: Exclude enemy that are dead
+				if(!FoundCharacter->GetIsDead())
+					ReturnActors.Add(FoundCharacter);
+			}
 		}
 	}
 	

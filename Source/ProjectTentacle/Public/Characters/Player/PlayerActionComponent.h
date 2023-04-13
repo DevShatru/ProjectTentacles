@@ -139,7 +139,7 @@ protected:
 	
 	// ================================================== Melee Attack ================================================
 	void BeginMeleeAttack();
-
+	
 	void PerformLongRangeMelee(AEnemyBase* RegisteredTarget);
 
 	void PerformCloseRangeMelee(AEnemyBase* RegisteredTarget);

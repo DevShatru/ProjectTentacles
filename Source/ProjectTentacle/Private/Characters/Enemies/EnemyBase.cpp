@@ -279,32 +279,6 @@ EEnemyType AEnemyBase::GetType() const
 	return UnitType;
 }
 
-
-void AEnemyBase::PlayDamageReceiveAnimation(int32 AttackTypIndex)
-{
-	if(AttackTypIndex > 4) return;
-	
-	switch (AttackTypIndex)
-	{
-	case 0:
-		PlayAnimMontage(ReceiveShortFlipKick,1,NAME_None);
-		break;
-	case 1:
-		PlayAnimMontage(ReceiveFlyingKick,1,NAME_None);
-		break;
-	case 2:
-		PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
-		break;
-	case 3:
-		PlayAnimMontage(ReceiveSpinKick,1,NAME_None);
-		break;
-	case 4:
-		PlayAnimMontage(ReceiveDashingDoubleKick,1,NAME_None);
-		break;
-	default: break;
-	}
-}
-
 void AEnemyBase::PlayFinishedAnimation()
 {
 	PlayAnimMontage(FinishedAnimation,1,NAME_None);
@@ -368,6 +342,8 @@ void AEnemyBase::TryTriggerPlayerCounter_Implementation()
 
 }
 
+// ===================================================== Damage Receive ========================================================
+
 void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
                                                         EPlayerAttackType PlayerAttackType)
 {
@@ -386,40 +362,107 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 			const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
 	}
 	
+	HealthReduction(DamageAmount);
 
+	if(Health >= 1)
+	{
+		PlayReceiveDamageAnimation(PlayerAttackType);
+		return;
+	}
+	
+	OnDeath();
+}
+
+void AEnemyBase::HealthReduction(float DamageAmount)
+{
 	// clamp health that is deducted 
 	Health = UKismetMathLibrary::Clamp((Health - DamageAmount),0,MaxHealth);
+}
 
+void AEnemyBase::OnDeath()
+{
+	// TODO: remove self from Encounter volume list
+	
+	// TODO: detach controller and reset behaviour tree
+	
+	// TODO: Clear from player's target reference
+	
+	
+	// TODO: flip death bool to prevent getting selected
+	IsDead = true;
+	
+	RagDollPhysicsOnDead();
+
+	// TODO: Dissolve after few seconds
+}
+
+void AEnemyBase::RagDollPhysicsOnDead()
+{
+	USkeletalMeshComponent* SelfCharacterMesh = GetMesh();
+
+	SelfCharacterMesh->SetSimulatePhysics(true);
+	
+	
+	const ACharacter* PlayerCharacterClass = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+	const FVector PlayerPos = PlayerCharacterClass->GetActorLocation();
+	const FVector SelfPos = GetActorLocation();
+	const FVector DirFromPlayerToSelf = UKismetMathLibrary::Normal((SelfPos - PlayerPos));
+	
+	SelfCharacterMesh->AddImpulse(DirFromPlayerToSelf * 5000,"Spine1",true);
+	
+	UCharacterMovementComponent* SelfCharacterMovement = GetCharacterMovement();
+	SelfCharacterMovement->DisableMovement();
+}
+
+void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType)
+{
 	// Switch case on player's attack type to play different damage receive animation
-	switch (PlayerAttackType)
+	switch (ReceivedAttackType)
 	{
 		case EPlayerAttackType::ShortFlipKick:
-			PlayDamageReceiveAnimation(0);
-			break;
+			PlayAnimMontage(ReceiveShortFlipKick,1,NAME_None);
 		case EPlayerAttackType::FlyingKick:
-			PlayDamageReceiveAnimation(1);
+			PlayAnimMontage(ReceiveFlyingKick,1,NAME_None);
 			break;
 		case EPlayerAttackType::FlyingPunch:
-			PlayDamageReceiveAnimation(2);
+			PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
 			break;
 		case EPlayerAttackType::SpinKick:
-			PlayDamageReceiveAnimation(3);
+			PlayAnimMontage(ReceiveSpinKick,1,NAME_None);
 			break;
 		case EPlayerAttackType::DashingDoubleKick:
-			PlayDamageReceiveAnimation(4);
-			break;
-		case EPlayerAttackType::CounterAttack:
-
+			PlayAnimMontage(ReceiveDashingDoubleKick,1,NAME_None);
 			break;
 		case EPlayerAttackType::FastKick:
-			PlayDamageReceiveAnimation(2);
+			PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
 			break;
 		case EPlayerAttackType::FastPunch:
-			PlayDamageReceiveAnimation(2);
+			PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
 			break;
 		default: break;
 	}
+}
 
+// ===================================================== On Death ========================================================
+
+
+
+
+
+void AEnemyBase::PlayDeathAnimation(EPlayerAttackType ReceivedAttackType)
+{
+	switch (ReceivedAttackType)
+	{
+		case EPlayerAttackType::ShortFlipKick: break;
+		case EPlayerAttackType::FlyingKick: break;
+		case EPlayerAttackType::FlyingPunch: break;
+		case EPlayerAttackType::SpinKick: break;
+		case EPlayerAttackType::DashingDoubleKick: break;
+		case EPlayerAttackType::CounterAttack: break;
+		case EPlayerAttackType::FastKick: break;
+		case EPlayerAttackType::FastPunch: break;
+		default: ;
+	}
 }
 
 void AEnemyBase::StartLyingOnTheGround_Implementation()
