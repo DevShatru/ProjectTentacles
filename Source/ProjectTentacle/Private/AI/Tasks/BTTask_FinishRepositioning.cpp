@@ -13,9 +13,6 @@ EBTNodeResult::Type UBTTask_FinishRepositioning::ExecuteTask(UBehaviorTreeCompon
 	if(!OwnerBBComp) return EBTNodeResult::Failed;
 
 	OwnerBBComp->SetValueAsBool(BBKey_bNeedToReposition.SelectedKeyName, false);
-
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Repositioning Done!"));	
-
 	
 	return EBTNodeResult::Succeeded;
 }
