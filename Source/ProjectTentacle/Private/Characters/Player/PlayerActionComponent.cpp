@@ -501,7 +501,7 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 			AEnemyBase* FoundCharacter = Cast<AEnemyBase>(EachFoundActor);
 			if(FoundCharacter != nullptr)
 			{
-				// TODO: Exclude enemy that are dead
+				// Exclude enemy that are dead
 				if(!FoundCharacter->GetIsDead())
 					ReturnActors.Add(FoundCharacter);
 			}

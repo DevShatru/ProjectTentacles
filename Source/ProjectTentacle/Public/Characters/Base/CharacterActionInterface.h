@@ -31,6 +31,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void TryTriggerPlayerCounter();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void DetachEnemyTarget();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ReceiveAttackInCounterState(AActor* CounteringTarget);

@@ -6,6 +6,7 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBaseController.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -384,19 +385,50 @@ void AEnemyBase::HealthReduction(float DamageAmount)
 
 void AEnemyBase::OnDeath()
 {
-	// TODO: remove self from Encounter volume list
+	// remove self from Encounter volume list
+	CurrentEnemyBaseController->QuitFromEncounter();
 	
 	// TODO: detach controller and reset behaviour tree
 	
-	// TODO: Clear from player's target reference
 	
+	// Clear from player's target reference
+	TryClearFromPlayerTarget();
 	
-	// TODO: flip death bool to prevent getting selected
+	// flip death bool to prevent getting selected
 	IsDead = true;
+
+	// Clear Collision
+	TurnCollisionOffOrOn(true);
 	
+	// Ragdoll Physics
 	RagDollPhysicsOnDead();
 
 	// TODO: Dissolve after few seconds
+}
+
+void AEnemyBase::TryClearFromPlayerTarget()
+{
+	ACharacter* PlayerCharacterClass = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	if(PlayerCharacterClass->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+		ICharacterActionInterface::Execute_DetachEnemyTarget(PlayerCharacterClass);
+}
+
+void AEnemyBase::TurnCollisionOffOrOn(bool TurnCollisionOff)
+{
+	
+	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
+	if(TurnCollisionOff)
+		CapsuleComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	else
+		CapsuleComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
+
+	
+	USkeletalMeshComponent* SkeleMeshComp = GetMesh();
+	
+	if(TurnCollisionOff)
+		SkeleMeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	else
+		SkeleMeshComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
 }
 
 void AEnemyBase::RagDollPhysicsOnDead()

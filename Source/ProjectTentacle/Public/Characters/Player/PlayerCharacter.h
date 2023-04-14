@@ -192,7 +192,7 @@ public:
 
 	// ================================================= Utility Functions ================================================
 
-	
+	void UnsetCurrentTarget();
 
 	
 	// ================================================= Get And Set Functions ============================================
@@ -228,6 +228,7 @@ public:
 	UFUNCTION()
 	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
 
+	virtual void DetachEnemyTarget_Implementation() override;
 	
 
 	
