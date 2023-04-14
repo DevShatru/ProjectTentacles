@@ -80,6 +80,7 @@ protected:
 	UAnimMontage* GetUpMontage;
 	
 	// Enemy Property variable
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	int32 Health = 10;
 
@@ -274,4 +275,8 @@ private:
 	
 	class AEnemyBaseController* OwnController;
 	void TryGetOwnController();
+
+	void TryClearFromPlayerTarget();
+
+	void TurnCollisionOffOrOn(bool TurnCollisionOff);
 };

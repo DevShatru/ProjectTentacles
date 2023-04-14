@@ -94,6 +94,14 @@ void AEncounterVolume::AddSpawnedUnitToEncounter(AEnemyBase* Unit)
 	}
 }
 
+void AEncounterVolume::RemoveDeadUnitFromEncounter(AEnemyBaseController* DeadUnit)
+{
+	// Remove units from queues and set
+	if(AttackQueueBasic.Contains(DeadUnit)) AttackQueueBasic.Remove(DeadUnit);
+	if(AttackQueueHeavy.Contains(DeadUnit)) AttackQueueHeavy.Remove(DeadUnit);
+	if(ContainedUnits.Contains(DeadUnit->GetOwnPawn())) ContainedUnits.Remove(DeadUnit->GetOwnPawn());
+}
+
 // Called when the game starts or when spawned
 void AEncounterVolume::BeginPlay()
 {

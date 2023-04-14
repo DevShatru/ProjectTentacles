@@ -20,6 +20,7 @@ APlayerCharacter::APlayerCharacter()
 	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
+	
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
@@ -47,6 +48,8 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	CharacterCurrentHealth = CharacterMaxHealth;
+
+	
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -156,15 +159,25 @@ void APlayerCharacter::TryDodge()
 	}
 }
 
-void APlayerCharacter::SetTargetActor(AEnemyBase* NewTargetActor)
+// ================================================ Utility ===========================================================
+void APlayerCharacter::UnsetCurrentTarget()
 {
-	// if target actor is not null ptr, unshow its target icon
 	if(TargetActor != nullptr)
 	{
+		// if target actor is not null ptr, unshow its target icon, and clear the reference of target actor
 		if(TargetActor->GetClass()->ImplementsInterface(UEnemyWidgetInterface::StaticClass()))
+		{
 			IEnemyWidgetInterface::Execute_UnShowPlayerTargetIndicator(TargetActor);
+			TargetActor = nullptr;
+		}
 	}
+
 	
+}
+
+void APlayerCharacter::SetTargetActor(AEnemyBase* NewTargetActor)
+{
+	UnsetCurrentTarget();
 	
 	if(NewTargetActor->GetClass()->ImplementsInterface(UEnemyWidgetInterface::StaticClass()))
 		IEnemyWidgetInterface::Execute_ShowPlayerTargetIndicator(NewTargetActor);
@@ -259,6 +272,15 @@ void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
 	Super::ActionEnd_Implementation(BufferingCheck);
 
 	const bool bExecuted = OnClearingComboCount.ExecuteIfBound();
+}
+
+void APlayerCharacter::DetachEnemyTarget_Implementation()
+{
+	Super::DetachEnemyTarget_Implementation();
+
+	// Unset Target
+	UnsetCurrentTarget();
+
 }
 
 
