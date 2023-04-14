@@ -21,7 +21,7 @@ protected:
 	
 public:
 	ATentacleProjectPlayerController();
-
+	
 	virtual void BeginPlay() override;
 
 	virtual void SetupInputComponent() override;

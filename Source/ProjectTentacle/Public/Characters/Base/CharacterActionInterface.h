@@ -30,6 +30,21 @@ public:
 	void StartWaitForCombo();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void TryTriggerPlayerCounter();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void DetachEnemyTarget();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ReceiveAttackInCounterState(AActor* CounteringTarget);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void StartLyingOnTheGround();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void RepeatLyingOnTheGround();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void TryToDamagePlayer();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

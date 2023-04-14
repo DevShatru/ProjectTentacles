@@ -31,7 +31,7 @@ void AAttackTargetTester::BeginPlay()
 	if(CastedAttackIndicatorWidget)
 	{
 		AttackIndicatorRef = CastedAttackIndicatorWidget;
-		OnUpdatingEnemyAttackIndicator.BindDynamic(AttackIndicatorRef, &UWidget_EnemyAttackIndicator::OnReceivingNewAttackType);
+		//OnUpdatingEnemyAttackIndicator.BindDynamic(AttackIndicatorRef, &UWidget_EnemyAttackIndicator::OnReceivingNewAttackType);
 		AttackIndicatorRef->UnShowIndicator();
 	}
 

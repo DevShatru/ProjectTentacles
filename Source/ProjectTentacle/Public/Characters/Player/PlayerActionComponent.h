@@ -62,6 +62,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* CloseToPerformFinisherCurve;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
+	float MaxDistanceToBeClose = 200.0f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_Setting)
 	float MaxAngleForFacingEnemy = 45.0f;
 	
@@ -81,11 +84,11 @@ protected:
 	int32 CurrentComboCount = 0;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
-	int32 MaxComboCount = 3;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
-	float ComboSpeedMotiplier = 0.3f;
+	float ComboSpeedMultiplier = 0.3f;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
+	float MaxComboSpeedBonus = 1.5f;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_ComboSetting)
 	float ComboCountExistTime = 5.0f;	
 
@@ -98,6 +101,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	TArray<UAnimMontage*> MeleeAttackMontages;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
+	TArray<UAnimMontage*> CloseMeleeAttackMontages;
+
+	UPROPERTY()
+	UAnimMontage* LastMeleeMontage;
+
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* FinisherAnimMontages;
 
@@ -119,10 +129,24 @@ protected:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Dodge_Setting)
 	UAnimMontage* FrontRollingMontage;
+
+	// ================================================= Damage Receiving Setting =============================================
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DamageReceive_Setting)
+	float DamageReceiveAnimDistance = 100.0f;
+
 	
 	
 	// ================================================== Melee Attack ================================================
 	void BeginMeleeAttack();
+	
+	void PerformLongRangeMelee(AEnemyBase* RegisteredTarget);
+
+	void PerformCloseRangeMelee(AEnemyBase* RegisteredTarget);
+
+	int32 GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages);
+	
+	bool TargetDistanceCheck(AEnemyBase* Target);
 
 	void ComboCountIncrement();
 
@@ -134,6 +158,9 @@ protected:
 	
 	UFUNCTION()
 	void MovingAttackMovement(float Alpha);
+
+	UFUNCTION()
+	void DodgeMovement(float Alpha);
 	
 	EPlayerAttackType GetAttackTypeByRndNum(int32 RndNum);
 	
@@ -146,6 +173,8 @@ protected:
 
 	UFUNCTION()
 	void ResetComboCount() {CurrentComboCount = 0;}
+
+	void ClearComboResetTimer();
 	
 	// ====================================================== Evade ===================================================
 	void BeginEvade();
@@ -154,7 +183,6 @@ protected:
 	void BeginCounterAttack(AActor* CounteringTarget);
 
 	// ================================================== Dodge ========================================================
-
 	void BeginDodge();
 
 	FVector DecideDodgingDirection(FVector PlayerFaceDir);
@@ -173,6 +201,7 @@ protected:
 	static bool IsPlayerCountering(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
 	static bool IsPlayerCanBeDamaged(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
 
+	void MakePlayerEnemyFaceEachOther(AEnemyBase* TargetEnemyRef);
 
 	// ================================ Functions called when the game starts ==========================================
 	virtual void BeginPlay() override;
@@ -196,6 +225,8 @@ public:
 	UFUNCTION()
 	void ReceivingDamage(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType ReceivingAttackType);
 	
+	UFUNCTION()
+	void TriggerCounterAttack(AActor* CounteringTarget);
 	
 	
 	// Called every frame

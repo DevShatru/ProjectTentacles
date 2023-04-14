@@ -4,10 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GenericTeamAgentInterface.h"
-#include "Characters/Base/AttackTargetTester.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "Characters/Enemies/EnemyBase.h"
-#include "Components/TimelineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerCharacter.generated.h"
 
@@ -56,6 +54,7 @@ public:
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnExecutingPlayerAction, EActionState, ExecutingAction);
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAmount, AActor*, DamageCauser, EEnemyAttackType, ReceivingAttackType);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggeringCounter, AActor*, DamageCauser);
 DECLARE_DYNAMIC_DELEGATE(FOnClearingComboCount);
 
 
@@ -162,6 +161,7 @@ public:
 	// Delegate signature
 	FOnExecutingPlayerAction OnExecutePlayerAction;
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
+	FOnTriggeringCounter OnTriggeringCounter;
 	FOnClearingComboCount OnClearingComboCount;
 	
 	APlayerCharacter();
@@ -192,11 +192,12 @@ public:
 
 	// ================================================= Utility Functions ================================================
 
-
+	void UnsetCurrentTarget();
 
 	
 	// ================================================= Get And Set Functions ============================================
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}
+	
 
 	float GetCurrentStamina() const {return CurrentStamina;}
 	void SetStamina(float NewStamina) {CurrentStamina = NewStamina;}
@@ -219,11 +220,15 @@ public:
 	virtual void DamagingTarget_Implementation() override;
 
 	UFUNCTION()
+	virtual void ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget) override;
+	
+	UFUNCTION()
 	virtual void ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType EnemyAttackType) override;
 
 	UFUNCTION()
 	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
 
+	virtual void DetachEnemyTarget_Implementation() override;
 	
 
 	
