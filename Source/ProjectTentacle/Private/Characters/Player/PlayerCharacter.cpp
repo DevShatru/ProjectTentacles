@@ -130,7 +130,7 @@ void APlayerCharacter::MoveRight(float Value)
 void APlayerCharacter::TryMeleeAttack()
 {
 	// if player is recovering from action or is dodging, return
-	if(CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::WaitForCombo)
+	if(CheckCanPerformAction())
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Attack);
 	
 }
@@ -139,7 +139,7 @@ void APlayerCharacter::TryMeleeAttack()
 void APlayerCharacter::TryEvade()
 {
 	// if player is able to dodge, make dodge
-	if(CurrentActionState == EActionState::Idle)
+	if(CheckCanPerformAction())
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Evade);
 }
 
@@ -147,7 +147,7 @@ void APlayerCharacter::TryEvade()
 void APlayerCharacter::TryDodge()
 {
 	// if player is able to dodge, make dodge
-	if(CurrentActionState == EActionState::Idle && CurrentStamina > CostForEachDodge)
+	if(CheckCanPerformAction() && CurrentStamina > CostForEachDodge)
 	{
 		StopAnimMontage();	
 		StopRegenerateStamina();
@@ -157,6 +157,11 @@ void APlayerCharacter::TryDodge()
 		
 		WaitToRegenStamina();
 	}
+}
+
+bool APlayerCharacter::CheckCanPerformAction()
+{
+	return CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::PreAction;
 }
 
 // ================================================ Utility ===========================================================

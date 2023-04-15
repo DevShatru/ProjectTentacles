@@ -26,7 +26,7 @@ enum class EActionState: uint8
 	Recovering = 3 UMETA(DisplayName = "RECOVERING"),
 	ReceivedDamage = 4 UMETA(DisplayName = "RECEIVEDDAMAGE"),
 	SpecialAttack = 5 UMETA(DisplayName = "SPECIALATTACK"),
-	WaitForCombo = 6 UMETA(DisplayName = "WAITFORCOMBO"),
+	PreAction = 6 UMETA(DisplayName = "PreAction"),
 	Dodge = 7 UMETA(DisplayName = "DODGE")
 };
 

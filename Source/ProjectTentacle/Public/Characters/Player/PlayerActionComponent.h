@@ -182,6 +182,8 @@ protected:
 	// ================================================== Counter ======================================================
 	void BeginCounterAttack(AActor* CounteringTarget);
 
+	void SetCounterDistance(AEnemyBase* CounterVictim);
+	
 	// ================================================== Dodge ========================================================
 	void BeginDodge();
 

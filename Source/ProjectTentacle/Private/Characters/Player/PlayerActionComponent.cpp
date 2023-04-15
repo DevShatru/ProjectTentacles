@@ -373,11 +373,33 @@ void UPlayerActionComponent::BeginCounterAttack(AActor* CounteringTarget)
 	CurrentPlayingMontage = CounterAttackMontages;
 
 	MakePlayerEnemyFaceEachOther(CastedTarget);
+
+	SetCounterDistance(CastedTarget);
 	
 	CastedTarget->StartCounterAttackAnimation();
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
 	ComboCountIncrement();
+}
+
+void UPlayerActionComponent::SetCounterDistance(AEnemyBase* CounterVictim)
+{
+	// // Hit result
+	// FHitResult Hit;
+	// // Empty array of ignoring actor, add CounterVictim and PlayerRef to be ignored
+	// TArray<AActor*> IgnoreActors;
+	// IgnoreActors.Add(CounterVictim);
+	// IgnoreActors.Add(PlayerOwnerRef);
+	//
+	const FVector StartPos = PlayerOwnerRef->GetActorLocation();
+	const FVector EndPos = StartPos + (PlayerOwnerRef->GetActorForwardVector() * 90);
+	//
+	// // Line trace by channel from Kismet System Library 
+	// const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, StartPos, EndPos, UEngineTypes::ConvertToTraceType(ECC_Visibility), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+	//
+	//
+
+	CounterVictim->SetActorLocation(EndPos);
 }
 
 // ==================================================== Dodge ===============================================
@@ -633,25 +655,12 @@ void UPlayerActionComponent::ExecutePlayerAction(EActionState ExecutingAction)
 	switch (ExecutingAction)
 	{
 		case EActionState::Idle:
-			
 			break;
 		case EActionState::Evade:
 			BeginEvade();
 			break;
 		case EActionState::Attack:
 			BeginMeleeAttack();
-			break;
-		case EActionState::Recovering:
-			
-			break;
-		case EActionState::ReceivedDamage:
-			
-			break;
-		case EActionState::SpecialAttack:
-			
-			break;
-		case EActionState::WaitForCombo:
-			
 			break;
 		case EActionState::Dodge:
 			BeginDodge();
@@ -717,7 +726,7 @@ bool UPlayerActionComponent::IsPlayerCanBeDamaged(EActionState PlayerCurrentActi
 	EEnemyAttackType ReceivingAttackType)
 {
 	// return true if player is standing or attacking or player is countering but incoming attack is not counterable
-	return PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack || (PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::UnableToCounter);
+	return PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack || PlayerCurrentAction == EActionState::PreAction || (PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::UnableToCounter);
 }
 
 void UPlayerActionComponent::MakePlayerEnemyFaceEachOther(AEnemyBase* TargetEnemyRef)

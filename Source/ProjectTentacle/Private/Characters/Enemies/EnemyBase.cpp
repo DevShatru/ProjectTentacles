@@ -228,10 +228,20 @@ TArray<AActor*> AEnemyBase::GetActorsInFrontOfEnemy()
 
 	TArray<AActor*> FoundActorList;
 
+
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(this);
+
 	
-	UKismetSystemLibrary::SphereOverlapActors(World, HeadSocketLocation, 120, FilterType, FilteringClass, IgnoreActors,FoundActorList);
+	TArray<AEnemyBase*> Allies = OwnController->GetAllies();
+	
+	if(Allies.Num() > 0)
+		for (AEnemyBase* EachAlly : Allies)
+		{
+			IgnoreActors.Add(EachAlly);
+		}
+	
+	UKismetSystemLibrary::CapsuleOverlapActors(World, HeadSocketLocation, 80.0f, 90.0f, FilterType, FilteringClass, IgnoreActors, FoundActorList);
 
 	return FoundActorList;
 }

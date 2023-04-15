@@ -190,6 +190,8 @@ public:
 	
 	void TryDodge();
 
+	bool CheckCanPerformAction();
+
 	// ================================================= Utility Functions ================================================
 
 	void UnsetCurrentTarget();

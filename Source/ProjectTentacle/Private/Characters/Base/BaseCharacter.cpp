@@ -65,6 +65,6 @@ void ABaseCharacter::StartWaitForCombo_Implementation()
 {
 	ICharacterActionInterface::StartWaitForCombo_Implementation();
 
-	CurrentActionState = EActionState::WaitForCombo;
+	CurrentActionState = EActionState::PreAction;
 }
 
