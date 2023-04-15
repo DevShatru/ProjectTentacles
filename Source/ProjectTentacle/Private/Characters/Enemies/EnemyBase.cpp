@@ -313,10 +313,12 @@ void AEnemyBase::ActionEnd_Implementation(bool BufferingCheck)
 {
 	ICharacterActionInterface::ActionEnd_Implementation(BufferingCheck);
 
-	IsAttacking = false;
 	
-	if(BTComponent)
+	if(BTComponent && IsAttacking)
+	{
+		IsAttacking = false;
 		const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
+	}
 
 }
 
@@ -366,8 +368,6 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate 
 	if(IsAttacking && PlayerAttackType != EPlayerAttackType::CounterAttack)
 	{
-		IsAttacking = false;
-		
 		StopAnimMontage();
 		
 		OnHideAttackIndicator();
