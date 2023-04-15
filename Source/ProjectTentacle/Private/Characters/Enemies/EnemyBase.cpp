@@ -295,6 +295,20 @@ void AEnemyBase::PlayFinishedAnimation()
 	PlayAnimMontage(FinishedAnimation,1,NAME_None);
 }
 
+void AEnemyBase::TryStopMoving()
+{
+	UCharacterMovementComponent* MovementComp = GetCharacterMovement();
+	if(MovementComp->MovementMode == EMovementMode::MOVE_Walking)
+		MovementComp->DisableMovement();
+}
+
+void AEnemyBase::TryResumeMoving()
+{
+	UCharacterMovementComponent* MovementComp = GetCharacterMovement();
+	if(MovementComp->MovementMode == EMovementMode::MOVE_None)
+		MovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
+}
+
 // ============================================= Timeline function ====================================================
 
 void AEnemyBase::UpdateAttackingPosition(float Alpha)
@@ -362,8 +376,8 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 
-	// Cancel movement if we take damage
-	OwnController->StopMovement();
+	// // Cancel movement if we take damage
+	// OwnController->StopMovement();
 	
 	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate 
 	if(IsAttacking && PlayerAttackType != EPlayerAttackType::CounterAttack)
@@ -378,6 +392,8 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	
 	HealthReduction(DamageAmount);
 
+	TryResumeMoving();
+	
 	if(Health >= 1)
 	{
 		PlayReceiveDamageAnimation(PlayerAttackType);

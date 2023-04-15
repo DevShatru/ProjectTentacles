@@ -139,6 +139,8 @@ void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 	// Set damaging actor
 	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
 
+	RegisteredTarget->TryStopMoving();
+
 	ClearComboResetTimer();
 
 	// if(EnemyCurrentHealth <= 1)
@@ -180,7 +182,6 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 	
 		
 	
-	
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
 	
 	// change current action state enum
@@ -202,6 +203,7 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 	// }
 	
 
+	RegisteredTarget->TryStopMoving();
 	
 	// Play attack montage
 	CurrentPlayingMontage = DecidedMontage;

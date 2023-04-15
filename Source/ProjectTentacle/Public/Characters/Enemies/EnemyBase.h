@@ -217,7 +217,10 @@ public:
 	void InstantRotation(FVector RotatingVector);
 	
 	void PlayFinishedAnimation();
-	
+
+
+	void TryStopMoving();
+	void TryResumeMoving();
 
 	// ============================================= Timeline function ====================================================
 	
