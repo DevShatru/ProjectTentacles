@@ -214,7 +214,8 @@ FVector AEnemyBase::CalculateDestinationForAttackMoving(FVector PlayerPos)
 	return Hit.ImpactPoint + (DirFromPlayerToSelf * OffsetFromPlayer);
 }
 
-TArray<AActor*> AEnemyBase::GetActorsInFrontOfEnemy()
+
+TArray<AActor*> AEnemyBase::GetActorsInFrontOfEnemy(bool IsDamaging)
 {
 	const UWorld* World = GetWorld();
 	
@@ -240,8 +241,23 @@ TArray<AActor*> AEnemyBase::GetActorsInFrontOfEnemy()
 		{
 			IgnoreActors.Add(EachAlly);
 		}
+
+	float Radius;
+	float Height;
 	
-	UKismetSystemLibrary::CapsuleOverlapActors(World, HeadSocketLocation, 80.0f, 90.0f, FilterType, FilteringClass, IgnoreActors, FoundActorList);
+	if(IsDamaging)
+	{
+		Radius = DamageTriggerRadius;
+		Height = DamageTriggerHeight;
+	}
+	else
+	{
+		Radius = CounterTriggerRadius;
+		Height = CounterTriggerHeight;
+	}
+	
+	
+	UKismetSystemLibrary::CapsuleOverlapActors(World, HeadSocketLocation, Radius, Height, FilterType, FilteringClass, IgnoreActors, FoundActorList);
 
 	return FoundActorList;
 }
@@ -341,7 +357,7 @@ void AEnemyBase::TryToDamagePlayer_Implementation()
 {
 	ICharacterActionInterface::TryToDamagePlayer_Implementation();
 	
-	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy();
+	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy(true);
 
 	if(FoundActorList.Num() != 0)
 	{
@@ -357,7 +373,7 @@ void AEnemyBase::TryTriggerPlayerCounter_Implementation()
 {
 	ICharacterActionInterface::TryTriggerPlayerCounter_Implementation();
 
-	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy();
+	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy(false);
 
 	if(FoundActorList.Num() != 0)
 	{

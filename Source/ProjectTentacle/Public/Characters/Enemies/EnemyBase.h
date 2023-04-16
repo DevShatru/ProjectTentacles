@@ -136,10 +136,24 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
 	float OffsetFromPlayer = 50.0f;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
 	UCurveFloat* AttackMovingCurve;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	float CounterTriggerRadius = 150.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	float CounterTriggerHeight = 90.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	float DamageTriggerRadius = 75.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	float DamageTriggerHeight = 10.0f;
+	
+	
 	bool IsAttacking = false;
 	
 	// Attacking Animation
@@ -159,7 +173,7 @@ protected:
 
 	FVector CalculateDestinationForAttackMoving(FVector PlayerPos);
 	
-	TArray<AActor*> GetActorsInFrontOfEnemy();
+	TArray<AActor*> GetActorsInFrontOfEnemy(bool IsDamaging);
 
 	// ===================================================== Receive Damage =================================================
 	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
