@@ -22,17 +22,17 @@ EBTNodeResult::Type UBTTask_WaitForTrigger::ExecuteTask(UBehaviorTreeComponent& 
 	
 	Pawn = Controller->GetPawn();
 	if(!Pawn) return EBTNodeResult::Failed;
-	
-	UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
 
-	float FlatAngle;
+	const UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
+
 	AActor* AsActor = Cast<AActor>(Blackboard->GetValueAsObject("Target"));
 	if(!AsActor) return EBTNodeResult::Failed;
 
 	FocalActor = AsActor;
 	OwnerComp.GetAIOwner()->SetFocus(FocalActor);
 	
-	FlatAngle = CalculateFlatAngle(Pawn->GetActorForwardVector(), (FocalActor->GetActorLocation() - Pawn->GetActorLocation()).GetSafeNormal());	
+	float FlatAngle = CalculateFlatAngle(Pawn->GetActorForwardVector(),
+	                                     (FocalActor->GetActorLocation() - Pawn->GetActorLocation()).GetSafeNormal());	
 	
 	return EBTNodeResult::InProgress;
 }

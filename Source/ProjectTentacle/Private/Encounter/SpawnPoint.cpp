@@ -20,6 +20,12 @@ void ASpawnPoint::StartSpawningUnits()
 	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ASpawnPoint::SpawnUnit, TimeBetweenSpawns, true, TimeBetweenSpawns);
 }
 
+void ASpawnPoint::StopSpawningUnits()
+{
+	GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
+	ResetSpawnPoint();
+}
+
 void ASpawnPoint::SetUnitPool(AUnitPool* NewUnitPool)
 {
 	UnitPool = NewUnitPool;
@@ -38,7 +44,7 @@ void ASpawnPoint::SpawnUnit()
 	const float SpawnWeightSum = MeleeSpawnWeight + RangedSpawnWeight + BruteSpawnWeight;
 
 	if (SpawnWeightSum <= 0.f) {
-		GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
+		StopSpawningUnits();
 		return;
 	}
 
@@ -67,11 +73,16 @@ void ASpawnPoint::RegisterOwningEncounter(AEncounterVolume* EncounterVolume)
 void ASpawnPoint::BeginPlay()
 {
 	Super::BeginPlay();
+	ResetSpawnPoint();
+	CheckUnitsToSpawn();
+}
+
+void ASpawnPoint::ResetSpawnPoint()
+{
 	for(const EEnemyType Type : TEnumRange<EEnemyType>())
 	{
 		UnitsSpawned.Add(Type, 0);
 	}
-	CheckUnitsToSpawn();
 }
 
 void ASpawnPoint::CheckUnitsToSpawn()
