@@ -31,6 +31,8 @@ public:
 
 	virtual void BeginAttack();
 
+	void QuitFromEncounter();
+
 	void RegisterCompletedAttack();
 
 	AEnemyBase* GetOwnPawn() const;

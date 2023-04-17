@@ -42,6 +42,7 @@ void UPlayerActionComponent::InitializeOwnerRef()
 
 	PlayerOwnerRef->OnExecutePlayerAction.BindDynamic(this, &UPlayerActionComponent::ExecutePlayerAction);
 	PlayerOwnerRef->OnReceivingIncomingDamage.BindDynamic(this, &UPlayerActionComponent::ReceivingDamage);
+	PlayerOwnerRef->OnTriggeringCounter.BindDynamic(this, &UPlayerActionComponent::TriggerCounterAttack);
 	PlayerOwnerRef->OnClearingComboCount.BindDynamic(this, &UPlayerActionComponent::WaitToResetComboCount);
 }
 
@@ -98,19 +99,12 @@ void UPlayerActionComponent::BeginMeleeAttack()
 
 	// Get Current target and player location for later use
 	const FVector TargetActorPos = RegisteredTarget->GetActorLocation();
-	const FVector PlayerPos = PlayerOwnerRef->GetActorLocation();
-
 	
 	// set lerping start and end position to variable
 	MovingStartPos = PlayerOwnerRef->GetActorLocation();
 	SetAttackMovementPositions(TargetActorPos);
-
 	
-	// simply make player and targeted enemy rotate to each other
-	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActorPos - PlayerPos);
-	const FVector FacingPlayerDir = UKismetMathLibrary::Normal(PlayerPos - TargetActorPos);
-	InstantRotation(FacingEnemyDir);
-	RegisteredTarget->InstantRotation(FacingPlayerDir);
+	MakePlayerEnemyFaceEachOther(RegisteredTarget);
 	
 	const bool bIsClose = TargetDistanceCheck(RegisteredTarget);
 	
@@ -145,16 +139,13 @@ void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 	// Set damaging actor
 	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
 
-	// Stop combo count reset timer handle
-	const UWorld* World = GetWorld();
-	if(!World) return;
-	World->GetTimerManager().ClearTimer(ComboResetTimerHandle);
+	ClearComboResetTimer();
 
-	if(EnemyCurrentHealth <= 1)
-	{
-		FinishEnemy();
-		return;
-	}
+	// if(EnemyCurrentHealth <= 1)
+	// {
+	// 	FinishEnemy();
+	// 	return;
+	// }
 	
 
 	
@@ -202,16 +193,13 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 	// Set damaging actor
 	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
 
-	// Stop combo count reset timer handle
-	const UWorld* World = GetWorld();
-	if(!World) return;
-	World->GetTimerManager().ClearTimer(ComboResetTimerHandle);
+	ClearComboResetTimer();
 
-	if(EnemyCurrentHealth <= 1)
-	{
-		FinishEnemy();
-		return;
-	}
+	// if(EnemyCurrentHealth <= 1)
+	// {
+	// 	FinishEnemy();
+	// 	return;
+	// }
 	
 
 	
@@ -333,6 +321,14 @@ void UPlayerActionComponent::WaitToResetComboCount()
 
 // ====================================================== Evade ===============================================
 
+void UPlayerActionComponent::ClearComboResetTimer()
+{
+	// Stop combo count reset timer handle
+	const UWorld* World = GetWorld();
+	if(!World) return;
+	World->GetTimerManager().ClearTimer(ComboResetTimerHandle);
+}
+
 void UPlayerActionComponent::BeginEvade()
 {
 	// if evade montage is null pointer, just return
@@ -372,12 +368,14 @@ void UPlayerActionComponent::BeginCounterAttack(AActor* CounteringTarget)
 	
 	PlayerOwnerRef->SetDamagingActor(CastedTarget);
 	
+	PlayerOwnerRef->SetCurrentAttackType(EPlayerAttackType::CounterAttack);
+	
 	CurrentPlayingMontage = CounterAttackMontages;
 
-	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(CastedTarget->GetActorLocation() - PlayerOwnerRef->GetActorLocation());
-	InstantRotation(FacingEnemyDir);
+	MakePlayerEnemyFaceEachOther(CastedTarget);
 	
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
+	CastedTarget->StartCounterAttackAnimation();
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
 	ComboCountIncrement();
 }
@@ -501,7 +499,12 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 		for (AActor* EachFoundActor : FoundActorList)
 		{
 			AEnemyBase* FoundCharacter = Cast<AEnemyBase>(EachFoundActor);
-			if(FoundCharacter != nullptr) ReturnActors.Add(FoundCharacter);
+			if(FoundCharacter != nullptr)
+			{
+				// Exclude enemy that are dead
+				if(!FoundCharacter->GetIsDead())
+					ReturnActors.Add(FoundCharacter);
+			}
 		}
 	}
 	
@@ -666,16 +669,6 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 
 	if(PlayerCurrentAction == EActionState::Dodge) return;
 	
-	
-	// TODO: Check EnemyAttackType before performing counter
-	
-	if(IsPlayerCountering(PlayerCurrentAction, ReceivingAttackType))
-	{
-		PlayerOwnerRef->StopAnimMontage();
-		BeginCounterAttack(DamageCauser);
-		return;
-	}
-	
 
 	if(IsPlayerCanBeDamaged(PlayerCurrentAction, ReceivingAttackType))
 	{
@@ -684,20 +677,35 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 			PlayerOwnerRef->StopAnimMontage();	
 		}
 
-		// TODO: Damage player
+		// Damage player
 		PlayerOwnerRef->HealthReduction(DamageAmount);
+
+		// Set combo count to zero
+		ResetComboCount();
+		ClearComboResetTimer();
 
 		// Player Play receiving damage montage
 		if(ReceiveDamageMontage == nullptr) return;
 
 		PlayerOwnerRef->SetCurrentActionState(EActionState::Recovering);
-		
+
+		// Instant Rotate to enemy
+		const FVector FacingEnemyDir = UKismetMathLibrary::Normal(DamageCauser->GetActorLocation() - PlayerOwnerRef->GetActorLocation());
+		InstantRotation(FacingEnemyDir);
 	
 		CurrentPlayingMontage = ReceiveDamageMontage;
 		
 		PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, NAME_None);
 	}
 }
+
+void UPlayerActionComponent::TriggerCounterAttack(AActor* CounteringTarget)
+{
+	PlayerOwnerRef->StopAnimMontage();
+	BeginCounterAttack(CounteringTarget);
+
+}
+
 
 bool UPlayerActionComponent::IsPlayerCountering(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType)
 {
@@ -710,5 +718,17 @@ bool UPlayerActionComponent::IsPlayerCanBeDamaged(EActionState PlayerCurrentActi
 {
 	// return true if player is standing or attacking or player is countering but incoming attack is not counterable
 	return PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack || (PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::UnableToCounter);
+}
+
+void UPlayerActionComponent::MakePlayerEnemyFaceEachOther(AEnemyBase* TargetEnemyRef)
+{
+	// simply make player and targeted enemy rotate to each other
+	const FVector TargetActorPos = TargetEnemyRef->GetActorLocation();
+	const FVector PlayerPos = PlayerOwnerRef->GetActorLocation();
+	
+	const FVector FacingEnemyDir = UKismetMathLibrary::Normal(TargetActorPos - PlayerPos);
+	const FVector FacingPlayerDir = UKismetMathLibrary::Normal(PlayerPos - TargetActorPos);
+	InstantRotation(FacingEnemyDir);
+	TargetEnemyRef->InstantRotation(FacingPlayerDir);
 }
 

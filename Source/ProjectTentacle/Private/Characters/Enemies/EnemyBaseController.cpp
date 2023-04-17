@@ -71,6 +71,14 @@ void AEnemyBaseController::BeginAttack()
 	Blackboard->SetValueAsBool("bIsAttacking", true);
 }
 
+void AEnemyBaseController::QuitFromEncounter()
+{
+	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("%s left queue list"), *OwnPawn->GetHumanReadableName()));
+
+	// TODO: Change to RegisterUnitDestroyed 
+	OwningEncounter->RemoveDeadUnitFromEncounter(this);
+}
+
 // Register after attack has completed
 void AEnemyBaseController::RegisterCompletedAttack()
 {

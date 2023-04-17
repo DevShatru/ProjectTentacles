@@ -37,6 +37,8 @@ public:
 
 	void AddSpawnedUnitToEncounter(AEnemyBase* Unit);
 
+	void RemoveDeadUnitFromEncounter(AEnemyBaseController* DeadUnit);
+
 	// Delegate function to be execute to send all enemy to reposition
 	UFUNCTION()
 	void SendAllEnemyToReposition(bool DoesIncludeHeavy);
