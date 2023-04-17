@@ -408,6 +408,9 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 
 	// // Cancel movement if we take damage
 	// OwnController->StopMovement();
+	// Cancel movement if we take damage
+	TryGetOwnController();
+	OwnController->StopMovement();
 	
 	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate 
 	if(IsAttacking && PlayerAttackType != EPlayerAttackType::CounterAttack)

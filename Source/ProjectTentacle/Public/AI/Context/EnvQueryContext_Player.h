@@ -13,8 +13,6 @@ UCLASS()
 class PROJECTTENTACLE_API UEnvQueryContext_Player : public UEnvQueryContext
 {
 	GENERATED_BODY()
-public:
-	UEnvQueryContext_Player();
 
 protected:
 	virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
@@ -22,5 +20,4 @@ protected:
 
 private:
 	static AActor* Player;
-	static TArray<UEnvQueryContext_Player*> AllPlayerContexts;
 };

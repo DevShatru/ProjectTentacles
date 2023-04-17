@@ -16,6 +16,7 @@ public:
 	// Sets default values for this actor's properties
 	ASpawnPoint();
 	void StartSpawningUnits();
+	void StopSpawningUnits();
 	void SetUnitPool(class AUnitPool* NewUnitPool);
 	void SpawnUnit();
 	void RegisterOwningEncounter(class AEncounterVolume* EncounterVolume);
@@ -53,6 +54,7 @@ protected:
 	AUnitPool* UnitPool;
 	
 private:
+	void ResetSpawnPoint();
 	AEncounterVolume* OwningEncounterVolume;
 	FTimerHandle SpawnTimerHandle;
 	TMap<EEnemyType, int8> UnitsSpawned;
