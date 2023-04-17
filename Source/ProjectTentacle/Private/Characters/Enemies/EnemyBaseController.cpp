@@ -34,14 +34,6 @@ void AEnemyBaseController::BeginPlay()
 {
 	Super::BeginPlay();
 	EncounterTarget = nullptr;
-	if(!BehaviorTree) return;
-
-	// Init blackboard and run master behaviour
-	Blackboard->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
-	RunBehaviorTree(BehaviorTree);
-
-	// Bind UFunction to perception updated delegate
-	Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyBaseController::UpdatePerception);
 }
 
 void AEnemyBaseController::RegisterOwningEncounter(AEncounterVolume* NewOwningEncounter)
@@ -102,6 +94,14 @@ void AEnemyBaseController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	OwnPawn = Cast<AEnemyBase>(InPawn);
+	if(!BehaviorTree) return;
+
+	// Init blackboard and run master behaviour
+	Blackboard->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+	RunBehaviorTree(BehaviorTree);
+
+	// Bind UFunction to perception updated delegate
+	Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyBaseController::UpdatePerception);
 }
 
 void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
