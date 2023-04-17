@@ -30,5 +30,5 @@ private:
 	AAIController* Controller;
 	APawn* Pawn;
 
-	float CalculateFlatAngle(const FVector& VectorA, const FVector& VectorB);
+	static float CalculateFlatAngle(const FVector& VectorA, const FVector& VectorB);
 };
