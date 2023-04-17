@@ -29,6 +29,22 @@ void UPlayerActionComponent::StopTimelineMoving()
 	DodgeLerpingTimeLine.Stop();
 }
 
+void UPlayerActionComponent::PauseComboResetTimer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	World->GetTimerManager().PauseTimer(ComboResetTimerHandle);
+}
+
+void UPlayerActionComponent::ResumeComboResetTimer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	World->GetTimerManager().UnPauseTimer(ComboResetTimerHandle);
+}
+
 
 // =================================================== Begin Functions =======================================================
 void UPlayerActionComponent::BeginPlay()
@@ -54,7 +70,7 @@ void UPlayerActionComponent::InitializeOwnerRef()
 	PlayerOwnerRef->OnReceivingIncomingDamage.BindDynamic(this, &UPlayerActionComponent::ReceivingDamage);
 	PlayerOwnerRef->OnTriggeringCounter.BindDynamic(this, &UPlayerActionComponent::TriggerCounterAttack);
 	PlayerOwnerRef->OnEnteringPreCounterState.BindDynamic(this, &UPlayerActionComponent::TriggerPreCounter);
-	PlayerOwnerRef->OnClearingComboCount.BindDynamic(this, &UPlayerActionComponent::WaitToResetComboCount);
+	PlayerOwnerRef->OnActionFinish.BindDynamic(this, &UPlayerActionComponent::OnEndingAction);
 }
 
 void UPlayerActionComponent::InitializeTimelineComp()
@@ -333,6 +349,12 @@ float UPlayerActionComponent::CalculateCurrentComboSpeed()
 	return 1 + AdjustedSpeedBonus;
 }
 
+void UPlayerActionComponent::OnEndingAction()
+{
+	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::Attack || PlayerOwnerRef->GetCurrentActionState() == EActionState::SpecialAttack)
+		WaitToResetComboCount();
+}
+
 void UPlayerActionComponent::WaitToResetComboCount()
 {
 	const UWorld* World = GetWorld();
@@ -466,8 +488,8 @@ void UPlayerActionComponent::BeginCounterAttack()
 
 	ComboCountIncrement();
 
-	// TODO: Stop Combo Count timer
-	
+	// Stop Combo Count timer
+	ClearComboResetTimer();
 
 	// Clear counter target reference and set counterable bool to false
 	AEnemyBase* DeletingCounterTargetRef = PlayerOwnerRef->GetCounteringTarget();

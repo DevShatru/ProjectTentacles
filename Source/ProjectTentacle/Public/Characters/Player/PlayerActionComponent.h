@@ -20,6 +20,9 @@ public:
 private:
 
 	void StopTimelineMoving();
+
+	void PauseComboResetTimer();
+	void ResumeComboResetTimer();
 	
 	// Attack Animation Timeline
 	// Timeline
@@ -195,6 +198,8 @@ protected:
 	float CalculateCurrentComboSpeed();
 
 	UFUNCTION()
+	void OnEndingAction();
+	
 	void WaitToResetComboCount();
 
 	UFUNCTION()

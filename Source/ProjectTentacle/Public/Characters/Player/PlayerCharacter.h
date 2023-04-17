@@ -57,7 +57,7 @@ DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAm
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggeringCounter, AActor*, DamageCauser);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEnteringPreCounterState, AActor*, CounterTarget);
 
-DECLARE_DYNAMIC_DELEGATE(FOnClearingComboCount);
+DECLARE_DYNAMIC_DELEGATE(FOnActionFinish);
 
 
 /**
@@ -170,7 +170,7 @@ public:
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
 	FOnTriggeringCounter OnTriggeringCounter;
 	FOnEnteringPreCounterState OnEnteringPreCounterState;
-	FOnClearingComboCount OnClearingComboCount;
+	FOnActionFinish OnActionFinish;
 	
 	APlayerCharacter();
 

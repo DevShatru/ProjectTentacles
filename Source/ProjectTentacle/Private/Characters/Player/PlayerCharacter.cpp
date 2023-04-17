@@ -297,9 +297,9 @@ void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount,
 
 void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
 {
-	Super::ActionEnd_Implementation(BufferingCheck);
+	const bool bExecuted = OnActionFinish.ExecuteIfBound();
 
-	const bool bExecuted = OnClearingComboCount.ExecuteIfBound();
+	Super::ActionEnd_Implementation(BufferingCheck);
 }
 
 void APlayerCharacter::DetachEnemyTarget_Implementation()
