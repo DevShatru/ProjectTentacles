@@ -18,6 +18,16 @@ UPlayerActionComponent::UPlayerActionComponent()
 	// ...
 }
 
+void UPlayerActionComponent::StopTimelineMoving()
+{
+	ShortFlipKickTimeLine.Stop();
+	FlyingKickTimeLine.Stop();
+	FlyingPunchTimeLine.Stop();
+	SpinKickTimeLine.Stop();
+	DashingDoubleKickTimeLine.Stop();
+	CloseToPerformFinisherTimeLine.Stop();
+	DodgeLerpingTimeLine.Stop();
+}
 
 
 // =================================================== Begin Functions =======================================================
@@ -345,24 +355,47 @@ void UPlayerActionComponent::ClearComboResetTimer()
 
 void UPlayerActionComponent::BeginEvade()
 {
-	// if evade montage is null pointer, just return
-	if(EvadeAnimMontage == nullptr) return;
+	// Set target countered to prevent clearing target
+	AEnemyBase* CurrentStoredCounterTarget = PlayerOwnerRef->GetCounteringTarget();
+	CurrentStoredCounterTarget->SetIsCountered(true);
 
-	PlayerOwnerRef->SetCurrentActionState(EActionState::Evade);
-	
-	CurrentPlayingMontage = EvadeAnimMontage;
-
-	const int32 RndPerformIndex = UKismetMathLibrary::RandomIntegerInRange(0,1);
-
-	if(RndPerformIndex == 0)
+	// Make previous targeted enemy able to move if player is attacking
+	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::Attack)
 	{
-		PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeRight");
-		return;
-	}
+		StopTimelineMoving();
+		
+		AEnemyBase* ResumeMovementDamagingActor = PlayerOwnerRef->GetDamagingActor();
+		if(ResumeMovementDamagingActor)
+			ResumeMovementDamagingActor->TryResumeMoving();
+	}	
 	
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeLeft");
+	
+	// Enter Pre Counter State
+	EnterPreCounterState();
+
+	
+
+
+	
+	// // if evade montage is null pointer, just return
+	// if(EvadeAnimMontage == nullptr) return;
+	//
+	// PlayerOwnerRef->SetCurrentActionState(EActionState::Evade);
+	//
+	// CurrentPlayingMontage = EvadeAnimMontage;
+	//
+	// const int32 RndPerformIndex = UKismetMathLibrary::RandomIntegerInRange(0,1);
+	//
+	// if(RndPerformIndex == 0)
+	// {
+	// 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeRight");
+	// 	return;
+	// }
+	//
+	// PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeLeft");
 }
 
+// ================================================== Pre Counter State =================================================
 void UPlayerActionComponent::EnterPreCounterState()
 {
 	PlayerOwnerRef->SetCurrentActionState(EActionState::SpecialAttack);
@@ -432,6 +465,14 @@ void UPlayerActionComponent::BeginCounterAttack()
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
 	ComboCountIncrement();
+
+	// TODO: Stop Combo Count timer
+	
+
+	// Clear counter target reference and set counterable bool to false
+	AEnemyBase* DeletingCounterTargetRef = PlayerOwnerRef->GetCounteringTarget();
+	PlayerOwnerRef->ClearCounteringTarget(DeletingCounterTargetRef);
+	PlayerOwnerRef->TryTurnCounterCapable(false);
 }
 
 FVector UPlayerActionComponent::GetCounterPos(AEnemyBase* CounterVictim)

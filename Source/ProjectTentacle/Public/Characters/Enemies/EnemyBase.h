@@ -257,6 +257,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UBehaviorTreeComponent* GetBehaviourTreeComponent() const {return BTComponent;}
 	void SetBehaviourTreeComponent(UBehaviorTreeComponent* NewBehaviourTreeComponent) {BTComponent = NewBehaviourTreeComponent;}
+
+	bool GetIsCountered() const {return IsCountered;}
+	void SetIsCountered(bool NewIsCountered) {IsCountered = NewIsCountered;}
+
 	
 	// ================================================== Interface Functions ============================================
 
@@ -265,6 +269,8 @@ public:
 	virtual void TryToDamagePlayer_Implementation() override;
 
 	virtual void TryTriggerPlayerCounter_Implementation() override;
+
+	virtual void OnCounterTimeEnd_Implementation() override;
 
 	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 
@@ -282,6 +288,9 @@ public:
 	
 
 private:
+
+	// bool to check if enemy is in counter state
+	bool IsCountered = false;
 	
 	// Timeline for enemy attack movement
 	FTimeline AttackMovingTimeline;

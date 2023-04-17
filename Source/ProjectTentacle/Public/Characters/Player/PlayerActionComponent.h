@@ -19,6 +19,8 @@ public:
 
 private:
 
+	void StopTimelineMoving();
+	
 	// Attack Animation Timeline
 	// Timeline
 	FTimeline ShortFlipKickTimeLine;

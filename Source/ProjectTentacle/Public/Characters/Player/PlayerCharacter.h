@@ -76,7 +76,7 @@ private:
 	void WaitToRegenStamina();
 	void BeginRegenerateStamina();
 	void RegeneratingStamina();
-	
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -104,6 +104,8 @@ protected:
 
 	UPROPERTY()
 	AEnemyBase* CounteringVictim;
+
+	bool IsPlayerCounterable = false;
 	
 	
 	UPROPERTY()
@@ -216,8 +218,13 @@ public:
 	AEnemyBase* GetDamagingActor() const {return DamagingActor;}
 	void SetDamagingActor(AEnemyBase* NewDamagingActor) {DamagingActor = NewDamagingActor;}
 
+	bool GetIsPlayerCounterable() const {return IsPlayerCounterable;}
+	void TryTurnCounterCapable(bool IsOn) {if(IsPlayerCounterable != IsOn) IsPlayerCounterable = IsOn;}
+
+	
 	AEnemyBase* GetCounteringTarget() const {return CounteringVictim;}
 	void SetCounteringTarget(AEnemyBase* NewCounterTarget) {if(CounteringVictim != NewCounterTarget) CounteringVictim = NewCounterTarget;}
+	void ClearCounteringTarget(AEnemyBase* RemovingCounterTarget) {if(CounteringVictim == RemovingCounterTarget) CounteringVictim = nullptr;}
 
 	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}
@@ -230,8 +237,14 @@ public:
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
 
+	// UFUNCTION()
+	// virtual void ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget) override;
+	
 	UFUNCTION()
-	virtual void ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget) override;
+	virtual void TryStoreCounterTarget_Implementation(AEnemyBase* CounterTarget) override;
+
+	UFUNCTION()
+	virtual void TryRemoveCounterTarget_Implementation(AEnemyBase* CounterTarget) override;
 	
 	UFUNCTION()
 	virtual void ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType EnemyAttackType) override;

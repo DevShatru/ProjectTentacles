@@ -298,7 +298,7 @@ void AEnemyBase::RecoverFromLying()
 	CurrentEnemyState = EEnemyCurrentState::Standing;
 	
 	StopAnimMontage();
-	PlayAnimMontage(GetUpMontage,1,"Default");
+	PlayAnimMontage(GetUpMontage,2,"Default");
 }
 
 EEnemyType AEnemyBase::GetType() const
@@ -350,6 +350,7 @@ void AEnemyBase::ActionEnd_Implementation(bool BufferingCheck)
 		const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
 	}
 
+	SetIsCountered(false);
 }
 
 // ================================================== Interface Functions ============================================
@@ -379,10 +380,23 @@ void AEnemyBase::TryTriggerPlayerCounter_Implementation()
 	{
 		for (AActor* EachFoundActor : FoundActorList)
 		{
-			ICharacterActionInterface::Execute_ReceiveAttackInCounterState(EachFoundActor, this);
+			ICharacterActionInterface::Execute_TryStoreCounterTarget(EachFoundActor, this);
 		}
 	}
 
+}
+
+void AEnemyBase::OnCounterTimeEnd_Implementation()
+{
+	ICharacterActionInterface::OnCounterTimeEnd_Implementation();
+
+	OnHideAttackIndicator();
+
+	if(!IsCountered)
+	{
+		ACharacter* PlayerCharacterClass = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+		ICharacterActionInterface::Execute_TryRemoveCounterTarget(PlayerCharacterClass, this);
+	}
 }
 
 // ===================================================== Damage Receive ========================================================
