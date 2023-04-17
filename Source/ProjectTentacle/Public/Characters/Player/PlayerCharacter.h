@@ -55,6 +55,8 @@ public:
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnExecutingPlayerAction, EActionState, ExecutingAction);
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAmount, AActor*, DamageCauser, EEnemyAttackType, ReceivingAttackType);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggeringCounter, AActor*, DamageCauser);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEnteringPreCounterState, AActor*, CounterTarget);
+
 DECLARE_DYNAMIC_DELEGATE(FOnClearingComboCount);
 
 
@@ -99,6 +101,9 @@ protected:
 
 	UPROPERTY()
 	AEnemyBase* DamagingActor;
+
+	UPROPERTY()
+	AEnemyBase* CounteringVictim;
 	
 	
 	UPROPERTY()
@@ -162,6 +167,7 @@ public:
 	FOnExecutingPlayerAction OnExecutePlayerAction;
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
 	FOnTriggeringCounter OnTriggeringCounter;
+	FOnEnteringPreCounterState OnEnteringPreCounterState;
 	FOnClearingComboCount OnClearingComboCount;
 	
 	APlayerCharacter();
@@ -209,6 +215,9 @@ public:
 
 	AEnemyBase* GetDamagingActor() const {return DamagingActor;}
 	void SetDamagingActor(AEnemyBase* NewDamagingActor) {DamagingActor = NewDamagingActor;}
+
+	AEnemyBase* GetCounteringTarget() const {return CounteringVictim;}
+	void SetCounteringTarget(AEnemyBase* NewCounterTarget) {if(CounteringVictim != NewCounterTarget) CounteringVictim = NewCounterTarget;}
 
 	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}

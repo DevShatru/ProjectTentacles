@@ -43,6 +43,7 @@ void UPlayerActionComponent::InitializeOwnerRef()
 	PlayerOwnerRef->OnExecutePlayerAction.BindDynamic(this, &UPlayerActionComponent::ExecutePlayerAction);
 	PlayerOwnerRef->OnReceivingIncomingDamage.BindDynamic(this, &UPlayerActionComponent::ReceivingDamage);
 	PlayerOwnerRef->OnTriggeringCounter.BindDynamic(this, &UPlayerActionComponent::TriggerCounterAttack);
+	PlayerOwnerRef->OnEnteringPreCounterState.BindDynamic(this, &UPlayerActionComponent::TriggerPreCounter);
 	PlayerOwnerRef->OnClearingComboCount.BindDynamic(this, &UPlayerActionComponent::WaitToResetComboCount);
 }
 
@@ -60,6 +61,16 @@ void UPlayerActionComponent::InitializeTimelineComp()
 	FOnTimelineFloat DodgingPosUpdate;
 	DodgingPosUpdate.BindDynamic(this, &UPlayerActionComponent::DodgeMovement);
 	DodgeLerpingTimeLine.AddInterpFloat(DodgeLerpingCurve, DodgingPosUpdate);
+
+	
+	FOnTimelineFloat TurnRotatorUpdate;
+	TurnRotatorUpdate.BindDynamic(this, &UPlayerActionComponent::TurnRotationUpdate);
+	
+	FOnTimelineEvent TurnRotatorFinish;
+	TurnRotatorFinish.BindDynamic(this, &UPlayerActionComponent::EnterCounterAttackState);
+	
+	TurnRotationTimeline.AddInterpFloat(CounterRotationCurve, TurnRotatorUpdate);
+	TurnRotationTimeline.SetTimelineFinishedFunc(TurnRotatorFinish);
 	
 }
 
@@ -83,6 +94,7 @@ void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	DashingDoubleKickTimeLine.TickTimeline(DeltaWithComboBonus);
 	CloseToPerformFinisherTimeLine.TickTimeline(DeltaWithComboBonus);
 	DodgeLerpingTimeLine.TickTimeline(DeltaTime);
+	TurnRotationTimeline.TickTimeline(DeltaTime);
 
 }
 
@@ -351,40 +363,78 @@ void UPlayerActionComponent::BeginEvade()
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeLeft");
 }
 
+void UPlayerActionComponent::EnterPreCounterState()
+{
+	PlayerOwnerRef->SetCurrentActionState(EActionState::SpecialAttack);
+
+	// Get Start and End lerping Rotation Yaw
+	StartTurnRotationZ = PlayerOwnerRef->GetActorRotation().Yaw;
+
+	AEnemyBase* CurrentCounterTarget = PlayerOwnerRef->GetCounteringTarget();
+
+	const FVector PlayerCurrentPos = PlayerOwnerRef->GetActorLocation();
+	FVector CounterTargetPos = CurrentCounterTarget->GetActorLocation();
+	CounterTargetPos.Z = PlayerCurrentPos.Z;
+
+	const FRotator RotationToTarget = UKismetMathLibrary::FindLookAtRotation(PlayerCurrentPos, CounterTargetPos);
+	EndTurnRotationZ = RotationToTarget.Yaw;
+
+	// Get Start and End lerping positions
+	CounterMoveStartPos = PlayerCurrentPos;
+	CounterMoveEndPos = GetCounterPos(CurrentCounterTarget);
+	
+	// Decide which side should player turn
+	const float AngleChange = EndTurnRotationZ - StartTurnRotationZ;
+
+	const bool IsLeftTurn = AngleChange < 0;
+
+	if(IsLeftTurn)
+		PlayerOwnerRef->PlayAnimMontage(RotateAnimationLeft, 6.0f, "Default");
+	else
+		PlayerOwnerRef->PlayAnimMontage(RotateAnimationRight, 6.0f, "Default");
+
+	TurnRotationTimeline.PlayFromStart();
+}
+
+void UPlayerActionComponent::EnterCounterAttackState()
+{
+	PlayerOwnerRef->StopAnimMontage();
+
+	PlayerOwnerRef->SetCounteringTarget(PlayerOwnerRef->GetCounteringTarget());
+	
+	BeginCounterAttack();
+}
 
 
 // ================================================== Counter ======================================================
-void UPlayerActionComponent::BeginCounterAttack(AActor* CounteringTarget)
+void UPlayerActionComponent::BeginCounterAttack()
 {
 	// ref validation check
 	if(PlayerOwnerRef == nullptr) return;
+
+	AEnemyBase* StoredCounterTarget = PlayerOwnerRef->GetCounteringTarget();
+	if(!StoredCounterTarget) return;
 	
 	// if Dodge montage is null pointer, just return
 	if(CounterAttackMontages == nullptr) return;
-
-	PlayerOwnerRef->SetCurrentActionState(EActionState::SpecialAttack);
-
-	AEnemyBase* CastedTarget = Cast<AEnemyBase>(CounteringTarget);
-	if(CastedTarget == nullptr) return;
-
 	
-	PlayerOwnerRef->SetDamagingActor(CastedTarget);
+	PlayerOwnerRef->SetDamagingActor(StoredCounterTarget);
 	
 	PlayerOwnerRef->SetCurrentAttackType(EPlayerAttackType::CounterAttack);
 	
 	CurrentPlayingMontage = CounterAttackMontages;
 
-	MakePlayerEnemyFaceEachOther(CastedTarget);
+	MakePlayerEnemyFaceEachOther(StoredCounterTarget);
 
-	SetCounterDistance(CastedTarget);
 	
-	CastedTarget->StartCounterAttackAnimation();
+	
+	StoredCounterTarget->StartCounterAttackAnimation();
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
 	ComboCountIncrement();
 }
 
-void UPlayerActionComponent::SetCounterDistance(AEnemyBase* CounterVictim)
+FVector UPlayerActionComponent::GetCounterPos(AEnemyBase* CounterVictim)
 {
 	// // Hit result
 	// FHitResult Hit;
@@ -393,16 +443,31 @@ void UPlayerActionComponent::SetCounterDistance(AEnemyBase* CounterVictim)
 	// IgnoreActors.Add(CounterVictim);
 	// IgnoreActors.Add(PlayerOwnerRef);
 	//
-	const FVector StartPos = PlayerOwnerRef->GetActorLocation();
-	const FVector EndPos = StartPos + (PlayerOwnerRef->GetActorForwardVector() * 90);
+	const FVector StartPos = CounterVictim->GetActorLocation();
+	const FVector EndPos = StartPos + (CounterVictim->GetActorForwardVector() * 90);
 	//
 	// // Line trace by channel from Kismet System Library 
 	// const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, StartPos, EndPos, UEngineTypes::ConvertToTraceType(ECC_Visibility), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
 	//
 	//
 
-	CounterVictim->SetActorLocation(EndPos);
+	return EndPos;
 }
+
+void UPlayerActionComponent::TurnRotationUpdate(float Alpha)
+{
+	
+	const FRotator CurrentPlayerRotation = PlayerOwnerRef->GetActorRotation();
+	const float CurrentRotatorYaw = UKismetMathLibrary::Lerp(StartTurnRotationZ, EndTurnRotationZ, Alpha);
+	const FRotator NewRotation = FRotator(CurrentPlayerRotation.Pitch,CurrentRotatorYaw,CurrentPlayerRotation.Roll);
+	
+	PlayerOwnerRef->SetActorRotation(NewRotation);
+
+	const FVector NewPos = UKismetMathLibrary::VLerp(CounterMoveStartPos, CounterMoveEndPos, Alpha);
+	PlayerOwnerRef->SetActorLocation(NewPos);
+}
+
+
 
 // ==================================================== Dodge ===============================================
 
@@ -710,10 +775,32 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 	}
 }
 
+
+void UPlayerActionComponent::TriggerPreCounter(AActor* CounteringTarget)
+{
+	if(!CounteringTarget) return;
+
+	AEnemyBase* CastedTarget = Cast<AEnemyBase>(CounteringTarget);
+	if(CastedTarget == nullptr) return;
+
+	PlayerOwnerRef->StopAnimMontage();
+
+	PlayerOwnerRef->SetCounteringTarget(CastedTarget);
+
+	EnterPreCounterState();
+}
+
+
 void UPlayerActionComponent::TriggerCounterAttack(AActor* CounteringTarget)
 {
+	AEnemyBase* CastedTarget = Cast<AEnemyBase>(CounteringTarget);
+	if(CastedTarget == nullptr) return;
+	
 	PlayerOwnerRef->StopAnimMontage();
-	BeginCounterAttack(CounteringTarget);
+
+	PlayerOwnerRef->SetCounteringTarget(CastedTarget);
+	
+	BeginCounterAttack();
 
 }
 

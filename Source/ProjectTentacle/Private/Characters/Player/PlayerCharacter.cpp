@@ -258,9 +258,12 @@ void APlayerCharacter::ReceiveAttackInCounterState_Implementation(AActor* Counte
 {
 	Super::ReceiveAttackInCounterState_Implementation(CounteringTarget);
 
-	// if player is in evade state, it means player will trigger counter action
 	if(CurrentActionState == EActionState::Evade)
-		bool bExecuted = OnTriggeringCounter.ExecuteIfBound(CounteringTarget);
+		bool bExecuted = OnEnteringPreCounterState.ExecuteIfBound(CounteringTarget);
+		
+	// // if player is in evade state, it means player will trigger counter action
+	// if(CurrentActionState == EActionState::Evade)
+	// 	bool bExecuted = OnTriggeringCounter.ExecuteIfBound(CounteringTarget);
 }
 
 
