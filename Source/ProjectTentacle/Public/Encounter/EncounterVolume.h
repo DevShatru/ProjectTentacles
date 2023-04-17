@@ -72,6 +72,8 @@ protected:
 	float SpawnStartTime = 75.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	float SpawnStartEncounterCompletionPercent = 75.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	float DespawnTimer = 5.0f;
 
 	// Attack queue for melee and ranged units
 	TArray<AEnemyBaseController*> AttackQueueBasic;
@@ -85,6 +87,10 @@ protected:
 
 	UFUNCTION()
 	void StartSpawn();
+
+	UFUNCTION()
+	void DespawnUnit(AEnemyBaseController* Unit);
+	
 private:
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();

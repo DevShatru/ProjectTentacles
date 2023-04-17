@@ -7,6 +7,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"
+#include "Characters/Enemies/UnitPool.h"
 #include "Encounter/SpawnPoint.h"
 
 FTimerManager* AEncounterVolume::WorldTimerManager = nullptr;
@@ -69,6 +70,10 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 	if(AttackQueueBasic.Contains(Unit)) AttackQueueBasic.Remove(Unit);
 	if(AttackQueueHeavy.Contains(Unit)) AttackQueueHeavy.Remove(Unit);
 	if(ContainedUnits.Contains(Unit->GetOwnPawn())) ContainedUnits.Remove(Unit->GetOwnPawn());
+	FTimerHandle DespawnHandle;
+	FTimerDelegate DespawnDelegate;
+	DespawnDelegate.BindUFunction(this, FName("DespawnUnit"), Unit);
+	WorldTimerManager->SetTimer(DespawnHandle, DespawnDelegate, DespawnTimer, false);
 	
 	// Check if spawn has started yet
 	if(bIsSpawnStarted) return;
@@ -119,7 +124,7 @@ void AEncounterVolume::BeginPlay()
 // Select random unit to attack
 void AEncounterVolume::BeginAttackBasic()
 {
-	int8 QueueSize = AttackQueueBasic.Num();
+	const int8 QueueSize = AttackQueueBasic.Num();
 	if (QueueSize == 0) return;
 
 	int8 RandomIndex;
@@ -143,6 +148,16 @@ void AEncounterVolume::StartSpawn()
 		SpawnPoint->SetUnitPool(UnitPool);
 		SpawnPoint->StartSpawningUnits();
 	}
+}
+
+void AEncounterVolume::DespawnUnit(AEnemyBaseController* Unit)
+{
+	if(!UnitPool)
+	{
+		Unit->GetOwnPawn()->Destroy();
+		return;
+	}
+	UnitPool->AddUnitToPool(Unit->GetOwnPawn());
 }
 
 // for loop to send all enemy to reposition
