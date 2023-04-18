@@ -55,6 +55,9 @@ public:
 	// Enemy Delegate
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnCounterTimeEnd();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnResumeMovement();
 	
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

@@ -265,6 +265,8 @@ public:
 	// ================================================== Interface Functions ============================================
 
 	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
+
+	virtual void OnResumeMovement_Implementation() override;
 	
 	virtual void TryToDamagePlayer_Implementation() override;
 
@@ -305,4 +307,6 @@ private:
 	void TryClearFromPlayerTarget();
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);
+
+	void TryFinishAttackTask();
 };

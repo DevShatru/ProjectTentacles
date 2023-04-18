@@ -79,6 +79,10 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 	// If not
 	++DefeatedUnits;
 	// Check if should start
+
+	// TODO: Somehow CurrentWaveParams is null
+	if(!CurrentWaveParams) return;
+	
 	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits / InitialUnits);
 	if(CompletionPercentage > CurrentWaveParams->SpawnStartEncounterCompletionPercent / 100.f)
 	{

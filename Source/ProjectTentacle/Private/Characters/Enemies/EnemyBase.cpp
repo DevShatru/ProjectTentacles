@@ -81,21 +81,7 @@ void AEnemyBase::InitializeWidgetComponents()
 
 void AEnemyBase::InitializeEnemyControllerRef()
 {
-	
-	// Get enemy base controller
-	AController* EnemyController = GetController();
-	if(Controller == nullptr) return;
-		
-	AEnemyBaseController* CastedEnemyBaseController =  Cast<AEnemyBaseController>(EnemyController);
-	if(CastedEnemyBaseController == nullptr) return;
-
-	// Assign Enemy base controller
-	if(CurrentEnemyBaseController == nullptr)
-		CurrentEnemyBaseController = CastedEnemyBaseController;
-
-	UBlackboardComponent* CastedBBComponent = CastedEnemyBaseController->GetBlackboardComponent();
-	if(CastedBBComponent)
-		BBComponent = CastedBBComponent;
+	TryGetOwnController();
 }
 
 // Called every frame
@@ -126,6 +112,11 @@ void AEnemyBase::TryGetOwnController()
 {
 	if(OwnController) return;
 	OwnController = Cast<AEnemyBaseController>(GetController());
+
+	if(!BBComponent)
+	{
+		BBComponent = OwnController->GetBlackboardComponent();
+	}
 }
 
 
@@ -153,7 +144,11 @@ void AEnemyBase::ExecuteAttack()
 	const FVector DestinationPos = CalculateDestinationForAttackMoving(PlayerCurrentPos);
 	AttackMovingDestination = DestinationPos;
 
+	// Set is attacking to true
 	IsAttacking = true;
+
+	// Set Character unable to move to prevent task early finish and
+	TryStopMoving();
 	
 	// switch case on current attack type to fire different animation 
 	switch (CurrentAttackType)
@@ -325,6 +320,15 @@ void AEnemyBase::TryResumeMoving()
 		MovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
 }
 
+void AEnemyBase::TryFinishAttackTask()
+{
+	if(BTComponent && IsAttacking)
+	{
+		IsAttacking = false;
+		const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
+	}
+}
+
 // ============================================= Timeline function ====================================================
 
 void AEnemyBase::UpdateAttackingPosition(float Alpha)
@@ -342,15 +346,17 @@ void AEnemyBase::UpdateAttackingPosition(float Alpha)
 void AEnemyBase::ActionEnd_Implementation(bool BufferingCheck)
 {
 	ICharacterActionInterface::ActionEnd_Implementation(BufferingCheck);
-
 	
-	if(BTComponent && IsAttacking)
-	{
-		IsAttacking = false;
-		const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
-	}
+	TryFinishAttackTask();
 
 	SetIsCountered(false);
+}
+
+void AEnemyBase::OnResumeMovement_Implementation()
+{
+	ICharacterActionInterface::OnResumeMovement_Implementation();
+
+	TryResumeMoving();
 }
 
 // ================================================== Interface Functions ============================================
@@ -365,9 +371,10 @@ void AEnemyBase::TryToDamagePlayer_Implementation()
 		for (AActor* EachFoundActor : FoundActorList)
 		{
 			IDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
-			//UGameplayStatics::ApplyDamage(EachFoundActor, 30, GetController(), this, DamageType);
 		}
 	}
+	
+	TryFinishAttackTask();
 }
 
 void AEnemyBase::TryTriggerPlayerCounter_Implementation()
@@ -409,8 +416,8 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	// // Cancel movement if we take damage
 	// OwnController->StopMovement();
 	// Cancel movement if we take damage
-	TryGetOwnController();
-	OwnController->StopMovement();
+	// TryGetOwnController();
+	// OwnController->StopMovement();
 	
 	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate 
 	if(IsAttacking && PlayerAttackType != EPlayerAttackType::CounterAttack)
@@ -445,10 +452,8 @@ void AEnemyBase::HealthReduction(float DamageAmount)
 void AEnemyBase::OnDeath()
 {
 	// remove self from Encounter volume list
-	CurrentEnemyBaseController->QuitFromEncounter();
-	
-	// TODO: detach controller and reset behaviour tree
-	
+	TryGetOwnController();
+	OwnController->OnDeath();
 	
 	// Clear from player's target reference
 	TryClearFromPlayerTarget();
