@@ -12,8 +12,6 @@
 UBTTask_StrafeTarget::UBTTask_StrafeTarget()
 {
 	NodeName = "Strafe Target";
-
-	bNotifyTick = true;
 	
 	TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, TargetKey), AActor::StaticClass());
 	TargetKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, TargetKey));
@@ -57,11 +55,6 @@ EBTNodeResult::Type UBTTask_StrafeTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 
 	// TODO Change direction if it hits something
 	return EBTNodeResult::InProgress;
-}
-
-void UBTTask_StrafeTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
-{
-	StrafeAroundLocation(bIsObject ? TargetActor->GetActorLocation() : TargetLocation);
 }
 
 EBTNodeResult::Type UBTTask_StrafeTarget::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
