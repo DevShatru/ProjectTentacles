@@ -25,6 +25,9 @@ protected:
 	FBlackboardKeySelector TargetKey;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FBlackboardKeySelector CircleDirectionKey;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StrafeDistance = 100.f;
+	
 private:
 	void StrafeAroundLocation(FVector Location) const;
 
@@ -32,7 +35,7 @@ private:
 	AActor* TargetActor;
 
 	AAIController* OwnController;
-	ACharacter* OwnCharacter;
+	class AEnemyBase* OwnPawn;
 	unsigned int bShouldMoveRight:1;
 	unsigned int bIsObject:1;
 };

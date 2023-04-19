@@ -6,7 +6,9 @@
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
+#include "Characters/Enemies/EnemyBase.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 UBTTask_StrafeTarget::UBTTask_StrafeTarget()
@@ -38,7 +40,9 @@ EBTNodeResult::Type UBTTask_StrafeTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 	// Resolve Target
 	bIsObject = TargetKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass();
 	const UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
-	bool bCircleRight = Blackboard->GetValueAsBool(CircleDirectionKey.SelectedKeyName);
+	bShouldMoveRight = Blackboard->GetValueAsBool(CircleDirectionKey.SelectedKeyName);
+	OwnController = OwnerComp.GetAIOwner();
+	OwnPawn = Cast<AEnemyBase>(OwnController->GetCharacter());
 	if(bIsObject)
 	{
 		TargetActor = Cast<AActor>(Blackboard->GetValueAsObject(TargetKey.SelectedKeyName));
@@ -56,9 +60,10 @@ EBTNodeResult::Type UBTTask_StrafeTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 
 void UBTTask_StrafeTarget::StrafeAroundLocation(const FVector Location) const
 {
-	const FVector CharLocation = OwnCharacter->GetActorLocation();
+	const FVector CharLocation = OwnPawn->GetActorLocation();
 	const FVector ForwardToTarget = Location - CharLocation;
 	const FVector RightDirection = FVector::CrossProduct(ForwardToTarget, FVector::UpVector);
-	const FVector Direction = (RightDirection * (bShouldMoveRight ? 1 : -1)).GetSafeNormal();
+	const FVector Direction = StrafeDistance * (RightDirection * (bShouldMoveRight ? 1 : -1)).GetSafeNormal();
+	
 	OwnController->MoveToLocation(CharLocation + Direction);
 }
