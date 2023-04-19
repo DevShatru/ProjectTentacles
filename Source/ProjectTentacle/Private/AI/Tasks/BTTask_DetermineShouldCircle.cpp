@@ -11,13 +11,18 @@ UBTTask_DetermineShouldCircle::UBTTask_DetermineShouldCircle()
 
 	DeterminedShouldCircleKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_DetermineShouldCircle, DeterminedShouldCircleKey));
 	ShouldCircleKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_DetermineShouldCircle, ShouldCircleKey));
+	ShouldCircleRightKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_DetermineShouldCircle, ShouldCircleRightKey));
 }
 
 EBTNodeResult::Type UBTTask_DetermineShouldCircle::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	const float Percentage = FMath::FRandRange(0.f, 100.0f);
-	OwnerComp.GetBlackboardComponent()->SetValueAsBool(ShouldCircleKey.SelectedKeyName, Percentage <= CirclePercentage);;
-	OwnerComp.GetBlackboardComponent()->SetValueAsBool(DeterminedShouldCircleKey.SelectedKeyName, true);
+	const bool bShouldCircle = Percentage <= CirclePercentage;
+	
+	UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
+	Blackboard->SetValueAsBool(ShouldCircleKey.SelectedKeyName, bShouldCircle);
+	Blackboard->SetValueAsBool(DeterminedShouldCircleKey.SelectedKeyName, true);
+	if(bShouldCircle) Blackboard->SetValueAsBool(ShouldCircleRightKey.SelectedKeyName, FMath::RandBool());
 	
 	return EBTNodeResult::Succeeded;
 }

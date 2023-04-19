@@ -27,6 +27,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FBlackboardKeySelector ShouldCircleKey;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FBlackboardKeySelector ShouldCircleRightKey;
+	
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
 };
