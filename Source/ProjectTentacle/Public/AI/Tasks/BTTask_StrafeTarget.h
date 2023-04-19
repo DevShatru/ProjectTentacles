@@ -19,11 +19,12 @@ public:
 	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FBlackboardKeySelector TargetKey;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FBlackboardKeySelector CircleDirectionKey;
 private:
 	void StrafeAroundLocation(FVector Location) const;
 

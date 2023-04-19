@@ -15,6 +15,7 @@ UBTTask_StrafeTarget::UBTTask_StrafeTarget()
 	
 	TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, TargetKey), AActor::StaticClass());
 	TargetKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, TargetKey));
+	CircleDirectionKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, CircleDirectionKey));
 }
 
 void UBTTask_StrafeTarget::InitializeFromAsset(UBehaviorTree& Asset)
@@ -36,32 +37,21 @@ EBTNodeResult::Type UBTTask_StrafeTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 {
 	// Resolve Target
 	bIsObject = TargetKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass();
+	const UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
+	bool bCircleRight = Blackboard->GetValueAsBool(CircleDirectionKey.SelectedKeyName);
 	if(bIsObject)
 	{
-		TargetActor = Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(TargetKey.SelectedKeyName));
+		TargetActor = Cast<AActor>(Blackboard->GetValueAsObject(TargetKey.SelectedKeyName));
 		if(!TargetActor) return EBTNodeResult::Failed;
 	} else
 	{
-		TargetLocation = OwnerComp.GetBlackboardComponent()->GetValueAsVector(TargetKey.SelectedKeyName);
+		TargetLocation = Blackboard->GetValueAsVector(TargetKey.SelectedKeyName);
 		if(TargetLocation == FVector::ZeroVector) return EBTNodeResult::Failed;
 	}
-	// Randomly pick between left and right
-	bShouldMoveRight = FMath::RandBool();
-	// Disable controller yaw
-	OwnController = OwnerComp.GetAIOwner();
-	OwnCharacter = OwnController->GetCharacter();
-	if(OwnCharacter) OwnCharacter->bUseControllerRotationYaw = false;
 	StrafeAroundLocation(bIsObject ? TargetActor->GetActorLocation() : TargetLocation);
 
 	// TODO Change direction if it hits something
-	return EBTNodeResult::InProgress;
-}
-
-EBTNodeResult::Type UBTTask_StrafeTarget::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
-{
-	// Re-enable controller yaw
-	if(OwnCharacter) OwnCharacter->bUseControllerRotationYaw = true;
-	return Super::AbortTask(OwnerComp, NodeMemory);
+	return EBTNodeResult::Succeeded;
 }
 
 void UBTTask_StrafeTarget::StrafeAroundLocation(const FVector Location) const
@@ -69,6 +59,6 @@ void UBTTask_StrafeTarget::StrafeAroundLocation(const FVector Location) const
 	const FVector CharLocation = OwnCharacter->GetActorLocation();
 	const FVector ForwardToTarget = Location - CharLocation;
 	const FVector RightDirection = FVector::CrossProduct(ForwardToTarget, FVector::UpVector);
-	const FVector Direction = RightDirection * (bShouldMoveRight ? 1 : -1);
+	const FVector Direction = (RightDirection * (bShouldMoveRight ? 1 : -1)).GetSafeNormal();
 	OwnController->MoveToLocation(CharLocation + Direction);
 }
