@@ -165,6 +165,9 @@ void AEncounterVolume::SendAllEnemyToReposition(bool DoesIncludeHeavy)
 		FName BBRepositionBoolName = "bNeedToReposition";
 		
 		EachOwnBBComp->SetValueAsBool(BBRepositionBoolName, true);
+
+		// Clear the circling state if they need to reposition
+		EachOwnBBComp->ClearValue("bShouldCircle");
 	}
 }
 
