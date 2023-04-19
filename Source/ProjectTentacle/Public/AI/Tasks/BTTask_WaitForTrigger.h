@@ -20,15 +20,14 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Precision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "100.0", UIMin = "0.0", UIMax = "100.0"))
+	float CirclePercentage = 75.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FBlackboardKeySelector ShouldCircleKey;
 	
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
-private:
-	
-	float TurnSpeed;
-	AActor* FocalActor;
-	AAIController* Controller;
-	APawn* Pawn;
-
-	static float CalculateFlatAngle(const FVector& VectorA, const FVector& VectorB);
+	// static float CalculateFlatAngle(const FVector& VectorA, const FVector& VectorB);
 };
