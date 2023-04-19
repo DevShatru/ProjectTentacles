@@ -16,7 +16,7 @@
 #include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
 
-DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnUpdatingEnemyAttackType, EEnemyAttackType, NewAttackType, EEnemyAttackAnimMontages, NewAttackAnim);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnUpdatingEnemyAttackType, EEnemyAttackType, NewAttackType);
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnFinishAttackingTask, UBehaviorTreeComponent*, BehaviorTreeReference, bool, bIsSuccess, bool, DoesGetInterupted);
 
 UCLASS()
@@ -69,13 +69,31 @@ protected:
 	
 	UPROPERTY()
 	UBlackboardComponent* BBComponent;
+
+
+	FTimerHandle GettingUpTimerHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Setting_Lying)
+	float TimeToGetUp = 3.0f;	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Setting_Lying)
+	UAnimMontage* GetUpMontage;
 	
 	// Enemy Property variable
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	int32 Health = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	int32 MaxHealth = 10;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
+	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::Standing;
+
+	bool IsDead = false;
+	
+	
+
 	
 	// Receiving Damage Animations
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
@@ -129,6 +147,9 @@ protected:
 	UAnimMontage* CounterableAttackMontage;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Animations)
+	UAnimMontage* CounterVictimMontage;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Animations)
 	UAnimMontage* NotCounterableAttackMontage;
 
 
@@ -138,10 +159,34 @@ protected:
 
 	FVector CalculateDestinationForAttackMoving(FVector PlayerPos);
 	
+	TArray<AActor*> GetActorsInFrontOfEnemy();
 
+	// ===================================================== Receive Damage =================================================
+	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
+	
+	void PlayDeathAnimation(EPlayerAttackType ReceivedAttackType);
+
+	void HealthReduction(float DamageAmount);
 
 	
+	// ===================================================== On Death =======================================================
+	void OnDeath();
+
+	void RagDollPhysicsOnDead();
+
+	
+	
+	// ===================================================== Stunning ===========================================
+
+	void BeginLyingCountDown();
+
+	void PlayLyingMontage();
+
+	void RecoverFromLying();
+	
+	
 public:
+	void ExecuteRangedAttack(AActor* Target);
 
 	EEnemyType GetType() const;
 
@@ -162,14 +207,16 @@ public:
 	float GetAttackCounterableTime() const;
 
 
+	void OnHideAttackIndicator();
+	
+
 	UFUNCTION(BlueprintCallable)
 	void ExecuteAttack();
+	void StartCounterAttackAnimation();
 	
 	// Instantly rotate to desired direction
 	void InstantRotation(FVector RotatingVector);
-
-	void PlayDamageReceiveAnimation(int32 AttackTypIndex);
-
+	
 	void PlayFinishedAnimation();
 	
 
@@ -180,6 +227,8 @@ public:
 	
 
 	// ============================================= Get and Set functions ================================================
+	bool GetIsDead() const { return IsDead;}
+	
 	int32 GetEnemyHealth() const { return Health;}
 	void SetEnemyHealth(int32 NewHealth) {Health = NewHealth;}
 
@@ -199,8 +248,14 @@ public:
 	
 	virtual void TryToDamagePlayer_Implementation() override;
 
+	virtual void TryTriggerPlayerCounter_Implementation() override;
+
 	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 
+	virtual void StartLyingOnTheGround_Implementation() override;
+
+	virtual void RepeatLyingOnTheGround_Implementation() override;
+	
 	virtual void ShowEnemyAttackIndicator_Implementation() override;
 
 	virtual void UnShowEnemyAttackIndicator_Implementation() override;
@@ -221,4 +276,8 @@ private:
 	
 	class AEnemyBaseController* OwnController;
 	void TryGetOwnController();
+
+	void TryClearFromPlayerTarget();
+
+	void TurnCollisionOffOrOn(bool TurnCollisionOff);
 };

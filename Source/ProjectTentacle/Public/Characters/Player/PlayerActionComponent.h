@@ -129,11 +129,17 @@ protected:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Dodge_Setting)
 	UAnimMontage* FrontRollingMontage;
+
+	// ================================================= Damage Receiving Setting =============================================
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DamageReceive_Setting)
+	float DamageReceiveAnimDistance = 100.0f;
+
 	
 	
 	// ================================================== Melee Attack ================================================
 	void BeginMeleeAttack();
-
+	
 	void PerformLongRangeMelee(AEnemyBase* RegisteredTarget);
 
 	void PerformCloseRangeMelee(AEnemyBase* RegisteredTarget);
@@ -167,6 +173,8 @@ protected:
 
 	UFUNCTION()
 	void ResetComboCount() {CurrentComboCount = 0;}
+
+	void ClearComboResetTimer();
 	
 	// ====================================================== Evade ===================================================
 	void BeginEvade();
@@ -175,7 +183,6 @@ protected:
 	void BeginCounterAttack(AActor* CounteringTarget);
 
 	// ================================================== Dodge ========================================================
-
 	void BeginDodge();
 
 	FVector DecideDodgingDirection(FVector PlayerFaceDir);
@@ -194,6 +201,7 @@ protected:
 	static bool IsPlayerCountering(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
 	static bool IsPlayerCanBeDamaged(EActionState PlayerCurrentAction, EEnemyAttackType ReceivingAttackType);
 
+	void MakePlayerEnemyFaceEachOther(AEnemyBase* TargetEnemyRef);
 
 	// ================================ Functions called when the game starts ==========================================
 	virtual void BeginPlay() override;
@@ -217,6 +225,8 @@ public:
 	UFUNCTION()
 	void ReceivingDamage(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType ReceivingAttackType);
 	
+	UFUNCTION()
+	void TriggerCounterAttack(AActor* CounteringTarget);
 	
 	
 	// Called every frame

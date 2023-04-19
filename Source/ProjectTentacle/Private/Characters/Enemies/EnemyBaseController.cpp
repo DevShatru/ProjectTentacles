@@ -34,14 +34,6 @@ void AEnemyBaseController::BeginPlay()
 {
 	Super::BeginPlay();
 	EncounterTarget = nullptr;
-	if(!BehaviorTree) return;
-
-	// Init blackboard and run master behaviour
-	Blackboard->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
-	RunBehaviorTree(BehaviorTree);
-
-	// Bind UFunction to perception updated delegate
-	Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyBaseController::UpdatePerception);
 }
 
 void AEnemyBaseController::RegisterOwningEncounter(AEncounterVolume* NewOwningEncounter)
@@ -79,6 +71,14 @@ void AEnemyBaseController::BeginAttack()
 	Blackboard->SetValueAsBool("bIsAttacking", true);
 }
 
+void AEnemyBaseController::QuitFromEncounter()
+{
+	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("%s left queue list"), *OwnPawn->GetHumanReadableName()));
+
+	// TODO: Change to RegisterUnitDestroyed 
+	OwningEncounter->RemoveDeadUnitFromEncounter(this);
+}
+
 // Register after attack has completed
 void AEnemyBaseController::RegisterCompletedAttack()
 {
@@ -102,6 +102,14 @@ void AEnemyBaseController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	OwnPawn = Cast<AEnemyBase>(InPawn);
+	if(!BehaviorTree) return;
+
+	// Init blackboard and run master behaviour
+	Blackboard->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+	RunBehaviorTree(BehaviorTree);
+
+	// Bind UFunction to perception updated delegate
+	Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyBaseController::UpdatePerception);
 }
 
 void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)

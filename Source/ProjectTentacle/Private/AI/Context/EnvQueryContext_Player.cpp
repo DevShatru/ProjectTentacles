@@ -8,18 +8,11 @@
 #include "EnvironmentQuery/Items/EnvQueryItemType_Actor.h"
 
 AActor* UEnvQueryContext_Player::Player = nullptr;
-TArray<UEnvQueryContext_Player*> UEnvQueryContext_Player::AllPlayerContexts = TArray<UEnvQueryContext_Player*>();
-
-UEnvQueryContext_Player::UEnvQueryContext_Player() : Super()
-{
-	AllPlayerContexts.Add(this);
-}
 
 void UEnvQueryContext_Player::ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const
 {
-	if(!Player->IsValidLowLevelFast())
+	if(!Player)
 	{
-		Player = nullptr;
 		for (TActorIterator<APlayerCharacter> It(GetWorld(), APlayerCharacter::StaticClass()); It; ++It)
 		{
 			Player = *It;
@@ -30,11 +23,6 @@ void UEnvQueryContext_Player::ProvideContext(FEnvQueryInstance& QueryInstance, F
 
 void UEnvQueryContext_Player::BeginDestroy()
 {
-	AllPlayerContexts.Remove(this);
-	if(AllPlayerContexts.Num() == 0)
-	{
-		Player = nullptr;
-	}
-	
+	Player = nullptr;
 	Super::BeginDestroy();
 }

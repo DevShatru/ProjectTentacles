@@ -13,8 +13,6 @@ EBTNodeResult::Type UBTTask_FinishRepositioning::ExecuteTask(UBehaviorTreeCompon
 	if(!OwnerBBComp) return EBTNodeResult::Failed;
 
 	OwnerBBComp->SetValueAsBool(BBKey_bNeedToReposition.SelectedKeyName, false);
-
-
 	
 	return EBTNodeResult::Succeeded;
 }

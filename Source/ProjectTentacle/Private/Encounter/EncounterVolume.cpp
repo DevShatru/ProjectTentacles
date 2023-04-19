@@ -30,8 +30,7 @@ void AEncounterVolume::TryTriggerEncounter(AActor* Target)
 	if(bIsEncounterActive) return;
 	bIsEncounterActive = true;
 	EngageContainedUnits(Target);
-	TryCacheTimerManager();
-	WorldTimerManager->SetTimer(SpawnStartTimer, this, &AEncounterVolume::StartSpawn, SpawnStartTime, false, SpawnStartTime);
+	TriggerNextWave();
 }
 
 TArray<AEnemyBase*> AEncounterVolume::GetAlliesForPawn(APawn* Pawn)
@@ -71,12 +70,12 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 	if(ContainedUnits.Contains(Unit->GetOwnPawn())) ContainedUnits.Remove(Unit->GetOwnPawn());
 	
 	// Check if spawn has started yet
-	if(bIsSpawnStarted) return;
+	if(bWaveStartedSpawning) return;
 	// If not
 	++DefeatedUnits;
 	// Check if should start
 	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits / InitialUnits);
-	if(CompletionPercentage > SpawnStartEncounterCompletionPercent / 100.f)
+	if(CompletionPercentage > CurrentWaveParams->SpawnStartEncounterCompletionPercent / 100.f)
 	{
 		TryCacheTimerManager();
 		WorldTimerManager->ClearTimer(SpawnStartTimer);
@@ -94,24 +93,32 @@ void AEncounterVolume::AddSpawnedUnitToEncounter(AEnemyBase* Unit)
 	}
 }
 
+void AEncounterVolume::RemoveDeadUnitFromEncounter(AEnemyBaseController* DeadUnit)
+{
+	// Remove units from queues and set
+	if(AttackQueueBasic.Contains(DeadUnit)) AttackQueueBasic.Remove(DeadUnit);
+	if(AttackQueueHeavy.Contains(DeadUnit)) AttackQueueHeavy.Remove(DeadUnit);
+	if(ContainedUnits.Contains(DeadUnit->GetOwnPawn())) ContainedUnits.Remove(DeadUnit->GetOwnPawn());
+}
+
 // Called when the game starts or when spawned
 void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	WorldTimerManager = &GetWorldTimerManager();
 	bIsEncounterActive = false;
-	bIsSpawnStarted = false;
 	LastAttacker = nullptr;
 	EncounterTarget = nullptr;
+	CurrentWaveParams = nullptr;
 	InitialUnits = ContainedUnits.Num();
+	CurrentWave = -1;
 	RegisterEncounterForUnits();
-	RegisterEncounterForSpawnPoints();
 }
 
 // Select random unit to attack
 void AEncounterVolume::BeginAttackBasic()
 {
-	int8 QueueSize = AttackQueueBasic.Num();
+	const int8 QueueSize = AttackQueueBasic.Num();
 	if (QueueSize == 0) return;
 
 	int8 RandomIndex;
@@ -128,22 +135,27 @@ void AEncounterVolume::BeginAttackBasic()
 
 void AEncounterVolume::StartSpawn()
 {
-	if(bIsSpawnStarted) return;
-	bIsSpawnStarted = true;
-	for(ASpawnPoint* SpawnPoint : ContainedSpawnPoints)
+	if(bWaveStartedSpawning) return;
+	bWaveStartedSpawning = true;
+	if (CurrentWaveParams)
+	{
+		// Reset Spawn Points
+		ResetSpawnPoints();
+	}
+	for(ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)
 	{
 		SpawnPoint->SetUnitPool(UnitPool);
 		SpawnPoint->StartSpawningUnits();
 	}
+	TriggerNextWave();
 }
 
 // for loop to send all enemy to reposition
 void AEncounterVolume::SendAllEnemyToReposition(bool DoesIncludeHeavy)
 {
-	for(AEnemyBaseController* EachEnemyBaseController: AttackQueueBasic)
+	for(const AEnemyBaseController* EachEnemyBaseController: AttackQueueBasic)
 	{
-		
-		AEnemyBase* EachOwnPawnRef = EachEnemyBaseController->GetOwnPawn();
+		const AEnemyBase* EachOwnPawnRef = EachEnemyBaseController->GetOwnPawn();
 
 		if(!EachOwnPawnRef) continue; 
 		
@@ -153,6 +165,9 @@ void AEncounterVolume::SendAllEnemyToReposition(bool DoesIncludeHeavy)
 		FName BBRepositionBoolName = "bNeedToReposition";
 		
 		EachOwnBBComp->SetValueAsBool(BBRepositionBoolName, true);
+
+		// Clear the circling state if they need to reposition
+		EachOwnBBComp->ClearValue("bShouldCircle");
 	}
 }
 
@@ -175,7 +190,7 @@ void AEncounterVolume::RegisterEncounterForUnits()
 
 void AEncounterVolume::RegisterEncounterForSpawnPoints()
 {
-	for(ASpawnPoint* SpawnPoint : ContainedSpawnPoints)
+	for(ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)
 	{
 		if(!SpawnPoint) continue;
 		SpawnPoint->RegisterOwningEncounter(this);
@@ -205,4 +220,28 @@ void AEncounterVolume::StartBasicQueueTimer()
 	TryCacheTimerManager();
 	
 	WorldTimerManager->SetTimer(BasicQueueTimer, this, &AEncounterVolume::BeginAttackBasic, AttackStartDelay, false, AttackStartDelay);
+}
+
+void AEncounterVolume::TriggerNextWave()
+{
+	bWaveStartedSpawning = false;
+	// Increment wave number
+	++CurrentWave;
+	if(CurrentWave >= WaveParameters.Num()) return;
+	CurrentWaveParams = &WaveParameters[CurrentWave];
+	if(!CurrentWaveParams) return;
+	// Register Spawn Points
+	RegisterEncounterForSpawnPoints();
+	// Start timer
+	TryCacheTimerManager();
+	WorldTimerManager->SetTimer(SpawnStartTimer, this, &AEncounterVolume::StartSpawn, CurrentWaveParams->SpawnStartTime, false, CurrentWaveParams->SpawnStartTime);
+	// Check percentage based start
+}
+
+void AEncounterVolume::ResetSpawnPoints() const
+{
+	for(ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)
+	{
+		SpawnPoint->StopSpawningUnits();
+	}
 }
