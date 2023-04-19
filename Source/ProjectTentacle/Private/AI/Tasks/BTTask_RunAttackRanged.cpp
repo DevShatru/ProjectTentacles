@@ -25,13 +25,6 @@ void UBTTask_RunAttackRanged::AttackCounterTimeLimit()
 	if(TraceResult.bBlockingHit)
 	{
 		// GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("Hit %s"), *TraceResult.Actor->GetHumanReadableName()));
-		/*
-		 * TODO Implement Damage
-		 * CACHED REFERENCES:
-		 * UBehaviorTreeComponent* OwningComp;
-		 * class AEnemyBase* OwnPawn;
-		 * AActor* Target; 
-		 */
-		// IDamageInterface::Execute_ReceiveDamageFromEnemy(TraceResult.Actor, BaseDamageAmount, OwnPawn, CurrentAttackType);
+		OwnPawn->ExecuteRangedAttack(TraceResult.Actor.Get());
 	}
 }
