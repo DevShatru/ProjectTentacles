@@ -57,7 +57,7 @@ DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAm
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggeringCounter, AActor*, DamageCauser);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEnteringPreCounterState, AActor*, CounterTarget);
 
-DECLARE_DYNAMIC_DELEGATE(FOnActionFinish);
+DECLARE_DYNAMIC_DELEGATE(FOnEnableComboResetTimer);
 
 
 /**
@@ -170,7 +170,7 @@ public:
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
 	FOnTriggeringCounter OnTriggeringCounter;
 	FOnEnteringPreCounterState OnEnteringPreCounterState;
-	FOnActionFinish OnActionFinish;
+	FOnEnableComboResetTimer OnEnableComboResetTimer;
 	
 	APlayerCharacter();
 
@@ -252,6 +252,10 @@ public:
 	UFUNCTION()
 	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
 
+	UFUNCTION()
+	virtual void OnActivateComboResetTimer_Implementation() override;
+	
+	UFUNCTION()
 	virtual void DetachEnemyTarget_Implementation() override;
 	
 

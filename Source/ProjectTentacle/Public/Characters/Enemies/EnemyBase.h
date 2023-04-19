@@ -32,6 +32,15 @@ protected:
 	
 	void InitializeEnemyControllerRef();
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting)
+	bool EnableAttackMovement = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting)
+	bool EnableEnemyAttackTracking = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting, meta=(ClampMin=0, ClampMax=1))
+	float AttackTrackingLimitInAlpha = 0.5f; 
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Combat)
 	EEnemyType UnitType = EEnemyType::Melee;
 
@@ -88,11 +97,11 @@ protected:
 	int32 MaxHealth = 10;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
-	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::Standing;
+	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::WaitToAttack;
 
 	bool IsDead = false;
-	
-	
+
+
 
 	
 	// Receiving Damage Animations
@@ -236,6 +245,8 @@ public:
 	void TryStopMoving();
 	void TryResumeMoving();
 
+	void TryStopAttackMovement();
+
 	// ============================================= Timeline function ====================================================
 	
 	UFUNCTION()
@@ -254,10 +265,13 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	EEnemyAttackType GetEnemyStoredAttackType() const {return CurrentAttackType;}
 
+	EEnemyCurrentState GetCurrentEnemyState() const {return CurrentEnemyState;}
+	
 	UFUNCTION(BlueprintCallable)
 	UBehaviorTreeComponent* GetBehaviourTreeComponent() const {return BTComponent;}
 	void SetBehaviourTreeComponent(UBehaviorTreeComponent* NewBehaviourTreeComponent) {BTComponent = NewBehaviourTreeComponent;}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool GetIsCountered() const {return IsCountered;}
 	void SetIsCountered(bool NewIsCountered) {IsCountered = NewIsCountered;}
 
@@ -267,6 +281,8 @@ public:
 	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
 
 	virtual void OnResumeMovement_Implementation() override;
+
+	virtual void OnResetEnemyCurrentState_Implementation() override;
 	
 	virtual void TryToDamagePlayer_Implementation() override;
 
@@ -308,5 +324,9 @@ private:
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);
 
-	void TryFinishAttackTask();
+	void TrySwitchEnemyState(EEnemyCurrentState NewState) { if(CurrentEnemyState != NewState) CurrentEnemyState = NewState;}
+	
+	void TryFinishAttackTask(EEnemyCurrentState SwitchingState);
+
+	
 };

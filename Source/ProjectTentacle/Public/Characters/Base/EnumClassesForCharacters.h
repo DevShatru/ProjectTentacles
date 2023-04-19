@@ -48,11 +48,12 @@ enum class EEnemyUnitType: uint8
 UENUM(BlueprintType)
 enum class EEnemyCurrentState: uint8
 {
-	Standing = 0 UMETA(DisplayName = "Standing"),
-	Moving = 1 UMETA(DisplaName = "Moving"),
-	Lying = 2 UMETA(DisplayName = "Lying"),
-	Attacking = 3 UMETA(DisplayName = "Attacking"),
-	Dead = 4 UMETA(DisplayName = "Dead")
+	WaitToAttack = 0 UMETA(DisplayName = "WaitToAttack"),
+	Attacking = 1 UMETA(DisplayName = "Attacking"),
+	Countered = 2 UMETA(DisplayName = "Countered"),
+	GettingUp = 3 UMETA(DisplayName = "GettingUp"),
+	Damaged = 4 UMETA(DisplayName = "Damaged"),
+	Dead = 5 UMETA(DisplayName = "Dead")
 };
 
 UENUM(BlueprintType)

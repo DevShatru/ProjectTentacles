@@ -19,7 +19,7 @@ public:
 
 private:
 
-	void StopTimelineMoving();
+	void StopSpecificMovingTimeline(EPlayerAttackType CurrentPlayerAttack);
 
 	void PauseComboResetTimer();
 	void ResumeComboResetTimer();
@@ -198,7 +198,7 @@ protected:
 	float CalculateCurrentComboSpeed();
 
 	UFUNCTION()
-	void OnEndingAction();
+	void OnStartingComboResetTimer();
 	
 	void WaitToResetComboCount();
 

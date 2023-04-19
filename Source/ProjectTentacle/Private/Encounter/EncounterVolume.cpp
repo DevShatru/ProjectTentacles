@@ -234,7 +234,6 @@ void AEncounterVolume::TryCacheTimerManager() const
 void AEncounterVolume::StartBasicQueueTimer()
 {
 	TryCacheTimerManager();
-	
 	WorldTimerManager->SetTimer(BasicQueueTimer, this, &AEncounterVolume::BeginAttackBasic, AttackStartDelay, false, AttackStartDelay);
 }
 

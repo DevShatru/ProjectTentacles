@@ -18,15 +18,34 @@ UPlayerActionComponent::UPlayerActionComponent()
 	// ...
 }
 
-void UPlayerActionComponent::StopTimelineMoving()
+void UPlayerActionComponent::StopSpecificMovingTimeline(EPlayerAttackType CurrentPlayerAttack)
 {
-	ShortFlipKickTimeLine.Stop();
-	FlyingKickTimeLine.Stop();
-	FlyingPunchTimeLine.Stop();
-	SpinKickTimeLine.Stop();
-	DashingDoubleKickTimeLine.Stop();
-	CloseToPerformFinisherTimeLine.Stop();
-	DodgeLerpingTimeLine.Stop();
+	switch (CurrentPlayerAttack)
+	{
+		case EPlayerAttackType::ShortFlipKick:
+			ShortFlipKickTimeLine.Stop();
+			break;
+		case EPlayerAttackType::FlyingKick:
+			FlyingKickTimeLine.Stop();
+			break;
+		case EPlayerAttackType::FlyingPunch:
+			FlyingPunchTimeLine.Stop();
+			break;
+		case EPlayerAttackType::SpinKick:
+			SpinKickTimeLine.Stop();
+			break;
+		case EPlayerAttackType::DashingDoubleKick:
+			DashingDoubleKickTimeLine.Stop();
+			break;
+		case EPlayerAttackType::FastKick:
+			CloseToPerformFinisherTimeLine.Stop();
+			break;
+		case EPlayerAttackType::FastPunch:
+			CloseToPerformFinisherTimeLine.Stop();
+
+			break;
+		default: ;
+	}
 }
 
 void UPlayerActionComponent::PauseComboResetTimer()
@@ -70,7 +89,7 @@ void UPlayerActionComponent::InitializeOwnerRef()
 	PlayerOwnerRef->OnReceivingIncomingDamage.BindDynamic(this, &UPlayerActionComponent::ReceivingDamage);
 	PlayerOwnerRef->OnTriggeringCounter.BindDynamic(this, &UPlayerActionComponent::TriggerCounterAttack);
 	PlayerOwnerRef->OnEnteringPreCounterState.BindDynamic(this, &UPlayerActionComponent::TriggerPreCounter);
-	PlayerOwnerRef->OnActionFinish.BindDynamic(this, &UPlayerActionComponent::OnEndingAction);
+	PlayerOwnerRef->OnEnableComboResetTimer.BindDynamic(this, &UPlayerActionComponent::OnStartingComboResetTimer);
 }
 
 void UPlayerActionComponent::InitializeTimelineComp()
@@ -349,7 +368,7 @@ float UPlayerActionComponent::CalculateCurrentComboSpeed()
 	return 1 + AdjustedSpeedBonus;
 }
 
-void UPlayerActionComponent::OnEndingAction()
+void UPlayerActionComponent::OnStartingComboResetTimer()
 {
 	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::Attack || PlayerOwnerRef->GetCurrentActionState() == EActionState::SpecialAttack)
 		WaitToResetComboCount();
@@ -361,6 +380,7 @@ void UPlayerActionComponent::WaitToResetComboCount()
 	if(!World) return;
 
 	FTimerManager& WorldTimerManager = World->GetTimerManager();
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Wait To Reset Combo Count"));	
 
 	WorldTimerManager.SetTimer(ComboResetTimerHandle,this, &UPlayerActionComponent::ResetComboCount, ComboCountExistTime, false, -1);
 }
@@ -384,8 +404,10 @@ void UPlayerActionComponent::BeginEvade()
 	// Make previous targeted enemy able to move if player is attacking
 	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::Attack)
 	{
-		StopTimelineMoving();
-		
+		const EPlayerAttackType CurrentRegisteredAttackType = PlayerOwnerRef->GetCurrentAttackType();
+		StopSpecificMovingTimeline(CurrentRegisteredAttackType);
+
+		// Make damaging actor resume moving
 		AEnemyBase* ResumeMovementDamagingActor = PlayerOwnerRef->GetDamagingActor();
 		if(ResumeMovementDamagingActor)
 			ResumeMovementDamagingActor->TryResumeMoving();
@@ -653,9 +675,10 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 			AEnemyBase* FoundCharacter = Cast<AEnemyBase>(EachFoundActor);
 			if(FoundCharacter != nullptr)
 			{
-				// Exclude enemy that are dead
-				if(!FoundCharacter->GetIsDead())
-					ReturnActors.Add(FoundCharacter);
+				// Exclude enemy that are dead, alse exclude enemy that are countered but yet not getting up yet
+				if(FoundCharacter->GetIsDead() && FoundCharacter->GetCurrentEnemyState() == EEnemyCurrentState::Countered) continue;
+				
+				ReturnActors.Add(FoundCharacter);
 			}
 		}
 	}
@@ -807,13 +830,24 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 	EActionState PlayerCurrentAction = PlayerOwnerRef->GetCurrentActionState();
 
 	if(PlayerCurrentAction == EActionState::Dodge) return;
-	
 
+	
 	if(IsPlayerCanBeDamaged(PlayerCurrentAction, ReceivingAttackType))
 	{
+		// if player is attacking
 		if(PlayerCurrentAction == EActionState::Attack)
 		{
-			PlayerOwnerRef->StopAnimMontage();	
+			// Stop player anim montage
+			PlayerOwnerRef->StopAnimMontage();
+
+			// stop player's attack movement
+			const EPlayerAttackType CurrentRegisteredAttackType = PlayerOwnerRef->GetCurrentAttackType();
+			StopSpecificMovingTimeline(CurrentRegisteredAttackType);
+
+			// make damaging enemy resume moving
+			AEnemyBase* ResumeMovementDamagingActor = PlayerOwnerRef->GetDamagingActor();
+			if(ResumeMovementDamagingActor)
+				ResumeMovementDamagingActor->TryResumeMoving();
 		}
 
 		// Damage player
@@ -828,6 +862,7 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 
 		PlayerOwnerRef->SetCurrentActionState(EActionState::Recovering);
 
+		// 
 		// Instant Rotate to enemy
 		const FVector FacingEnemyDir = UKismetMathLibrary::Normal(DamageCauser->GetActorLocation() - PlayerOwnerRef->GetActorLocation());
 		InstantRotation(FacingEnemyDir);

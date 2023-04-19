@@ -51,6 +51,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void TryRemoveCounterTarget(AEnemyBase* CounterTarget);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnActivateComboResetTimer();
+	
 
 	// Enemy Delegate
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
@@ -58,7 +61,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnResumeMovement();
-	
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnResetEnemyCurrentState();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ReceiveAttackInCounterState(AActor* CounteringTarget);

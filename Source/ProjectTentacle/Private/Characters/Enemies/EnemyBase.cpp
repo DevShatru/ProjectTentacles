@@ -110,13 +110,15 @@ void AEnemyBase::OnHideAttackIndicator()
 
 void AEnemyBase::TryGetOwnController()
 {
-	if(OwnController) return;
-	OwnController = Cast<AEnemyBaseController>(GetController());
-
-	if(!BBComponent)
+	if(OwnController)
 	{
-		BBComponent = OwnController->GetBlackboardComponent();
+		if(!BBComponent)
+		{
+			BBComponent = OwnController->GetBlackboardComponent();
+		}
+		return;
 	}
+	OwnController = Cast<AEnemyBaseController>(GetController());
 }
 
 
@@ -124,6 +126,7 @@ void AEnemyBase::TryGetOwnController()
 
 void AEnemyBase::ExecuteAttack()
 {
+	
 	// SetAttackType and get the result enum of it
 	EEnemyAttackAnimMontages ResultEnemyAnimMontage = SetAttackType();
 
@@ -143,12 +146,16 @@ void AEnemyBase::ExecuteAttack()
 	
 	const FVector DestinationPos = CalculateDestinationForAttackMoving(PlayerCurrentPos);
 	AttackMovingDestination = DestinationPos;
+	
+	// Set is attacking
+	TrySwitchEnemyState(EEnemyCurrentState::Attacking);
 
-	// Set is attacking to true
-	IsAttacking = true;
-
-	// Set Character unable to move to prevent task early finish and
+	// Set Character unable to move to prevent task early finish and enemy is able to move while animation montage
 	TryStopMoving();
+
+	// Debug Attack Moving timeline activate
+	if(EnableAttackMovement)
+		AttackMovingTimeline.PlayFromStart();
 	
 	// switch case on current attack type to fire different animation 
 	switch (CurrentAttackType)
@@ -156,12 +163,10 @@ void AEnemyBase::ExecuteAttack()
 		case EEnemyAttackType::AbleToCounter:
 			if(CounterableAttackMontage != nullptr)
 				PlayAnimMontage(CounterableAttackMontage, 1, "Default");
-			//AttackMovingTimeline.PlayFromStart();
 			break;
 		case EEnemyAttackType::UnableToCounter:
 			if(NotCounterableAttackMontage != nullptr)
 				PlayAnimMontage(NotCounterableAttackMontage, 1, "Default");
-			//AttackMovingTimeline.PlayFromStart();
 			break;
 		default: break;
 	}
@@ -290,8 +295,8 @@ void AEnemyBase::RecoverFromLying()
 {
 	if(!GetUpMontage) return;
 
-	CurrentEnemyState = EEnemyCurrentState::Standing;
-	
+	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);	
+
 	StopAnimMontage();
 	PlayAnimMontage(GetUpMontage,2,"Default");
 }
@@ -320,11 +325,19 @@ void AEnemyBase::TryResumeMoving()
 		MovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
 }
 
-void AEnemyBase::TryFinishAttackTask()
+void AEnemyBase::TryStopAttackMovement()
 {
-	if(BTComponent && IsAttacking)
+	if(EnableAttackMovement) AttackMovingTimeline.Stop();
+}
+
+// Finish attack task and switch to requested task
+void AEnemyBase::TryFinishAttackTask(EEnemyCurrentState SwitchingState)
+{
+	// if BT component is valid and if current enemy state is attacking
+	if(BTComponent && CurrentEnemyState == EEnemyCurrentState::Attacking)
 	{
-		IsAttacking = false;
+		// switch state to standing
+		TrySwitchEnemyState(SwitchingState);
 		const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
 	}
 }
@@ -333,6 +346,18 @@ void AEnemyBase::TryFinishAttackTask()
 
 void AEnemyBase::UpdateAttackingPosition(float Alpha)
 {
+	// Update lerping destination if enemy attack tracking is enable and current Alpha is not exceeding limit
+	if(EnableEnemyAttackTracking)
+		if(Alpha < AttackTrackingLimitInAlpha)
+		{
+			ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+			if(!PlayerCha) return;
+
+			FVector PlayerPos = PlayerCha->GetActorLocation();
+	
+			AttackMovingDestination = CalculateDestinationForAttackMoving(PlayerPos);
+		}
+
 	const FVector CharacterCurrentPos = GetActorLocation();
 	
 	const FVector LerpPos = UKismetMathLibrary::VLerp(SelfAttackStartPos,AttackMovingDestination, Alpha);
@@ -347,7 +372,7 @@ void AEnemyBase::ActionEnd_Implementation(bool BufferingCheck)
 {
 	ICharacterActionInterface::ActionEnd_Implementation(BufferingCheck);
 	
-	TryFinishAttackTask();
+	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 
 	SetIsCountered(false);
 }
@@ -357,6 +382,13 @@ void AEnemyBase::OnResumeMovement_Implementation()
 	ICharacterActionInterface::OnResumeMovement_Implementation();
 
 	TryResumeMoving();
+}
+
+void AEnemyBase::OnResetEnemyCurrentState_Implementation()
+{
+	ICharacterActionInterface::OnResetEnemyCurrentState_Implementation();
+
+	CurrentEnemyState = EEnemyCurrentState::WaitToAttack;
 }
 
 // ================================================== Interface Functions ============================================
@@ -374,7 +406,7 @@ void AEnemyBase::TryToDamagePlayer_Implementation()
 		}
 	}
 	
-	TryFinishAttackTask();
+	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 }
 
 void AEnemyBase::TryTriggerPlayerCounter_Implementation()
@@ -414,27 +446,47 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 
 	// // Cancel movement if we take damage
-	// OwnController->StopMovement();
-	// Cancel movement if we take damage
 	// TryGetOwnController();
 	// OwnController->StopMovement();
+
+	bool StateChanged = false;
 	
-	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate 
-	if(IsAttacking && PlayerAttackType != EPlayerAttackType::CounterAttack)
+	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate
+	if(CurrentEnemyState == EEnemyCurrentState::Attacking && PlayerAttackType != EPlayerAttackType::CounterAttack)
 	{
 		StopAnimMontage();
 		
 		OnHideAttackIndicator();
+
+		// Stop attack movement
+		TryStopAttackMovement();
 		
-		if(BTComponent)
-			const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
+		
+		TryFinishAttackTask(EEnemyCurrentState::Damaged);
+
+		// change StateChanged bool to true to prevent changing again
+		StateChanged = true;
+
+	}
+	
+	// if player is doing counter attack damage
+	if(PlayerAttackType == EPlayerAttackType::CounterAttack)
+	{
+		TryFinishAttackTask(EEnemyCurrentState::Countered);
+
+		SetIsCountered(false);
+		
+		// change StateChanged bool to true to prevent changing again
+		StateChanged = true;
 	}
 	
 	HealthReduction(DamageAmount);
 
-	TryResumeMoving();
 	
-	if(Health >= 1)
+	// if bool StateChanged is false, it means enemy is not taking damage when it get countered or get damaged while doing attack
+	if(!StateChanged) TrySwitchEnemyState(EEnemyCurrentState::Damaged);
+	
+	if((Health - DamageAmount) > 0)
 	{
 		PlayReceiveDamageAnimation(PlayerAttackType);
 		return;
@@ -568,7 +620,9 @@ void AEnemyBase::StartLyingOnTheGround_Implementation()
 {
 	ICharacterActionInterface::StartLyingOnTheGround_Implementation();
 
-	CurrentEnemyState = EEnemyCurrentState::Lying;
+
+	// TODO: Maybe don't need
+	//CurrentEnemyState = EEnemyCurrentState::Countered;
 	
 	BeginLyingCountDown();
 }
