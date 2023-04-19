@@ -19,5 +19,7 @@ public:
 	
 protected:
 	virtual void AttackCounterTimeLimit() override;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AttackRange = 1500.f;
 };

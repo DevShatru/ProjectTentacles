@@ -20,7 +20,11 @@ void UBTTask_RunAttackRanged::AttackCounterTimeLimit()
 	if(!Target) return;
 
 	FHitResult TraceResult;
-	UKismetSystemLibrary::LineTraceSingle(GetWorld(), OwnPawn->GetActorLocation(), Target->GetActorLocation(), UEngineTypes::ConvertToTraceType(ECC_Camera), false, { OwnPawn }, EDrawDebugTrace::ForDuration, TraceResult, true, FColor::Yellow, FColor::Purple);
+	const FVector OwnLocation = OwnPawn->GetActorLocation();
+	FVector Direction2D = Target->GetActorLocation() - OwnLocation;
+	Direction2D.Z = 0;
+	Direction2D.Normalize();
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), OwnLocation, OwnLocation + Direction2D * AttackRange, UEngineTypes::ConvertToTraceType(ECC_Camera), false, { OwnPawn }, EDrawDebugTrace::ForDuration, TraceResult, true, FColor::Yellow, FColor::Purple);
 
 	if(TraceResult.bBlockingHit)
 	{
