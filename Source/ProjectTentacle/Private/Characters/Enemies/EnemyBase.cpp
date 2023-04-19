@@ -275,6 +275,14 @@ void AEnemyBase::RecoverFromLying()
 	PlayAnimMontage(GetUpMontage,1,"Default");
 }
 
+void AEnemyBase::ExecuteRangedAttack(AActor* Target)
+{
+	if(Target->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+	{
+		IDamageInterface::Execute_ReceiveDamageFromEnemy(Target, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
+	}
+}
+
 EEnemyType AEnemyBase::GetType() const
 {
 	return UnitType;
