@@ -288,9 +288,7 @@ public:
 
 	
 	// ================================================== Interface Functions ============================================
-
-	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
-
+	
 	virtual void OnResumeMovement_Implementation() override;
 
 	virtual void OnResetEnemyCurrentState_Implementation() override;
@@ -320,6 +318,9 @@ private:
 
 	// bool to check if enemy is in counter state
 	bool IsCountered = false;
+
+	// bool to check if enemy is in attack task
+	bool AttackTaskOn = false;
 	
 	// Timeline for enemy attack movement
 	FTimeline UnCounterMovingTimeline;

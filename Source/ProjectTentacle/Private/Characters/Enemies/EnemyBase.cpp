@@ -162,6 +162,8 @@ void AEnemyBase::ExecuteAttack()
 	{
 		PlaySpecificAttackMovingTimeline(CurrentAttackType);
 	}
+
+	AttackTaskOn = true;
 	
 	// switch case on current attack type to fire different animation 
 	switch (CurrentAttackType)
@@ -362,7 +364,11 @@ void AEnemyBase::TryFinishAttackTask(EEnemyCurrentState SwitchingState)
 	{
 		// switch state to standing
 		TrySwitchEnemyState(SwitchingState);
-		const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
+		if(AttackTaskOn)
+		{
+			const bool bIsBound = OnFinishAttackingTask.ExecuteIfBound(BTComponent, true, false);
+			AttackTaskOn = false;
+		}
 	}
 }
 
@@ -391,16 +397,6 @@ void AEnemyBase::UpdateAttackingPosition(float Alpha)
 	SetActorLocation(MovingPos);
 }
 
-
-void AEnemyBase::ActionEnd_Implementation(bool BufferingCheck)
-{
-	ICharacterActionInterface::ActionEnd_Implementation(BufferingCheck);
-	
-	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
-
-	SetIsCountered(false);
-}
-
 void AEnemyBase::OnResumeMovement_Implementation()
 {
 	ICharacterActionInterface::OnResumeMovement_Implementation();
@@ -419,6 +415,8 @@ void AEnemyBase::OnResetEnemyCurrentState_Implementation()
 void AEnemyBase::TryToDamagePlayer_Implementation()
 {
 	ICharacterActionInterface::TryToDamagePlayer_Implementation();
+
+	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 	
 	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy(true);
 
@@ -430,7 +428,6 @@ void AEnemyBase::TryToDamagePlayer_Implementation()
 		}
 	}
 	
-	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 }
 
 void AEnemyBase::TryTriggerPlayerCounter_Implementation()
@@ -484,7 +481,6 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 
 		// Stop attack movement
 		TryStopAttackMovement();
-		
 		
 		TryFinishAttackTask(EEnemyCurrentState::Damaged);
 
