@@ -9,9 +9,9 @@ void AProjectTentacleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TryInitializeEncounterVolumeRef();
+	// TryInitializeEncounterVolumeRef();
 
-	StartRepositionEnemyLoop();
+	// StartRepositionEnemyLoop();
 }
 
 void AProjectTentacleGameModeBase::TryInitializeEncounterVolumeRef()

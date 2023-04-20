@@ -214,6 +214,7 @@ protected:
 	
 	
 public:
+	void ExecuteRangedAttack(AActor* Target);
 
 	EEnemyType GetType() const;
 

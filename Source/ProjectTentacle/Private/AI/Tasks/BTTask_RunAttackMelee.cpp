@@ -36,10 +36,10 @@ EBTNodeResult::Type UBTTask_RunAttackMelee::ExecuteTask(UBehaviorTreeComponent& 
 
 	
 	
-	// // Create timers for counter timeout and completion timeout
-	// FTimerManager* WorldTimerManager = &GetWorld()->GetTimerManager();
-	// WorldTimerManager->SetTimer(CounterTimer, this, &UBTTask_RunAttackMelee::AttackCounterTimeLimit,OwnPawn->GetAttackCounterableTime(), false, OwnPawn->GetAttackCounterableTime());
-	// WorldTimerManager->SetTimer(CompletionTimer, this, &UBTTask_RunAttackMelee::AttackCompletionTimeLimit,OwnPawn->GetAttackCompletionTime(), false, OwnPawn->GetAttackCompletionTime());
+	// Create timers for counter timeout and completion timeout
+	FTimerManager* WorldTimerManager = &GetWorld()->GetTimerManager();
+	WorldTimerManager->SetTimer(CounterTimer, this, &UBTTask_RunAttackMelee::AttackCounterTimeLimit,OwnPawn->GetAttackCounterableTime(), false, OwnPawn->GetAttackCounterableTime());
+	WorldTimerManager->SetTimer(CompletionTimer, this, &UBTTask_RunAttackMelee::AttackCompletionTimeLimit,OwnPawn->GetAttackCompletionTime(), false, OwnPawn->GetAttackCompletionTime());
 
 	return EBTNodeResult::InProgress;
 }
