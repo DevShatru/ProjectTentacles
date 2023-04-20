@@ -76,7 +76,10 @@ void AEnemyBase::InitializeWidgetComponents()
 	// timeline binding
 	FOnTimelineFloat MovingAttackPosUpdate;
 	MovingAttackPosUpdate.BindDynamic(this, &AEnemyBase::UpdateAttackingPosition);
-	AttackMovingTimeline.AddInterpFloat(AttackMovingCurve, MovingAttackPosUpdate);
+	UnCounterMovingTimeline.AddInterpFloat(UncounterableAttackMovingCurve, MovingAttackPosUpdate);
+	CounterableMovingTimeline.AddInterpFloat(CounterableAttackMovingCurve, MovingAttackPosUpdate);
+	
+	
 }
 
 void AEnemyBase::InitializeEnemyControllerRef()
@@ -89,7 +92,8 @@ void AEnemyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	AttackMovingTimeline.TickTimeline(DeltaTime);
+	UnCounterMovingTimeline.TickTimeline(DeltaTime);
+	CounterableMovingTimeline.TickTimeline(DeltaTime);
 }
 
 float AEnemyBase::GetAttackCompletionTime() const
@@ -155,7 +159,9 @@ void AEnemyBase::ExecuteAttack()
 
 	// Debug Attack Moving timeline activate
 	if(EnableAttackMovement)
-		AttackMovingTimeline.PlayFromStart();
+	{
+		PlaySpecificAttackMovingTimeline(CurrentAttackType);
+	}
 	
 	// switch case on current attack type to fire different animation 
 	switch (CurrentAttackType)
@@ -212,6 +218,20 @@ FVector AEnemyBase::CalculateDestinationForAttackMoving(FVector PlayerPos)
 	const FVector DirFromPlayerToSelf = DirFromSelfToPlayer * -1;
 	
 	return Hit.ImpactPoint + (DirFromPlayerToSelf * OffsetFromPlayer);
+}
+
+void AEnemyBase::PlaySpecificAttackMovingTimeline(EEnemyAttackType AttackType)
+{
+	switch (AttackType)
+	{
+	case EEnemyAttackType::AbleToCounter:
+		CounterableMovingTimeline.PlayFromStart();
+		break;
+	case EEnemyAttackType::UnableToCounter:
+		UnCounterMovingTimeline.PlayFromStart();
+		break;
+	default: break;
+	}
 }
 
 
@@ -327,7 +347,11 @@ void AEnemyBase::TryResumeMoving()
 
 void AEnemyBase::TryStopAttackMovement()
 {
-	if(EnableAttackMovement) AttackMovingTimeline.Stop();
+	if(EnableAttackMovement)
+	{
+		UnCounterMovingTimeline.Stop();
+		CounterableMovingTimeline.Stop();
+	}
 }
 
 // Finish attack task and switch to requested task
@@ -350,10 +374,10 @@ void AEnemyBase::UpdateAttackingPosition(float Alpha)
 	if(EnableEnemyAttackTracking)
 		if(Alpha < AttackTrackingLimitInAlpha)
 		{
-			ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+			const ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
 			if(!PlayerCha) return;
 
-			FVector PlayerPos = PlayerCha->GetActorLocation();
+			const FVector PlayerPos = PlayerCha->GetActorLocation();
 	
 			AttackMovingDestination = CalculateDestinationForAttackMoving(PlayerPos);
 		}

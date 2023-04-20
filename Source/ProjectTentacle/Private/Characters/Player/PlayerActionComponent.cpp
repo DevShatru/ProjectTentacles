@@ -370,8 +370,7 @@ float UPlayerActionComponent::CalculateCurrentComboSpeed()
 
 void UPlayerActionComponent::OnStartingComboResetTimer()
 {
-	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::Attack || PlayerOwnerRef->GetCurrentActionState() == EActionState::SpecialAttack)
-		WaitToResetComboCount();
+	WaitToResetComboCount();
 }
 
 void UPlayerActionComponent::WaitToResetComboCount()
@@ -380,7 +379,6 @@ void UPlayerActionComponent::WaitToResetComboCount()
 	if(!World) return;
 
 	FTimerManager& WorldTimerManager = World->GetTimerManager();
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Wait To Reset Combo Count"));	
 
 	WorldTimerManager.SetTimer(ComboResetTimerHandle,this, &UPlayerActionComponent::ResetComboCount, ComboCountExistTime, false, -1);
 }

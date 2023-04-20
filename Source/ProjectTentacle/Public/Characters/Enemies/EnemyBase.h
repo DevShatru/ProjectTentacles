@@ -148,8 +148,11 @@ protected:
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
-	UCurveFloat* AttackMovingCurve;
+	UCurveFloat* UncounterableAttackMovingCurve;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	UCurveFloat* CounterableAttackMovingCurve;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
 	float CounterTriggerRadius = 150.0f;
 
@@ -181,6 +184,8 @@ protected:
 	EEnemyAttackAnimMontages SetAttackType();
 
 	FVector CalculateDestinationForAttackMoving(FVector PlayerPos);
+
+	void PlaySpecificAttackMovingTimeline(EEnemyAttackType AttackType);
 	
 	TArray<AActor*> GetActorsInFrontOfEnemy(bool IsDamaging);
 
@@ -311,7 +316,8 @@ private:
 	bool IsCountered = false;
 	
 	// Timeline for enemy attack movement
-	FTimeline AttackMovingTimeline;
+	FTimeline UnCounterMovingTimeline;
+	FTimeline CounterableMovingTimeline;
 
 	// Class variables for timeline function usage
 	FVector AttackMovingDestination;

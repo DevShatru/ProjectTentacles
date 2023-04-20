@@ -19,7 +19,7 @@ void UAN_StartComboResetTimer::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 	if(OwnerRef->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
 	{
 		// if it has character action interface, it means its base character, execute its SwitchToIdleState function
-		ICharacterActionInterface::Execute_StartLyingOnTheGround(OwnerRef);
+		ICharacterActionInterface::Execute_OnActivateComboResetTimer(OwnerRef);
 	}
 
 
