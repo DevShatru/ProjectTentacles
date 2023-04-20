@@ -5,6 +5,7 @@
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "Characters/Player/PlayerCharacter.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 UBTTask_RunAttackRanged::UBTTask_RunAttackRanged()
@@ -12,11 +13,20 @@ UBTTask_RunAttackRanged::UBTTask_RunAttackRanged()
 	NodeName = "Run Ranged Attack";
 }
 
+EBTNodeResult::Type UBTTask_RunAttackRanged::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	// TODO Pop up indicator
+	TryCacheRefs(OwnerComp);
+	if(!bHasCachedRefs) return EBTNodeResult::Failed;
+
+	Target->ShowHitIndicator(OwnPawn->GetAttackCounterableTime(), OwnPawn->GetAttackCompletionTime());
+	return Super::ExecuteTask(OwnerComp, NodeMemory);
+}
+
 void UBTTask_RunAttackRanged::AttackCounterTimeLimit()
 {
 	Super::AttackCounterTimeLimit();
 	
-	const AActor* Target = Cast<AActor>(OwningComp->GetBlackboardComponent()->GetValueAsObject("Target"));
 	if(!Target) return;
 
 	FHitResult TraceResult;
@@ -31,4 +41,16 @@ void UBTTask_RunAttackRanged::AttackCounterTimeLimit()
 		// GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("Hit %s"), *TraceResult.Actor->GetHumanReadableName()));
 		OwnPawn->ExecuteRangedAttack(TraceResult.Actor.Get());
 	}
+}
+
+void UBTTask_RunAttackRanged::AttackCompletionTimeLimit()
+{
+	// TODO Hide indicator
+	Super::AttackCompletionTimeLimit();
+}
+
+EBTNodeResult::Type UBTTask_RunAttackRanged::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	// TODO Hide indicator
+	return Super::AbortTask(OwnerComp, NodeMemory);
 }
