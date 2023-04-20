@@ -358,7 +358,7 @@ void AEnemyBase::TryStopAttackMovement()
 void AEnemyBase::TryFinishAttackTask(EEnemyCurrentState SwitchingState)
 {
 	// if BT component is valid and if current enemy state is attacking
-	if(BTComponent && CurrentEnemyState == EEnemyCurrentState::Attacking)
+	if(BTComponent && (CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered))
 	{
 		// switch state to standing
 		TrySwitchEnemyState(SwitchingState);

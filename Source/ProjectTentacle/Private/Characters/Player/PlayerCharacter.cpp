@@ -251,8 +251,10 @@ void APlayerCharacter::DamagingTarget_Implementation()
 	Super::DamagingTarget_Implementation();
 
 	if(DamagingActor == nullptr) return;
-
+	
 	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, 1, this, CurrentAttackType);
+
+	if(CurrentAttackType == EPlayerAttackType::CounterAttack) UnsetCurrentTarget();
 }
 
 void APlayerCharacter::TryStoreCounterTarget_Implementation(AEnemyBase* CounterTarget)

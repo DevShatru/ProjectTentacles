@@ -76,7 +76,6 @@ private:
 	void WaitToRegenStamina();
 	void BeginRegenerateStamina();
 	void RegeneratingStamina();
-
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

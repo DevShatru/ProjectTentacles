@@ -256,6 +256,12 @@ public:
 	
 	UFUNCTION()
 	void UpdateAttackingPosition(float Alpha);
+
+
+	// ============================================= Utility Functions ====================================================
+
+	void TrySwitchEnemyState(EEnemyCurrentState NewState) { if(CurrentEnemyState != NewState) CurrentEnemyState = NewState;}
+
 	
 
 	// ============================================= Get and Set functions ================================================
@@ -329,8 +335,6 @@ private:
 	void TryClearFromPlayerTarget();
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);
-
-	void TrySwitchEnemyState(EEnemyCurrentState NewState) { if(CurrentEnemyState != NewState) CurrentEnemyState = NewState;}
 	
 	void TryFinishAttackTask(EEnemyCurrentState SwitchingState);
 

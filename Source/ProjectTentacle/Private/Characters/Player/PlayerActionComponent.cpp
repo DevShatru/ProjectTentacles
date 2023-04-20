@@ -500,10 +500,9 @@ void UPlayerActionComponent::BeginCounterAttack()
 	CurrentPlayingMontage = CounterAttackMontages;
 
 	MakePlayerEnemyFaceEachOther(StoredCounterTarget);
-
-	
 	
 	StoredCounterTarget->StartCounterAttackAnimation();
+	StoredCounterTarget->TrySwitchEnemyState(EEnemyCurrentState::Countered);
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
 	ComboCountIncrement();
@@ -674,9 +673,8 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 			if(FoundCharacter != nullptr)
 			{
 				// Exclude enemy that are dead, alse exclude enemy that are countered but yet not getting up yet
-				if(FoundCharacter->GetIsDead() && FoundCharacter->GetCurrentEnemyState() == EEnemyCurrentState::Countered) continue;
-				
-				ReturnActors.Add(FoundCharacter);
+				if(!FoundCharacter->GetIsDead() && FoundCharacter->GetCurrentEnemyState() != EEnemyCurrentState::Countered)
+					ReturnActors.Add(FoundCharacter);
 			}
 		}
 	}
