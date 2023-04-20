@@ -32,6 +32,15 @@ protected:
 	
 	void InitializeEnemyControllerRef();
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting)
+	bool EnableAttackMovement = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting)
+	bool EnableEnemyAttackTracking = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting, meta=(ClampMin=0, ClampMax=1))
+	float AttackTrackingLimitInAlpha = 0.5f; 
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Combat)
 	EEnemyType UnitType = EEnemyType::Melee;
 
@@ -88,11 +97,11 @@ protected:
 	int32 MaxHealth = 10;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
-	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::Standing;
+	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::WaitToAttack;
 
 	bool IsDead = false;
-	
-	
+
+
 
 	
 	// Receiving Damage Animations
@@ -136,10 +145,27 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
 	float OffsetFromPlayer = 50.0f;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
-	UCurveFloat* AttackMovingCurve;
+	UCurveFloat* UncounterableAttackMovingCurve;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	UCurveFloat* CounterableAttackMovingCurve;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	float CounterTriggerRadius = 150.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	float CounterTriggerHeight = 90.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	float DamageTriggerRadius = 75.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
+	float DamageTriggerHeight = 10.0f;
+	
+	
 	bool IsAttacking = false;
 	
 	// Attacking Animation
@@ -158,8 +184,10 @@ protected:
 	EEnemyAttackAnimMontages SetAttackType();
 
 	FVector CalculateDestinationForAttackMoving(FVector PlayerPos);
+
+	void PlaySpecificAttackMovingTimeline(EEnemyAttackType AttackType);
 	
-	TArray<AActor*> GetActorsInFrontOfEnemy();
+	TArray<AActor*> GetActorsInFrontOfEnemy(bool IsDamaging);
 
 	// ===================================================== Receive Damage =================================================
 	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
@@ -218,12 +246,23 @@ public:
 	void InstantRotation(FVector RotatingVector);
 	
 	void PlayFinishedAnimation();
-	
+
+
+	void TryStopMoving();
+	void TryResumeMoving();
+
+	void TryStopAttackMovement();
 
 	// ============================================= Timeline function ====================================================
 	
 	UFUNCTION()
 	void UpdateAttackingPosition(float Alpha);
+
+
+	// ============================================= Utility Functions ====================================================
+
+	void TrySwitchEnemyState(EEnemyCurrentState NewState) { if(CurrentEnemyState != NewState) CurrentEnemyState = NewState;}
+
 	
 
 	// ============================================= Get and Set functions ================================================
@@ -238,17 +277,28 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	EEnemyAttackType GetEnemyStoredAttackType() const {return CurrentAttackType;}
 
+	EEnemyCurrentState GetCurrentEnemyState() const {return CurrentEnemyState;}
+	
 	UFUNCTION(BlueprintCallable)
 	UBehaviorTreeComponent* GetBehaviourTreeComponent() const {return BTComponent;}
 	void SetBehaviourTreeComponent(UBehaviorTreeComponent* NewBehaviourTreeComponent) {BTComponent = NewBehaviourTreeComponent;}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool GetIsCountered() const {return IsCountered;}
+	void SetIsCountered(bool NewIsCountered) {IsCountered = NewIsCountered;}
+
 	
 	// ================================================== Interface Functions ============================================
+	
+	virtual void OnResumeMovement_Implementation() override;
 
-	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
+	virtual void OnResetEnemyCurrentState_Implementation() override;
 	
 	virtual void TryToDamagePlayer_Implementation() override;
 
 	virtual void TryTriggerPlayerCounter_Implementation() override;
+
+	virtual void OnCounterTimeEnd_Implementation() override;
 
 	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 
@@ -266,9 +316,16 @@ public:
 	
 
 private:
+
+	// bool to check if enemy is in counter state
+	bool IsCountered = false;
+
+	// bool to check if enemy is in attack task
+	bool AttackTaskOn = false;
 	
 	// Timeline for enemy attack movement
-	FTimeline AttackMovingTimeline;
+	FTimeline UnCounterMovingTimeline;
+	FTimeline CounterableMovingTimeline;
 
 	// Class variables for timeline function usage
 	FVector AttackMovingDestination;
@@ -280,4 +337,8 @@ private:
 	void TryClearFromPlayerTarget();
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);
+	
+	void TryFinishAttackTask(EEnemyCurrentState SwitchingState);
+
+	
 };

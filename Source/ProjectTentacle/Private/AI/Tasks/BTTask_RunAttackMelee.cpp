@@ -25,7 +25,8 @@ EBTNodeResult::Type UBTTask_RunAttackMelee::ExecuteTask(UBehaviorTreeComponent& 
 	// Allocate Owner's behaviour tree component and bind with signature
 	if(!OwnPawn->GetBehaviourTreeComponent())
 		OwnPawn->SetBehaviourTreeComponent(&OwnerComp);
-		
+
+	
 	OwnPawn->OnFinishAttackingTask.BindDynamic(this, &UBTTask_RunAttackMelee::AttackFinishTask);
 
 

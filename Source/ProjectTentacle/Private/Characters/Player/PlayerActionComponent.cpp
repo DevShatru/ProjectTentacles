@@ -18,6 +18,51 @@ UPlayerActionComponent::UPlayerActionComponent()
 	// ...
 }
 
+void UPlayerActionComponent::StopSpecificMovingTimeline(EPlayerAttackType CurrentPlayerAttack)
+{
+	switch (CurrentPlayerAttack)
+	{
+		case EPlayerAttackType::ShortFlipKick:
+			ShortFlipKickTimeLine.Stop();
+			break;
+		case EPlayerAttackType::FlyingKick:
+			FlyingKickTimeLine.Stop();
+			break;
+		case EPlayerAttackType::FlyingPunch:
+			FlyingPunchTimeLine.Stop();
+			break;
+		case EPlayerAttackType::SpinKick:
+			SpinKickTimeLine.Stop();
+			break;
+		case EPlayerAttackType::DashingDoubleKick:
+			DashingDoubleKickTimeLine.Stop();
+			break;
+		case EPlayerAttackType::FastKick:
+			CloseToPerformFinisherTimeLine.Stop();
+			break;
+		case EPlayerAttackType::FastPunch:
+			CloseToPerformFinisherTimeLine.Stop();
+
+			break;
+		default: ;
+	}
+}
+
+void UPlayerActionComponent::PauseComboResetTimer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	World->GetTimerManager().PauseTimer(ComboResetTimerHandle);
+}
+
+void UPlayerActionComponent::ResumeComboResetTimer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	World->GetTimerManager().UnPauseTimer(ComboResetTimerHandle);
+}
 
 
 // =================================================== Begin Functions =======================================================
@@ -43,7 +88,8 @@ void UPlayerActionComponent::InitializeOwnerRef()
 	PlayerOwnerRef->OnExecutePlayerAction.BindDynamic(this, &UPlayerActionComponent::ExecutePlayerAction);
 	PlayerOwnerRef->OnReceivingIncomingDamage.BindDynamic(this, &UPlayerActionComponent::ReceivingDamage);
 	PlayerOwnerRef->OnTriggeringCounter.BindDynamic(this, &UPlayerActionComponent::TriggerCounterAttack);
-	PlayerOwnerRef->OnClearingComboCount.BindDynamic(this, &UPlayerActionComponent::WaitToResetComboCount);
+	PlayerOwnerRef->OnEnteringPreCounterState.BindDynamic(this, &UPlayerActionComponent::TriggerPreCounter);
+	PlayerOwnerRef->OnEnableComboResetTimer.BindDynamic(this, &UPlayerActionComponent::OnStartingComboResetTimer);
 }
 
 void UPlayerActionComponent::InitializeTimelineComp()
@@ -60,6 +106,16 @@ void UPlayerActionComponent::InitializeTimelineComp()
 	FOnTimelineFloat DodgingPosUpdate;
 	DodgingPosUpdate.BindDynamic(this, &UPlayerActionComponent::DodgeMovement);
 	DodgeLerpingTimeLine.AddInterpFloat(DodgeLerpingCurve, DodgingPosUpdate);
+
+	
+	FOnTimelineFloat TurnRotatorUpdate;
+	TurnRotatorUpdate.BindDynamic(this, &UPlayerActionComponent::TurnRotationUpdate);
+	
+	FOnTimelineEvent TurnRotatorFinish;
+	TurnRotatorFinish.BindDynamic(this, &UPlayerActionComponent::EnterCounterAttackState);
+	
+	TurnRotationTimeline.AddInterpFloat(CounterRotationCurve, TurnRotatorUpdate);
+	TurnRotationTimeline.SetTimelineFinishedFunc(TurnRotatorFinish);
 	
 }
 
@@ -83,6 +139,7 @@ void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	DashingDoubleKickTimeLine.TickTimeline(DeltaWithComboBonus);
 	CloseToPerformFinisherTimeLine.TickTimeline(DeltaWithComboBonus);
 	DodgeLerpingTimeLine.TickTimeline(DeltaTime);
+	TurnRotationTimeline.TickTimeline(DeltaTime);
 
 }
 
@@ -139,6 +196,8 @@ void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 	// Set damaging actor
 	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
 
+	RegisteredTarget->TryStopMoving();
+
 	ClearComboResetTimer();
 
 	// if(EnemyCurrentHealth <= 1)
@@ -180,7 +239,6 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 	
 		
 	
-	
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
 	
 	// change current action state enum
@@ -202,6 +260,7 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 	// }
 	
 
+	RegisteredTarget->TryStopMoving();
 	
 	// Play attack montage
 	CurrentPlayingMontage = DecidedMontage;
@@ -309,6 +368,11 @@ float UPlayerActionComponent::CalculateCurrentComboSpeed()
 	return 1 + AdjustedSpeedBonus;
 }
 
+void UPlayerActionComponent::OnStartingComboResetTimer()
+{
+	WaitToResetComboCount();
+}
+
 void UPlayerActionComponent::WaitToResetComboCount()
 {
 	const UWorld* World = GetWorld();
@@ -331,54 +395,161 @@ void UPlayerActionComponent::ClearComboResetTimer()
 
 void UPlayerActionComponent::BeginEvade()
 {
-	// if evade montage is null pointer, just return
-	if(EvadeAnimMontage == nullptr) return;
+	// Set target countered to prevent clearing target
+	AEnemyBase* CurrentStoredCounterTarget = PlayerOwnerRef->GetCounteringTarget();
+	CurrentStoredCounterTarget->SetIsCountered(true);
 
-	PlayerOwnerRef->SetCurrentActionState(EActionState::Evade);
-	
-	CurrentPlayingMontage = EvadeAnimMontage;
-
-	const int32 RndPerformIndex = UKismetMathLibrary::RandomIntegerInRange(0,1);
-
-	if(RndPerformIndex == 0)
+	// Make previous targeted enemy able to move if player is attacking
+	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::Attack)
 	{
-		PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeRight");
-		return;
-	}
+		const EPlayerAttackType CurrentRegisteredAttackType = PlayerOwnerRef->GetCurrentAttackType();
+		StopSpecificMovingTimeline(CurrentRegisteredAttackType);
+
+		// Make damaging actor resume moving
+		AEnemyBase* ResumeMovementDamagingActor = PlayerOwnerRef->GetDamagingActor();
+		if(ResumeMovementDamagingActor)
+			ResumeMovementDamagingActor->TryResumeMoving();
+	}	
 	
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeLeft");
+	
+	// Enter Pre Counter State
+	EnterPreCounterState();
+
+	
+
+
+	
+	// // if evade montage is null pointer, just return
+	// if(EvadeAnimMontage == nullptr) return;
+	//
+	// PlayerOwnerRef->SetCurrentActionState(EActionState::Evade);
+	//
+	// CurrentPlayingMontage = EvadeAnimMontage;
+	//
+	// const int32 RndPerformIndex = UKismetMathLibrary::RandomIntegerInRange(0,1);
+	//
+	// if(RndPerformIndex == 0)
+	// {
+	// 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeRight");
+	// 	return;
+	// }
+	//
+	// PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "DodgeLeft");
+}
+
+// ================================================== Pre Counter State =================================================
+void UPlayerActionComponent::EnterPreCounterState()
+{
+	PlayerOwnerRef->SetCurrentActionState(EActionState::SpecialAttack);
+
+	// Get Start and End lerping Rotation Yaw
+	StartTurnRotationZ = PlayerOwnerRef->GetActorRotation().Yaw;
+
+	AEnemyBase* CurrentCounterTarget = PlayerOwnerRef->GetCounteringTarget();
+
+	const FVector PlayerCurrentPos = PlayerOwnerRef->GetActorLocation();
+	FVector CounterTargetPos = CurrentCounterTarget->GetActorLocation();
+	CounterTargetPos.Z = PlayerCurrentPos.Z;
+
+	const FRotator RotationToTarget = UKismetMathLibrary::FindLookAtRotation(PlayerCurrentPos, CounterTargetPos);
+	EndTurnRotationZ = RotationToTarget.Yaw;
+
+	// Get Start and End lerping positions
+	CounterMoveStartPos = PlayerCurrentPos;
+	CounterMoveEndPos = GetCounterPos(CurrentCounterTarget);
+	
+	// Decide which side should player turn
+	const float AngleChange = EndTurnRotationZ - StartTurnRotationZ;
+
+	const bool IsLeftTurn = AngleChange < 0;
+
+	if(IsLeftTurn)
+		PlayerOwnerRef->PlayAnimMontage(RotateAnimationLeft, 6.0f, "Default");
+	else
+		PlayerOwnerRef->PlayAnimMontage(RotateAnimationRight, 6.0f, "Default");
+
+	TurnRotationTimeline.PlayFromStart();
+}
+
+void UPlayerActionComponent::EnterCounterAttackState()
+{
+	PlayerOwnerRef->StopAnimMontage();
+
+	PlayerOwnerRef->SetCounteringTarget(PlayerOwnerRef->GetCounteringTarget());
+	
+	BeginCounterAttack();
 }
 
 
-
 // ================================================== Counter ======================================================
-void UPlayerActionComponent::BeginCounterAttack(AActor* CounteringTarget)
+void UPlayerActionComponent::BeginCounterAttack()
 {
 	// ref validation check
 	if(PlayerOwnerRef == nullptr) return;
+
+	AEnemyBase* StoredCounterTarget = PlayerOwnerRef->GetCounteringTarget();
+	if(!StoredCounterTarget) return;
 	
 	// if Dodge montage is null pointer, just return
 	if(CounterAttackMontages == nullptr) return;
-
-	PlayerOwnerRef->SetCurrentActionState(EActionState::SpecialAttack);
-
-	AEnemyBase* CastedTarget = Cast<AEnemyBase>(CounteringTarget);
-	if(CastedTarget == nullptr) return;
-
 	
-	PlayerOwnerRef->SetDamagingActor(CastedTarget);
+	PlayerOwnerRef->SetDamagingActor(StoredCounterTarget);
 	
 	PlayerOwnerRef->SetCurrentAttackType(EPlayerAttackType::CounterAttack);
 	
 	CurrentPlayingMontage = CounterAttackMontages;
 
-	MakePlayerEnemyFaceEachOther(CastedTarget);
+	MakePlayerEnemyFaceEachOther(StoredCounterTarget);
 	
-	CastedTarget->StartCounterAttackAnimation();
+	StoredCounterTarget->StartCounterAttackAnimation();
+	StoredCounterTarget->TrySwitchEnemyState(EEnemyCurrentState::Countered);
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
 	ComboCountIncrement();
+
+	// Stop Combo Count timer
+	ClearComboResetTimer();
+
+	// Clear counter target reference and set counterable bool to false
+	AEnemyBase* DeletingCounterTargetRef = PlayerOwnerRef->GetCounteringTarget();
+	PlayerOwnerRef->ClearCounteringTarget(DeletingCounterTargetRef);
+	PlayerOwnerRef->TryTurnCounterCapable(false);
 }
+
+FVector UPlayerActionComponent::GetCounterPos(AEnemyBase* CounterVictim)
+{
+	// // Hit result
+	// FHitResult Hit;
+	// // Empty array of ignoring actor, add CounterVictim and PlayerRef to be ignored
+	// TArray<AActor*> IgnoreActors;
+	// IgnoreActors.Add(CounterVictim);
+	// IgnoreActors.Add(PlayerOwnerRef);
+	//
+	const FVector StartPos = CounterVictim->GetActorLocation();
+	const FVector EndPos = StartPos + (CounterVictim->GetActorForwardVector() * 90);
+	//
+	// // Line trace by channel from Kismet System Library 
+	// const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, StartPos, EndPos, UEngineTypes::ConvertToTraceType(ECC_Visibility), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+	//
+	//
+
+	return EndPos;
+}
+
+void UPlayerActionComponent::TurnRotationUpdate(float Alpha)
+{
+	
+	const FRotator CurrentPlayerRotation = PlayerOwnerRef->GetActorRotation();
+	const float CurrentRotatorYaw = UKismetMathLibrary::Lerp(StartTurnRotationZ, EndTurnRotationZ, Alpha);
+	const FRotator NewRotation = FRotator(CurrentPlayerRotation.Pitch,CurrentRotatorYaw,CurrentPlayerRotation.Roll);
+	
+	PlayerOwnerRef->SetActorRotation(NewRotation);
+
+	const FVector NewPos = UKismetMathLibrary::VLerp(CounterMoveStartPos, CounterMoveEndPos, Alpha);
+	PlayerOwnerRef->SetActorLocation(NewPos);
+}
+
+
 
 // ==================================================== Dodge ===============================================
 
@@ -501,8 +672,8 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 			AEnemyBase* FoundCharacter = Cast<AEnemyBase>(EachFoundActor);
 			if(FoundCharacter != nullptr)
 			{
-				// Exclude enemy that are dead
-				if(!FoundCharacter->GetIsDead())
+				// Exclude enemy that are dead, alse exclude enemy that are countered but yet not getting up yet
+				if(!FoundCharacter->GetIsDead() && FoundCharacter->GetCurrentEnemyState() != EEnemyCurrentState::Countered)
 					ReturnActors.Add(FoundCharacter);
 			}
 		}
@@ -633,25 +804,12 @@ void UPlayerActionComponent::ExecutePlayerAction(EActionState ExecutingAction)
 	switch (ExecutingAction)
 	{
 		case EActionState::Idle:
-			
 			break;
 		case EActionState::Evade:
 			BeginEvade();
 			break;
 		case EActionState::Attack:
 			BeginMeleeAttack();
-			break;
-		case EActionState::Recovering:
-			
-			break;
-		case EActionState::ReceivedDamage:
-			
-			break;
-		case EActionState::SpecialAttack:
-			
-			break;
-		case EActionState::WaitForCombo:
-			
 			break;
 		case EActionState::Dodge:
 			BeginDodge();
@@ -668,13 +826,24 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 	EActionState PlayerCurrentAction = PlayerOwnerRef->GetCurrentActionState();
 
 	if(PlayerCurrentAction == EActionState::Dodge) return;
-	
 
+	
 	if(IsPlayerCanBeDamaged(PlayerCurrentAction, ReceivingAttackType))
 	{
+		// if player is attacking
 		if(PlayerCurrentAction == EActionState::Attack)
 		{
-			PlayerOwnerRef->StopAnimMontage();	
+			// Stop player anim montage
+			PlayerOwnerRef->StopAnimMontage();
+
+			// stop player's attack movement
+			const EPlayerAttackType CurrentRegisteredAttackType = PlayerOwnerRef->GetCurrentAttackType();
+			StopSpecificMovingTimeline(CurrentRegisteredAttackType);
+
+			// make damaging enemy resume moving
+			AEnemyBase* ResumeMovementDamagingActor = PlayerOwnerRef->GetDamagingActor();
+			if(ResumeMovementDamagingActor)
+				ResumeMovementDamagingActor->TryResumeMoving();
 		}
 
 		// Damage player
@@ -689,6 +858,7 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 
 		PlayerOwnerRef->SetCurrentActionState(EActionState::Recovering);
 
+		// 
 		// Instant Rotate to enemy
 		const FVector FacingEnemyDir = UKismetMathLibrary::Normal(DamageCauser->GetActorLocation() - PlayerOwnerRef->GetActorLocation());
 		InstantRotation(FacingEnemyDir);
@@ -699,10 +869,32 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 	}
 }
 
+
+void UPlayerActionComponent::TriggerPreCounter(AActor* CounteringTarget)
+{
+	if(!CounteringTarget) return;
+
+	AEnemyBase* CastedTarget = Cast<AEnemyBase>(CounteringTarget);
+	if(CastedTarget == nullptr) return;
+
+	PlayerOwnerRef->StopAnimMontage();
+
+	PlayerOwnerRef->SetCounteringTarget(CastedTarget);
+
+	EnterPreCounterState();
+}
+
+
 void UPlayerActionComponent::TriggerCounterAttack(AActor* CounteringTarget)
 {
+	AEnemyBase* CastedTarget = Cast<AEnemyBase>(CounteringTarget);
+	if(CastedTarget == nullptr) return;
+	
 	PlayerOwnerRef->StopAnimMontage();
-	BeginCounterAttack(CounteringTarget);
+
+	PlayerOwnerRef->SetCounteringTarget(CastedTarget);
+	
+	BeginCounterAttack();
 
 }
 
@@ -717,7 +909,7 @@ bool UPlayerActionComponent::IsPlayerCanBeDamaged(EActionState PlayerCurrentActi
 	EEnemyAttackType ReceivingAttackType)
 {
 	// return true if player is standing or attacking or player is countering but incoming attack is not counterable
-	return PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack || (PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::UnableToCounter);
+	return PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack || PlayerCurrentAction == EActionState::PreAction || (PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::UnableToCounter);
 }
 
 void UPlayerActionComponent::MakePlayerEnemyFaceEachOther(AEnemyBase* TargetEnemyRef)

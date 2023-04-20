@@ -41,6 +41,8 @@ public:
 
 	virtual void Reset() override;
 
+	void OnDeath();
+	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	// Base behavior tree, run on start
@@ -58,7 +60,6 @@ protected:
 	void UpdatePerception(AActor* Actor, FAIStimulus Stimulus);	
 	
 private:
-	void OnDeath();
 	void ClearBlackboard();
 	void TryCacheBlackboardComp();
 

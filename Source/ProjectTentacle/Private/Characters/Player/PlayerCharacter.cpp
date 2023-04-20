@@ -130,7 +130,7 @@ void APlayerCharacter::MoveRight(float Value)
 void APlayerCharacter::TryMeleeAttack()
 {
 	// if player is recovering from action or is dodging, return
-	if(CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::WaitForCombo)
+	if(CheckCanPerformAction())
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Attack);
 	
 }
@@ -139,7 +139,8 @@ void APlayerCharacter::TryMeleeAttack()
 void APlayerCharacter::TryEvade()
 {
 	// if player is able to dodge, make dodge
-	if(CurrentActionState == EActionState::Idle)
+	//if(CheckCanPerformAction())
+	if(IsPlayerCounterable && CounteringVictim && (CurrentActionState != EActionState::SpecialAttack && CurrentActionState != EActionState::Dodge))
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Evade);
 }
 
@@ -147,7 +148,7 @@ void APlayerCharacter::TryEvade()
 void APlayerCharacter::TryDodge()
 {
 	// if player is able to dodge, make dodge
-	if(CurrentActionState == EActionState::Idle && CurrentStamina > CostForEachDodge)
+	if(CheckCanPerformAction() && CurrentStamina > CostForEachDodge)
 	{
 		StopAnimMontage();	
 		StopRegenerateStamina();
@@ -157,6 +158,11 @@ void APlayerCharacter::TryDodge()
 		
 		WaitToRegenStamina();
 	}
+}
+
+bool APlayerCharacter::CheckCanPerformAction()
+{
+	return CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::PreAction;
 }
 
 // ================================================ Utility ===========================================================
@@ -245,18 +251,42 @@ void APlayerCharacter::DamagingTarget_Implementation()
 	Super::DamagingTarget_Implementation();
 
 	if(DamagingActor == nullptr) return;
-
+	
 	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, 1, this, CurrentAttackType);
+
+	if(CurrentAttackType == EPlayerAttackType::CounterAttack) UnsetCurrentTarget();
 }
 
-void APlayerCharacter::ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget)
+void APlayerCharacter::TryStoreCounterTarget_Implementation(AEnemyBase* CounterTarget)
 {
-	Super::ReceiveAttackInCounterState_Implementation(CounteringTarget);
+	Super::TryStoreCounterTarget_Implementation(CounterTarget);
 
-	// if player is in evade state, it means player will trigger counter action
-	if(CurrentActionState == EActionState::Evade)
-		bool bExecuted = OnTriggeringCounter.ExecuteIfBound(CounteringTarget);
+	SetCounteringTarget(CounterTarget);
+
+	TryTurnCounterCapable(true);
 }
+
+void APlayerCharacter::TryRemoveCounterTarget_Implementation(AEnemyBase* CounterTarget)
+{
+	Super::TryRemoveCounterTarget_Implementation(CounterTarget);
+
+	ClearCounteringTarget(CounterTarget);
+
+	TryTurnCounterCapable(false);
+}
+
+
+// void APlayerCharacter::ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget)
+// {
+// 	Super::ReceiveAttackInCounterState_Implementation(CounteringTarget);
+//
+// 	if(CurrentActionState == EActionState::Evade)
+// 		bool bExecuted = OnEnteringPreCounterState.ExecuteIfBound(CounteringTarget);
+// 		
+// 	// // if player is in evade state, it means player will trigger counter action
+// 	// if(CurrentActionState == EActionState::Evade)
+// 	// 	bool bExecuted = OnTriggeringCounter.ExecuteIfBound(CounteringTarget);
+// }
 
 
 void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser,
@@ -270,8 +300,13 @@ void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount,
 void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
 {
 	Super::ActionEnd_Implementation(BufferingCheck);
+}
 
-	const bool bExecuted = OnClearingComboCount.ExecuteIfBound();
+void APlayerCharacter::OnActivateComboResetTimer_Implementation()
+{
+	Super::OnActivateComboResetTimer_Implementation();
+
+	const bool bExecuted = OnEnableComboResetTimer.ExecuteIfBound();
 }
 
 void APlayerCharacter::DetachEnemyTarget_Implementation()

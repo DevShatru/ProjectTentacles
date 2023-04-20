@@ -7,6 +7,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"
+#include "Characters/Enemies/UnitPool.h"
 #include "Encounter/SpawnPoint.h"
 
 FTimerManager* AEncounterVolume::WorldTimerManager = nullptr;
@@ -68,12 +69,20 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 	if(AttackQueueBasic.Contains(Unit)) AttackQueueBasic.Remove(Unit);
 	if(AttackQueueHeavy.Contains(Unit)) AttackQueueHeavy.Remove(Unit);
 	if(ContainedUnits.Contains(Unit->GetOwnPawn())) ContainedUnits.Remove(Unit->GetOwnPawn());
+	FTimerHandle DespawnHandle;
+	FTimerDelegate DespawnDelegate;
+	DespawnDelegate.BindUFunction(this, FName("DespawnUnit"), Unit);
+	WorldTimerManager->SetTimer(DespawnHandle, DespawnDelegate, DespawnTimer, false);
 	
 	// Check if spawn has started yet
 	if(bWaveStartedSpawning) return;
 	// If not
 	++DefeatedUnits;
 	// Check if should start
+
+	// TODO: Somehow CurrentWaveParams is null
+	if(!CurrentWaveParams) return;
+	
 	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits / InitialUnits);
 	if(CompletionPercentage > CurrentWaveParams->SpawnStartEncounterCompletionPercent / 100.f)
 	{
@@ -150,6 +159,16 @@ void AEncounterVolume::StartSpawn()
 	TriggerNextWave();
 }
 
+void AEncounterVolume::DespawnUnit(AEnemyBaseController* Unit)
+{
+	if(!UnitPool)
+	{
+		Unit->GetOwnPawn()->Destroy();
+		return;
+	}
+	UnitPool->AddUnitToPool(Unit->GetOwnPawn());
+}
+
 // for loop to send all enemy to reposition
 void AEncounterVolume::SendAllEnemyToReposition(bool DoesIncludeHeavy)
 {
@@ -218,7 +237,6 @@ void AEncounterVolume::TryCacheTimerManager() const
 void AEncounterVolume::StartBasicQueueTimer()
 {
 	TryCacheTimerManager();
-	
 	WorldTimerManager->SetTimer(BasicQueueTimer, this, &AEncounterVolume::BeginAttackBasic, AttackStartDelay, false, AttackStartDelay);
 }
 

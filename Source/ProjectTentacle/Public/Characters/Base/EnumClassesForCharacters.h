@@ -26,7 +26,7 @@ enum class EActionState: uint8
 	Recovering = 3 UMETA(DisplayName = "RECOVERING"),
 	ReceivedDamage = 4 UMETA(DisplayName = "RECEIVEDDAMAGE"),
 	SpecialAttack = 5 UMETA(DisplayName = "SPECIALATTACK"),
-	WaitForCombo = 6 UMETA(DisplayName = "WAITFORCOMBO"),
+	PreAction = 6 UMETA(DisplayName = "PreAction"),
 	Dodge = 7 UMETA(DisplayName = "DODGE")
 };
 
@@ -48,9 +48,12 @@ enum class EEnemyUnitType: uint8
 UENUM(BlueprintType)
 enum class EEnemyCurrentState: uint8
 {
-	Standing = 0 UMETA(DisplayName = "Standing"),
-	Lying = 1 UMETA(DisplayName = "Lying"),
-	Dead = 2 UMETA(DisplayName = "Dead")
+	WaitToAttack = 0 UMETA(DisplayName = "WaitToAttack"),
+	Attacking = 1 UMETA(DisplayName = "Attacking"),
+	Countered = 2 UMETA(DisplayName = "Countered"),
+	GettingUp = 3 UMETA(DisplayName = "GettingUp"),
+	Damaged = 4 UMETA(DisplayName = "Damaged"),
+	Dead = 5 UMETA(DisplayName = "Dead")
 };
 
 UENUM(BlueprintType)

@@ -69,6 +69,11 @@ protected:
 
 	// Wave system setup
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	float SpawnStartTime = 75.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	float SpawnStartEncounterCompletionPercent = 75.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	float DespawnTimer = 5.0f;
 	TArray<FWaveParams> WaveParameters;
 
 	// Attack queue for melee and ranged units
@@ -83,6 +88,10 @@ protected:
 
 	UFUNCTION()
 	void StartSpawn();
+
+	UFUNCTION()
+	void DespawnUnit(AEnemyBaseController* Unit);
+	
 private:
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();
