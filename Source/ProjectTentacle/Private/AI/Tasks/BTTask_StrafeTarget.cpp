@@ -64,6 +64,6 @@ void UBTTask_StrafeTarget::StrafeAroundLocation(const FVector Location) const
 	const FVector ForwardToTarget = Location - CharLocation;
 	const FVector RightDirection = FVector::CrossProduct(ForwardToTarget, FVector::UpVector);
 	const FVector Direction = StrafeDistance * (RightDirection * (bShouldMoveRight ? 1 : -1)).GetSafeNormal();
-	
+	OwnPawn->EnableStrafe();
 	OwnController->MoveToLocation(CharLocation + Direction);
 }
