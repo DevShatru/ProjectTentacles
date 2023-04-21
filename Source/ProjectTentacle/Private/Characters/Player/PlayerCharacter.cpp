@@ -13,9 +13,9 @@
 FGenericTeamId APlayerCharacter::TeamId = FGenericTeamId(1);
 // ==================================================== Constructor =========================================
 
-void APlayerCharacter::ShowHitIndicator(const float CounterTime) const
+void APlayerCharacter::ShowHitIndicator(const float CounterTime, const FVector HitLocation) const
 {
-	HUDRef->PopIndicator(CounterTime);
+	HUDRef->PopIndicator(CounterTime, HitLocation);
 }
 
 void APlayerCharacter::CollapseHitIndicator() const

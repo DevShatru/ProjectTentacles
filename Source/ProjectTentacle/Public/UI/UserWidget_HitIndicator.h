@@ -14,7 +14,7 @@ class PROJECTTENTACLE_API UUserWidget_HitIndicator : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	void PopIndicator(float TransitionTime);
+	void PopIndicator(float TransitionTime, FVector HitLocation);
 	void CollapseIndicator();
 	
 protected:

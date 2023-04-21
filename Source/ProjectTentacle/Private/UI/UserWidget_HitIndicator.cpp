@@ -6,7 +6,7 @@
 #include "Components/Image.h"
 #include "Kismet/KismetMaterialLibrary.h"
 
-void UUserWidget_HitIndicator::PopIndicator(float TransitionTime)
+void UUserWidget_HitIndicator::PopIndicator(float TransitionTime, FVector HitLocation)
 {
 	HitIndicator->SetVisibility(ESlateVisibility::HitTestInvisible);
 	PlayAnimationForward(ShowHitIndicator);
