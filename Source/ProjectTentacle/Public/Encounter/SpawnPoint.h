@@ -20,6 +20,7 @@ public:
 	void SetUnitPool(class AUnitPool* NewUnitPool);
 	void SpawnUnit();
 	void RegisterOwningEncounter(class AEncounterVolume* EncounterVolume);
+	bool IsSpawningComplete() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -58,6 +59,6 @@ private:
 	AEncounterVolume* OwningEncounterVolume;
 	FTimerHandle SpawnTimerHandle;
 	TMap<EEnemyType, int8> UnitsSpawned;
-	unsigned int bShouldSpawnMelee:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1;
+	unsigned int bShouldSpawnMelee:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1, bSpawnComplete:1;
 	void CheckUnitsToSpawn();
 };
