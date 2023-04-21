@@ -32,9 +32,12 @@ protected:
 
 	FTimerHandle CompletionTimer, CounterTimer;
 	
-protected:
 	// Cache values for owning BTComp, and Unit's pawn
 	UPROPERTY()
 	UBehaviorTreeComponent* OwningComp;
 	class AEnemyBase* OwnPawn;
+	
+	unsigned int bHasCachedRefs:1;
+
+	virtual void TryCacheRefs(UBehaviorTreeComponent& OwnerComp);
 };

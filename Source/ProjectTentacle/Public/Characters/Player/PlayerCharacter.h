@@ -76,7 +76,11 @@ private:
 	void WaitToRegenStamina();
 	void BeginRegenerateStamina();
 	void RegeneratingStamina();
+	
 protected:
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	class UUserWidget_HitIndicator* HUDRef;
+	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
@@ -163,7 +167,9 @@ protected:
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
 
 public:
-
+	void ShowHitIndicator(float CounterTime, const FVector HitLocation) const;
+	void CollapseHitIndicator() const;
+	
 	// Delegate signature
 	FOnExecutingPlayerAction OnExecutePlayerAction;
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
