@@ -38,14 +38,6 @@ enum class EEnemyAttackType: uint8
 };
 
 UENUM(BlueprintType)
-enum class EEnemyUnitType: uint8
-{
-	Melee = 0 UMETA(DisplayName = "Melee"),
-	Gunner = 1 UMETA(DisplayName = "Gunner"),
-	Brute = 2 UMETA(DisplayName = "Brute")
-};
-
-UENUM(BlueprintType)
 enum class EEnemyCurrentState: uint8
 {
 	WaitToAttack = 0 UMETA(DisplayName = "WaitToAttack"),

@@ -60,6 +60,7 @@ void AEnemyBase::InitializeWidgetComponents()
 		AttackIndicatorRef = CastedAttackIndicatorWidget;
 		OnUpdatingEnemyAttackIndicator.BindDynamic(AttackIndicatorRef, &UWidget_EnemyAttackIndicator::OnReceivingNewAttackType);
 		AttackIndicatorRef->UnShowIndicator();
+		AttackIndicatorRef->SetUnitType(UnitType);
 	}
 
 	// Get target icon widget reference
@@ -113,7 +114,6 @@ void AEnemyBase::ExecuteAttack()
 {
 	AttackTaskOn = true;
 
-	// SetAttackType and get the result enum of it
 	SetAttackType();
 
 	

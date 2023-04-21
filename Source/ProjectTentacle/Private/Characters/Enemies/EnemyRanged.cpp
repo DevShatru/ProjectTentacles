@@ -81,9 +81,6 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 
 	if(!SupposeDamageActor) return;
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Found: %s"), *SupposeDamageActor->GetName()));	
-
-
 	if(SupposeDamageActor->GetClass()->ImplementsInterface(UDamageInterface::StaticClass()))
 		IDamageInterface::Execute_ReceiveDamageFromEnemy(SupposeDamageActor, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
 }

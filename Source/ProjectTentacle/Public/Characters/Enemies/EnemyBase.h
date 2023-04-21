@@ -40,7 +40,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting, meta=(ClampMin=0, ClampMax=1))
 	float AttackTrackingLimitInAlpha = 0.5f; 
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Combat)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	EEnemyType UnitType = EEnemyType::Melee;
 
 	// Updating Enemy Attack Delegate Signature
