@@ -31,6 +31,12 @@ protected:
 	void InitializeWidgetComponents();
 	
 	void InitializeEnemyControllerRef();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Movement")
+	float WalkSpeed = 600.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Movement")
+	float StrafeSpeed = 300.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting)
 	bool EnableAttackMovement = false;
@@ -214,6 +220,7 @@ protected:
 	
 	
 public:
+	void EnableStrafe(bool bStrafe = true) const;
 	void ExecuteRangedAttack(AActor* Target);
 
 	EEnemyType GetType() const;
