@@ -13,6 +13,10 @@ UCLASS()
 class PROJECTTENTACLE_API UUserWidget_HitIndicator : public UUserWidget
 {
 	GENERATED_BODY()
+public:
+	void PopIndicator(float TransitionTime);
+	void CollapseIndicator();
+	
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
@@ -22,7 +26,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hit Indicator")
 	UMaterialInterface* HitIndicatorMaterial;
+
+	UPROPERTY( Transient, meta = ( BindWidgetAnim ) )
+	UWidgetAnimation* ShowHitIndicator;
+
+	UPROPERTY( Transient, meta = ( BindWidgetAnim ) )
+	UWidgetAnimation* HideHitIndicator;
 	
 private:
+	void HideIndicator();
 	UMaterialInstanceDynamic* HitIndicatorDynamicInst;
+	FWidgetAnimationDynamicEvent HideAnimationDelegate;
 };
