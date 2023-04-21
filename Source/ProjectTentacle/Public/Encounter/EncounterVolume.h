@@ -8,6 +8,7 @@
 #include "WaveParams.h"
 #include "EncounterVolume.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEncounterComplete);
 class UNavigationInvokerComponent;
 class AEnemyBase;
 
@@ -46,6 +47,9 @@ public:
 	virtual void AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy) override;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
+	FEncounterComplete EncounterComplete;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -103,6 +107,8 @@ private:
 	unsigned int bIsEncounterActive:1;
 	// Track if contained spawn points have begun spawning
 	unsigned int bWaveStartedSpawning:1;
+
+	bool AllSpawnsComplete() const;
 	
 	// Timer handle for basic attack queue
 	FTimerHandle BasicQueueTimer;
