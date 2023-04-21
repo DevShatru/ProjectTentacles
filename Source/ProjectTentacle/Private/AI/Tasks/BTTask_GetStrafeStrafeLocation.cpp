@@ -18,6 +18,7 @@ UBTTask_StrafeTarget::UBTTask_StrafeTarget()
 	TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, TargetKey), AActor::StaticClass());
 	TargetKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, TargetKey));
 	CircleDirectionKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, CircleDirectionKey));
+	StrafeLocationKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, StrafeLocationKey));
 }
 
 void UBTTask_StrafeTarget::InitializeFromAsset(UBehaviorTree& Asset)
@@ -41,8 +42,7 @@ EBTNodeResult::Type UBTTask_StrafeTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 	bIsObject = TargetKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass();
 	const UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
 	bShouldMoveRight = Blackboard->GetValueAsBool(CircleDirectionKey.SelectedKeyName);
-	OwnController = OwnerComp.GetAIOwner();
-	OwnPawn = Cast<AEnemyBase>(OwnController->GetCharacter());
+	OwnPawn = Cast<AEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter());
 	if(bIsObject)
 	{
 		TargetActor = Cast<AActor>(Blackboard->GetValueAsObject(TargetKey.SelectedKeyName));
@@ -52,18 +52,17 @@ EBTNodeResult::Type UBTTask_StrafeTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 		TargetLocation = Blackboard->GetValueAsVector(TargetKey.SelectedKeyName);
 		if(TargetLocation == FVector::ZeroVector) return EBTNodeResult::Failed;
 	}
-	StrafeAroundLocation(bIsObject ? TargetActor->GetActorLocation() : TargetLocation);
+	OwnerComp.GetBlackboardComponent()->SetValueAsVector(StrafeLocationKey.SelectedKeyName, GetStrafeLocation(bIsObject ? TargetActor->GetActorLocation() : TargetLocation));
 
-	// TODO Change direction if it hits something
 	return EBTNodeResult::Succeeded;
 }
 
-void UBTTask_StrafeTarget::StrafeAroundLocation(const FVector Location) const
+FVector UBTTask_StrafeTarget::GetStrafeLocation(const FVector Location) const
 {
 	const FVector CharLocation = OwnPawn->GetActorLocation();
 	const FVector ForwardToTarget = Location - CharLocation;
 	const FVector RightDirection = FVector::CrossProduct(ForwardToTarget, FVector::UpVector);
 	const FVector Direction = StrafeDistance * (RightDirection * (bShouldMoveRight ? 1 : -1)).GetSafeNormal();
-	OwnPawn->EnableStrafe();
-	OwnController->MoveToLocation(CharLocation + Direction);
+	
+	return CharLocation + Direction;
 }
