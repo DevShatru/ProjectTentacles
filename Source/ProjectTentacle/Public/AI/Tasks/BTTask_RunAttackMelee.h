@@ -39,5 +39,5 @@ protected:
 	
 	unsigned int bHasCachedRefs:1;
 
-	void TryCacheRefs(UBehaviorTreeComponent& OwnerComp);
+	virtual void TryCacheRefs(UBehaviorTreeComponent& OwnerComp);
 };
