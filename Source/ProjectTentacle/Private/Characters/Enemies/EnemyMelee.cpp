@@ -12,20 +12,21 @@ void AEnemyMelee::ExecuteAttack()
 {
 	Super::ExecuteAttack();
 
-	// Save lerp start and end position for later timeline function usage
-	SelfAttackStartPos = GetActorLocation();
-
-	// Get Player Position
-	const ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	FVector PlayerCurrentPos = PlayerCharacter->GetActorLocation();
-	
-	const FVector DestinationPos = CalculateDestinationForAttackMoving(PlayerCurrentPos);
-	AttackMovingDestination = DestinationPos;
 	
 
 	// Debug Attack Moving timeline activate
 	if(EnableAttackMovement)
 	{
+		// Save lerp start and end position for later timeline function usage
+		SelfAttackStartPos = GetActorLocation();
+
+		// Get Player Position
+		const ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		FVector PlayerCurrentPos = PlayerCharacter->GetActorLocation();
+		
+		const FVector DestinationPos = CalculateDestinationForAttackMoving(PlayerCurrentPos);
+		AttackMovingDestination = DestinationPos;
+		
 		PlaySpecificAttackMovingTimeline(CurrentAttackType);
 	}
 	

@@ -12,7 +12,6 @@
 #include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
-// TODO: Based Class
 AEnemyBase::AEnemyBase()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -27,14 +26,12 @@ AEnemyBase::AEnemyBase()
 	EnemyTargetedIconWidgetComponent->AttachToComponent( RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
-// TODO: Based Class
 void AEnemyBase::RegisterOwningEncounter(AEncounterVolume* NewOwningEncounter)
 {
 	TryGetOwnController();
 	OwnController->RegisterOwningEncounter(NewOwningEncounter);
 }
 
-// TODO: Based Class
 void AEnemyBase::EngageTarget(AActor* Target)
 {
 	TryGetOwnController();
@@ -42,7 +39,6 @@ void AEnemyBase::EngageTarget(AActor* Target)
 }
 
 // Called when the game starts or when spawned
-// TODO: Based Class
 void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -52,7 +48,6 @@ void AEnemyBase::BeginPlay()
 	InitializeEnemyControllerRef();
 }
 
-// TODO: Based Class
 void AEnemyBase::InitializeWidgetComponents()
 {
 	// Get attack indicator widget reference
@@ -79,7 +74,6 @@ void AEnemyBase::InitializeWidgetComponents()
 	}
 }
 
-// TODO: Based Class
 void AEnemyBase::InitializeEnemyControllerRef()
 {
 	TryGetOwnController();
@@ -92,7 +86,6 @@ void AEnemyBase::Tick(float DeltaTime)
 }
 
 
-// TODO: Based Class
 void AEnemyBase::OnHideAttackIndicator()
 {
 	if(AttackIndicatorRef)
@@ -141,6 +134,13 @@ void AEnemyBase::ExecuteAttack()
 
 void AEnemyBase::SetAttackType()
 {
+	// If Unit Type is Range or Brute, the attack is UnableToCounter
+	if(UnitType != EEnemyType::Melee)
+	{
+		CurrentAttackType = EEnemyAttackType::UnableToCounter;
+		return;
+	}
+	
 	int32 CounterableRndInt = UKismetMathLibrary::RandomInteger(2);
 
 	if(CounterableRndInt == 0)
