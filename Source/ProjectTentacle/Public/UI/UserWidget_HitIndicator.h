@@ -23,18 +23,35 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(BindWidget))
 	class UImage* HitIndicator;
+	UPROPERTY(Transient, meta=(BindWidgetAnim))
+	UWidgetAnimation* ShowHitIndicator;
+	UPROPERTY(Transient, meta=(BindWidgetAnim))
+	UWidgetAnimation* HideHitIndicator;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hit Indicator")
 	UMaterialInterface* HitIndicatorMaterial;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hit Indicator")
+	FLinearColor StartColor;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hit Indicator")
+	FLinearColor FinalColor;
+	
+	UFUNCTION()
+	void UpdateIndicatorLocation();
 
-	UPROPERTY( Transient, meta = ( BindWidgetAnim ) )
-	UWidgetAnimation* ShowHitIndicator;
-
-	UPROPERTY( Transient, meta = ( BindWidgetAnim ) )
-	UWidgetAnimation* HideHitIndicator;
+	UFUNCTION()
+	void UpdateIndicatorColor();
 	
 private:
 	void HideIndicator();
 	UMaterialInstanceDynamic* HitIndicatorDynamicInst;
 	FWidgetAnimationDynamicEvent HideAnimationDelegate;
+
+	UWorld* World;
+	float DisplayStartTime;
+	float ColorTransitionTime;
+	FVector CurrentHitLocation;
+	FTimerManager* WorldTimerManager;
+	APawn* PawnOwner;
+	APlayerCameraManager* PawnCamera;
+	unsigned int bUpdateDirection:1;
 };
