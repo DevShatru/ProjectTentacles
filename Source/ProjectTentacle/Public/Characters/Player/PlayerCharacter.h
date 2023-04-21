@@ -167,7 +167,8 @@ protected:
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
 
 public:
-	void ShowHitIndicator(float CounterTime, float CompletionTime);
+	void ShowHitIndicator(float CounterTime) const;
+	void CollapseHitIndicator() const;
 	
 	// Delegate signature
 	FOnExecutingPlayerAction OnExecutePlayerAction;

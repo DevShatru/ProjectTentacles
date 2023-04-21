@@ -19,7 +19,7 @@ EBTNodeResult::Type UBTTask_RunAttackRanged::ExecuteTask(UBehaviorTreeComponent&
 	TryCacheRefs(OwnerComp);
 	if(!bHasCachedRefs) return EBTNodeResult::Failed;
 
-	Target->ShowHitIndicator(OwnPawn->GetAttackCounterableTime(), OwnPawn->GetAttackCompletionTime());
+	Target->ShowHitIndicator(OwnPawn->GetAttackCounterableTime());
 	return Super::ExecuteTask(OwnerComp, NodeMemory);
 }
 
@@ -45,12 +45,19 @@ void UBTTask_RunAttackRanged::AttackCounterTimeLimit()
 
 void UBTTask_RunAttackRanged::AttackCompletionTimeLimit()
 {
-	// TODO Hide indicator
+	Target->CollapseHitIndicator();
 	Super::AttackCompletionTimeLimit();
 }
 
 EBTNodeResult::Type UBTTask_RunAttackRanged::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// TODO Hide indicator
+	Target->CollapseHitIndicator();
 	return Super::AbortTask(OwnerComp, NodeMemory);
+}
+
+void UBTTask_RunAttackRanged::TryCacheRefs(UBehaviorTreeComponent& OwnerComp)
+{
+	Super::TryCacheRefs(OwnerComp);
+	Target = Cast<APlayerCharacter>(OwningComp->GetBlackboardComponent()->GetValueAsObject("Target"));
+	bHasCachedRefs = bHasCachedRefs && Target;
 }

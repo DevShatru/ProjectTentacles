@@ -8,9 +8,20 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
+#include "UI/UserWidget_HitIndicator.h"
 
 FGenericTeamId APlayerCharacter::TeamId = FGenericTeamId(1);
 // ==================================================== Constructor =========================================
+
+void APlayerCharacter::ShowHitIndicator(const float CounterTime) const
+{
+	HUDRef->PopIndicator(CounterTime);
+}
+
+void APlayerCharacter::CollapseHitIndicator() const
+{
+	HUDRef->CollapseIndicator();
+}
 
 APlayerCharacter::APlayerCharacter()
 {
