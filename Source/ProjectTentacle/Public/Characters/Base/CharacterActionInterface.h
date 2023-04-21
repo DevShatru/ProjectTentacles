@@ -64,6 +64,12 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnResetEnemyCurrentState();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnSetIsCountered(bool Countered);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnStartCounteredAnimation();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ReceiveAttackInCounterState(AActor* CounteringTarget);

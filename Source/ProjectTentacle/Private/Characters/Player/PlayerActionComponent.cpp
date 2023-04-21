@@ -397,7 +397,7 @@ void UPlayerActionComponent::BeginEvade()
 {
 	// Set target countered to prevent clearing target
 	AEnemyBase* CurrentStoredCounterTarget = PlayerOwnerRef->GetCounteringTarget();
-	CurrentStoredCounterTarget->SetIsCountered(true);
+	ICharacterActionInterface::Execute_OnSetIsCountered(CurrentStoredCounterTarget ,true);
 
 	// Make previous targeted enemy able to move if player is attacking
 	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::Attack)
@@ -501,7 +501,12 @@ void UPlayerActionComponent::BeginCounterAttack()
 
 	MakePlayerEnemyFaceEachOther(StoredCounterTarget);
 	
-	StoredCounterTarget->StartCounterAttackAnimation();
+	
+	if(StoredCounterTarget->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+	{
+		ICharacterActionInterface::Execute_OnStartCounteredAnimation(StoredCounterTarget);
+	}
+	
 	StoredCounterTarget->TrySwitchEnemyState(EEnemyCurrentState::Countered);
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
