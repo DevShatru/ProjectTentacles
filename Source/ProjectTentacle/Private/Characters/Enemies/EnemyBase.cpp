@@ -43,6 +43,7 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	InitializeWidgetComponents();
 
 	InitializeEnemyControllerRef();
@@ -321,6 +322,11 @@ void AEnemyBase::RecoverFromLying()
 
 	StopAnimMontage();
 	PlayAnimMontage(GetUpMontage,2,"Default");
+}
+
+void AEnemyBase::EnableStrafe(const bool bStrafe) const
+{
+	GetCharacterMovement()->MaxWalkSpeed = bStrafe ? StrafeSpeed : WalkSpeed;
 }
 
 void AEnemyBase::ExecuteRangedAttack(AActor* Target)
