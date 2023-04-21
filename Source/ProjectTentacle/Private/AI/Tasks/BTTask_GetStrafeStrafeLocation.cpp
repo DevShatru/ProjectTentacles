@@ -1,27 +1,25 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "AI/Tasks/BTTask_StrafeTarget.h"
+#include "AI/Tasks/BTTask_GetStrafeStrafeLocation.h"
 
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
 #include "Characters/Enemies/EnemyBase.h"
-#include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
 
 
-UBTTask_StrafeTarget::UBTTask_StrafeTarget()
+UBTTask_GetStrafeStrafeLocation::UBTTask_GetStrafeStrafeLocation()
 {
 	NodeName = "Strafe Target";
 	
-	TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, TargetKey), AActor::StaticClass());
-	TargetKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, TargetKey));
-	CircleDirectionKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, CircleDirectionKey));
-	StrafeLocationKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_StrafeTarget, StrafeLocationKey));
+	TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_GetStrafeStrafeLocation, TargetKey), AActor::StaticClass());
+	TargetKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_GetStrafeStrafeLocation, TargetKey));
+	CircleDirectionKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_GetStrafeStrafeLocation, CircleDirectionKey));
+	StrafeLocationKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_GetStrafeStrafeLocation, StrafeLocationKey));
 }
 
-void UBTTask_StrafeTarget::InitializeFromAsset(UBehaviorTree& Asset)
+void UBTTask_GetStrafeStrafeLocation::InitializeFromAsset(UBehaviorTree& Asset)
 {
 	Super::InitializeFromAsset(Asset);
 
@@ -36,7 +34,7 @@ void UBTTask_StrafeTarget::InitializeFromAsset(UBehaviorTree& Asset)
 	}
 }
 
-EBTNodeResult::Type UBTTask_StrafeTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_GetStrafeStrafeLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	// Resolve Target
 	bIsObject = TargetKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass();
@@ -57,7 +55,7 @@ EBTNodeResult::Type UBTTask_StrafeTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 	return EBTNodeResult::Succeeded;
 }
 
-FVector UBTTask_StrafeTarget::GetStrafeLocation(const FVector Location) const
+FVector UBTTask_GetStrafeStrafeLocation::GetStrafeLocation(const FVector Location) const
 {
 	const FVector CharLocation = OwnPawn->GetActorLocation();
 	const FVector ForwardToTarget = Location - CharLocation;

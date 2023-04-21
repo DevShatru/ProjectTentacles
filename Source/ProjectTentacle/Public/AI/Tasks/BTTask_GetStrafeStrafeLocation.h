@@ -4,22 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTTask_StrafeTarget.generated.h"
+#include "BTTask_GetStrafeStrafeLocation.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API UBTTask_StrafeTarget : public UBTTaskNode
+class PROJECTTENTACLE_API UBTTask_GetStrafeStrafeLocation : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
-	UBTTask_StrafeTarget();
+	UBTTask_GetStrafeStrafeLocation();
 	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -30,9 +29,6 @@ protected:
 	FBlackboardKeySelector StrafeLocationKey;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float StrafeDistance = 100.f;
-
-	UFUNCTION()
-	void CheckStrafeComplete();
 	
 private:
 	FVector GetStrafeLocation(FVector Location) const;
