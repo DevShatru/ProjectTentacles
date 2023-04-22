@@ -19,7 +19,8 @@ EBTNodeResult::Type UBTTask_RunAttackRanged::ExecuteTask(UBehaviorTreeComponent&
 	TryCacheRefs(OwnerComp);
 	if(!bHasCachedRefs) return EBTNodeResult::Failed;
 
-	Target->ShowHitIndicator(OwnPawn->GetAttackCounterableTime(), OwnPawn->GetActorLocation());
+	Target->SetRangeAimingEnemy(OwnPawn, OwnPawn->GetAttackCounterableTime());
+	//Target->ShowHitIndicator(OwnPawn->GetAttackCounterableTime(), OwnPawn->GetActorLocation());
 	return Super::ExecuteTask(OwnerComp, NodeMemory);
 }
 

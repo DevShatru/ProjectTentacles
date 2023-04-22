@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "PlayerCharacter.h"
 #include "Components/ActorComponent.h"
+#include "Components/TimelineComponent.h"
 #include "PlayerActionComponent.generated.h"
 
 

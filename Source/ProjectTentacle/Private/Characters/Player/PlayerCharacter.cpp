@@ -192,6 +192,14 @@ void APlayerCharacter::UnsetCurrentTarget()
 	
 }
 
+void APlayerCharacter::SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime)
+{
+	if(RangeAimingEnemy != NewRegisteringActor)
+		RangeAimingEnemy = NewRegisteringActor;
+
+	IndicatorHUDRemainTime = HUDRemainTime;
+}
+
 void APlayerCharacter::SetTargetActor(AEnemyBase* NewTargetActor)
 {
 	UnsetCurrentTarget();
@@ -327,6 +335,21 @@ void APlayerCharacter::DetachEnemyTarget_Implementation()
 	// Unset Target
 	UnsetCurrentTarget();
 
+}
+
+void APlayerCharacter::OnShowPlayerIndicatorHUD_Implementation()
+{
+	Super::OnShowPlayerIndicatorHUD_Implementation();
+
+	if(!RangeAimingEnemy) return;
+	ShowHitIndicator(IndicatorHUDRemainTime, RangeAimingEnemy->GetActorLocation());
+}
+
+void APlayerCharacter::OnHidePlayerIndicatorHUD_Implementation()
+{
+	Super::OnHidePlayerIndicatorHUD_Implementation();
+
+	CollapseHitIndicator();
 }
 
 

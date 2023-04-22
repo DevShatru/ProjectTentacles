@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EnumClassesForCharacters.h"
 #include "Widget_EnemyBaseUserWidget.h"
+#include "Characters/Enemies/EnemyType.h"
 #include "Widget_EnemyAttackIndicator.generated.h"
 
 /**
@@ -19,6 +20,9 @@ private:
 	
 protected:
 	EEnemyAttackType CurrentAttackType;
+
+	UPROPERTY(BlueprintReadOnly)
+	EEnemyType OwnerEnemyType;
 
 	UPROPERTY()
 	TMap<FName, UWidgetAnimation*> WidgetAnimMap;
@@ -37,6 +41,9 @@ public:
 	void PlaySpecificAnimation(EEnemyAttackType NewAttackType);
 
 	void StoreWidgetAnimation();
+
+	void SetUnitType(EEnemyType OwnerType) {OwnerEnemyType = OwnerType;}
+
 	
 	UWidgetAnimation* GetAnimationByName(FName AnimationName);
 

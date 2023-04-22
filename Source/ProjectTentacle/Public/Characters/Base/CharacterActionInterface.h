@@ -53,6 +53,12 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnActivateComboResetTimer();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnShowPlayerIndicatorHUD();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnHidePlayerIndicatorHUD();
 	
 
 	// Enemy Delegate
@@ -64,6 +70,12 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnResetEnemyCurrentState();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnSetIsCountered(bool Countered);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnStartCounteredAnimation();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ReceiveAttackInCounterState(AActor* CounteringTarget);
