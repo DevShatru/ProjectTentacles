@@ -63,6 +63,7 @@ public:
 private:
 
 	AActor* GetDamageActorByLineTrace();
-	
+
+	void ShowOrHidePlayerHUD(bool Show);
 	
 };

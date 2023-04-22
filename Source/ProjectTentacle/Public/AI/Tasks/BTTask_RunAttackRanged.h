@@ -18,8 +18,16 @@ public:
 	UBTTask_RunAttackRanged();
 	
 protected:
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void AttackCounterTimeLimit() override;
+	virtual void AttackCompletionTimeLimit() override;
+	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+	virtual void TryCacheRefs(UBehaviorTreeComponent& OwnerComp) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float AttackRange = 1500.f;
+	
+private:
+	class APlayerCharacter* Target;
 };

@@ -76,7 +76,18 @@ private:
 	void WaitToRegenStamina();
 	void BeginRegenerateStamina();
 	void RegeneratingStamina();
+	
 protected:
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	class UUserWidget_HitIndicator* HUDRef;
+
+	UPROPERTY()
+	AEnemyBase* RangeAimingEnemy;
+
+	UPROPERTY()
+	float IndicatorHUDRemainTime = 0;
+	
+	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
@@ -163,7 +174,9 @@ protected:
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
 
 public:
-
+	void ShowHitIndicator(float CounterTime, const FVector HitLocation) const;
+	void CollapseHitIndicator() const;
+	
 	// Delegate signature
 	FOnExecutingPlayerAction OnExecutePlayerAction;
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
@@ -206,8 +219,11 @@ public:
 	
 	// ================================================= Get And Set Functions ============================================
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}
-	
 
+	void SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime);
+	void TryClearStoredRange(AEnemyBase* ClearingEnemy) {if(RangeAimingEnemy == ClearingEnemy) RangeAimingEnemy = nullptr;}
+	
+	
 	float GetCurrentStamina() const {return CurrentStamina;}
 	void SetStamina(float NewStamina) {CurrentStamina = NewStamina;}
 	
@@ -256,7 +272,11 @@ public:
 	
 	UFUNCTION()
 	virtual void DetachEnemyTarget_Implementation() override;
-	
 
+	UFUNCTION()
+	virtual void OnShowPlayerIndicatorHUD_Implementation() override;	
+
+	UFUNCTION()
+	virtual void OnHidePlayerIndicatorHUD_Implementation() override;
 	
 };

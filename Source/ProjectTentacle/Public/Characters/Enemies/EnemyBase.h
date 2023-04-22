@@ -30,6 +30,12 @@ protected:
 	void InitializeWidgetComponents();
 	
 	void InitializeEnemyControllerRef();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Movement")
+	float WalkSpeed = 600.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Movement")
+	float StrafeSpeed = 300.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting)
 	bool EnableAttackMovement = false;
@@ -43,6 +49,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	EEnemyType UnitType = EEnemyType::Melee;
 
+	UPROPERTY(EditDefaultsOnly, Category=Combat)
+	float AttackCompletionTime = 2.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category=Combat)
+	float AttackCounterableTime = 1.4f;
+	
+	
 	// Updating Enemy Attack Delegate Signature
 	FOnUpdatingEnemyAttackType OnUpdatingEnemyAttackIndicator;
 	
@@ -160,6 +173,7 @@ protected:
 	
 	
 public:
+	void EnableStrafe(bool bStrafe = true) const;
 	void ExecuteRangedAttack(AActor* Target);
 
 	EEnemyType GetType() const;
@@ -177,7 +191,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
+	float GetAttackCompletionTime() const;
+	float GetAttackCounterableTime() const;
 
 
 	void OnHideAttackIndicator();

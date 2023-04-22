@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/EnemyRanged.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
@@ -11,8 +12,6 @@ void AEnemyRanged::ExecuteAttack()
 	Super::ExecuteAttack();
 
 	PlayAnimMontage(KneelDownToAimAnim, 1, "Default");
-
-	
 }
 
 void AEnemyRanged::BeginFire()
@@ -45,6 +44,18 @@ AActor* AEnemyRanged::GetDamageActorByLineTrace()
 	return nullptr;
 }
 
+void AEnemyRanged::ShowOrHidePlayerHUD(bool Show)
+{
+	ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	if(!PlayerCha) return;
+
+	if(PlayerCha->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+		if(Show)
+			ICharacterActionInterface::Execute_OnShowPlayerIndicatorHUD(PlayerCha);
+		else
+			ICharacterActionInterface::Execute_OnHidePlayerIndicatorHUD(PlayerCha);
+}
+
 void AEnemyRanged::OnRifleBeginAiming_Implementation()
 {
 	IEnemyRangeInterface::OnRifleBeginAiming_Implementation();
@@ -62,6 +73,10 @@ void AEnemyRanged::OnRifleBeginAiming_Implementation()
 	// Show attack indicator
 	if(AttackIndicatorRef)
 		AttackIndicatorRef->ShowIndicator();
+
+	// Show Player attack indicator HUD
+	ShowOrHidePlayerHUD(true);
+	
 }
 
 void AEnemyRanged::OnRifleFinishFiring_Implementation()
@@ -81,6 +96,8 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 
 	if(!SupposeDamageActor) return;
 
+	ShowOrHidePlayerHUD(false);
+	
 	if(SupposeDamageActor->GetClass()->ImplementsInterface(UDamageInterface::StaticClass()))
 		IDamageInterface::Execute_ReceiveDamageFromEnemy(SupposeDamageActor, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
 }

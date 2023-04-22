@@ -8,9 +8,20 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
+#include "UI/UserWidget_HitIndicator.h"
 
 FGenericTeamId APlayerCharacter::TeamId = FGenericTeamId(1);
 // ==================================================== Constructor =========================================
+
+void APlayerCharacter::ShowHitIndicator(const float CounterTime, const FVector HitLocation) const
+{
+	HUDRef->PopIndicator(CounterTime, HitLocation);
+}
+
+void APlayerCharacter::CollapseHitIndicator() const
+{
+	HUDRef->CollapseIndicator();
+}
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -181,6 +192,14 @@ void APlayerCharacter::UnsetCurrentTarget()
 	
 }
 
+void APlayerCharacter::SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime)
+{
+	if(RangeAimingEnemy != NewRegisteringActor)
+		RangeAimingEnemy = NewRegisteringActor;
+
+	IndicatorHUDRemainTime = HUDRemainTime;
+}
+
 void APlayerCharacter::SetTargetActor(AEnemyBase* NewTargetActor)
 {
 	UnsetCurrentTarget();
@@ -316,6 +335,21 @@ void APlayerCharacter::DetachEnemyTarget_Implementation()
 	// Unset Target
 	UnsetCurrentTarget();
 
+}
+
+void APlayerCharacter::OnShowPlayerIndicatorHUD_Implementation()
+{
+	Super::OnShowPlayerIndicatorHUD_Implementation();
+
+	if(!RangeAimingEnemy) return;
+	ShowHitIndicator(IndicatorHUDRemainTime, RangeAimingEnemy->GetActorLocation());
+}
+
+void APlayerCharacter::OnHidePlayerIndicatorHUD_Implementation()
+{
+	Super::OnHidePlayerIndicatorHUD_Implementation();
+
+	CollapseHitIndicator();
 }
 
 

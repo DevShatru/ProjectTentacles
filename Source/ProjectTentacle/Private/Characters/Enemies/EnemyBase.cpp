@@ -43,6 +43,7 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	InitializeWidgetComponents();
 
 	InitializeEnemyControllerRef();
@@ -84,6 +85,16 @@ void AEnemyBase::InitializeEnemyControllerRef()
 void AEnemyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+float AEnemyBase::GetAttackCompletionTime() const
+{
+	return AttackCompletionTime;
+}
+
+float AEnemyBase::GetAttackCounterableTime() const
+{
+	return AttackCounterableTime;
 }
 
 
@@ -147,6 +158,11 @@ void AEnemyBase::SetAttackType()
 		CurrentAttackType = EEnemyAttackType::UnableToCounter;
 	else
 		CurrentAttackType = EEnemyAttackType::AbleToCounter;
+}
+
+void AEnemyBase::EnableStrafe(const bool bStrafe) const
+{
+	GetCharacterMovement()->MaxWalkSpeed = bStrafe ? StrafeSpeed : WalkSpeed;
 }
 
 void AEnemyBase::ExecuteRangedAttack(AActor* Target)

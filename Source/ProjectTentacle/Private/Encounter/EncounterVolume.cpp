@@ -69,6 +69,13 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 	if(AttackQueueBasic.Contains(Unit)) AttackQueueBasic.Remove(Unit);
 	if(AttackQueueHeavy.Contains(Unit)) AttackQueueHeavy.Remove(Unit);
 	if(ContainedUnits.Contains(Unit->GetOwnPawn())) ContainedUnits.Remove(Unit->GetOwnPawn());
+
+	// TODO If contained units is empty and spawn points are done spawning, we're done
+	if(ContainedUnits.Num() <= 0 && AllSpawnsComplete())
+	{
+		if(EncounterComplete.IsBound()) EncounterComplete.Broadcast();
+	}
+	
 	FTimerHandle DespawnHandle;
 	FTimerDelegate DespawnDelegate;
 	DespawnDelegate.BindUFunction(this, FName("DespawnUnit"), Unit);
@@ -78,9 +85,8 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 	if(bWaveStartedSpawning) return;
 	// If not
 	++DefeatedUnits;
+	
 	// Check if should start
-
-	// TODO: Somehow CurrentWaveParams is null
 	if(!CurrentWaveParams) return;
 	
 	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits / InitialUnits);
@@ -151,8 +157,10 @@ void AEncounterVolume::StartSpawn()
 		// Reset Spawn Points
 		ResetSpawnPoints();
 	}
+
 	for(ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)
 	{
+		if(!SpawnPoint) continue;
 		SpawnPoint->SetUnitPool(UnitPool);
 		SpawnPoint->StartSpawningUnits();
 	}
@@ -226,6 +234,21 @@ void AEncounterVolume::EngageContainedUnits(AActor* Target)
 	}
 }
 
+// Check if all spawn points have completed
+bool AEncounterVolume::AllSpawnsComplete() const
+{
+	bool bAllComplete = true;
+	if (!CurrentWaveParams) return bAllComplete;
+
+	for(const ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)
+	{
+		if(!SpawnPoint) continue;
+		bAllComplete = bAllComplete && SpawnPoint->IsSpawningComplete();
+	}
+
+	return bAllComplete;
+}
+
 void AEncounterVolume::TryCacheTimerManager() const
 {
 	if(WorldTimerManager) return;
@@ -260,6 +283,7 @@ void AEncounterVolume::ResetSpawnPoints() const
 {
 	for(ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)
 	{
+		if(!SpawnPoint) continue;
 		SpawnPoint->StopSpawningUnits();
 	}
 }
