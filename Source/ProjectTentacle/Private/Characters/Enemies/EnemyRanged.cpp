@@ -44,6 +44,14 @@ AActor* AEnemyRanged::GetDamageActorByLineTrace()
 	return nullptr;
 }
 
+void AEnemyRanged::StopAimingTimer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	World->GetTimerManager().ClearTimer(AimingTimerHandle);
+}
+
 void AEnemyRanged::ShowOrHidePlayerHUD(bool Show)
 {
 	ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
@@ -112,11 +120,17 @@ void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AA
 	// if enemy is attack, stop montage, cancel fire timer, unshow attack indicator, and execute onfinish attack delegate
 	if(CurrentEnemyState == EEnemyCurrentState::Attacking)
 	{
+		// Stop current montage
 		StopAnimMontage();
+
+		// Stop timer
+		StopAimingTimer();
 		
+		// Stop Both attack indicators
 		OnHideAttackIndicator();
+		ShowOrHidePlayerHUD(false);
 		
-		
+		// Finish task
 		TryFinishAttackTask(EEnemyCurrentState::Damaged);
 
 		// change StateChanged bool to true to prevent changing again

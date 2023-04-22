@@ -64,6 +64,8 @@ private:
 
 	AActor* GetDamageActorByLineTrace();
 
+	void StopAimingTimer();
+	
 	void ShowOrHidePlayerHUD(bool Show);
 	
 };
