@@ -100,11 +100,12 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 {
 	Super::TryToDamagePlayer_Implementation();
 
+	ShowOrHidePlayerHUD(false);
+
 	AActor* SupposeDamageActor = GetDamageActorByLineTrace();
 
 	if(!SupposeDamageActor) return;
 
-	ShowOrHidePlayerHUD(false);
 	
 	if(SupposeDamageActor->GetClass()->ImplementsInterface(UDamageInterface::StaticClass()))
 		IDamageInterface::Execute_ReceiveDamageFromEnemy(SupposeDamageActor, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
