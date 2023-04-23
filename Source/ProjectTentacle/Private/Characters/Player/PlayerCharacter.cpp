@@ -337,19 +337,27 @@ void APlayerCharacter::DetachEnemyTarget_Implementation()
 
 }
 
-void APlayerCharacter::OnShowPlayerIndicatorHUD_Implementation()
+void APlayerCharacter::OnShowPlayerIndicatorHUD_Implementation(bool Show)
 {
-	Super::OnShowPlayerIndicatorHUD_Implementation();
+	Super::OnShowPlayerIndicatorHUD_Implementation(Show);
 
-	if(!RangeAimingEnemy) return;
-	ShowHitIndicator(IndicatorHUDRemainTime, RangeAimingEnemy->GetActorLocation());
+	if(Show)
+	{
+		if(!RangeAimingEnemy) return;
+		ShowHitIndicator(IndicatorHUDRemainTime, RangeAimingEnemy->GetActorLocation());
+	}
+	else
+		CollapseHitIndicator();
+	
+	
 }
 
-void APlayerCharacter::OnHidePlayerIndicatorHUD_Implementation()
-{
-	Super::OnHidePlayerIndicatorHUD_Implementation();
 
-	CollapseHitIndicator();
+void APlayerCharacter::OnChangePlayerIndicatorHUD_Visibility_Implementation(bool IsVisible)
+{
+	Super::OnChangePlayerIndicatorHUD_Visibility_Implementation(IsVisible);
+
+	HUDRef->ChangeVisibility(IsVisible);
 }
 
 

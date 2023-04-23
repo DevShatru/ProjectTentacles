@@ -16,6 +16,7 @@ class PROJECTTENTACLE_API UUserWidget_HitIndicator : public UUserWidget
 public:
 	void PopIndicator(float TransitionTime, FVector HitLocation);
 	void CollapseIndicator();
+	void ChangeVisibility(bool IsVisible);
 	
 protected:
 	virtual void NativeConstruct() override;

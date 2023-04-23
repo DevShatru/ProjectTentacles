@@ -55,10 +55,10 @@ public:
 	void OnActivateComboResetTimer();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void OnShowPlayerIndicatorHUD();
-
+	void OnShowPlayerIndicatorHUD(bool Show);
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void OnHidePlayerIndicatorHUD();
+	void OnChangePlayerIndicatorHUD_Visibility(bool IsVisible);
 	
 
 	// Enemy Delegate

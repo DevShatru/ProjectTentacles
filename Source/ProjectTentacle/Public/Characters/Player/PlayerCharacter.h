@@ -274,9 +274,9 @@ public:
 	virtual void DetachEnemyTarget_Implementation() override;
 
 	UFUNCTION()
-	virtual void OnShowPlayerIndicatorHUD_Implementation() override;	
-
+	virtual void OnShowPlayerIndicatorHUD_Implementation(bool Show) override;	
+	
 	UFUNCTION()
-	virtual void OnHidePlayerIndicatorHUD_Implementation() override;
+	virtual void OnChangePlayerIndicatorHUD_Visibility_Implementation(bool IsVisible) override;
 	
 };

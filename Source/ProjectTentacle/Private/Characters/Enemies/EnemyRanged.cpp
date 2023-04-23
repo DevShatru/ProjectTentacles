@@ -24,6 +24,14 @@ void AEnemyRanged::BeginFire()
 	PlayAnimMontage(KneelFireAnim,1, "Default");
 }
 
+void AEnemyRanged::InSightConditionUpdate()
+{
+	GEngine->AddOnScreenDebugMessage(-1, CheckInSightTick, FColor::Yellow, TEXT("InSightConditionUpdate"));
+	const bool IsInCameraSight = WasRecentlyRendered(CheckInSightTick);
+
+	ShowOrHidePlayerHUD(IsInCameraSight);
+}
+
 AActor* AEnemyRanged::GetDamageActorByLineTrace()
 {
 	// Hit result
@@ -52,16 +60,48 @@ void AEnemyRanged::StopAimingTimer()
 	World->GetTimerManager().ClearTimer(AimingTimerHandle);
 }
 
+void AEnemyRanged::StopCheckInSightTimer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	World->GetTimerManager().ClearTimer(CheckInSightTimerHandle);
+}
+
+bool AEnemyRanged::TryCachePlayerRef()
+{
+	// early return Cache result to true if already has player character reference
+	if(PlayerRef) return true;
+
+	// if PlayerRef is nullptr, get player character from world
+	const UWorld* World = GetWorld();
+	if(!World) return false;
+	ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(World, 0);
+	if(!PlayerCha) return false;
+
+	// if the result is not nullptr, store it and return Cache result to true
+	PlayerRef = PlayerCha;
+	return true;
+}
+
+void AEnemyRanged::SpawnOrCollapsePlayerHUD(bool Spawn)
+{
+	const bool PlayerRefCacheResult = TryCachePlayerRef();
+
+	if(!PlayerRefCacheResult) return;
+	
+	if(PlayerRef->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+		ICharacterActionInterface::Execute_OnShowPlayerIndicatorHUD(PlayerRef, Spawn);
+}
+
 void AEnemyRanged::ShowOrHidePlayerHUD(bool Show)
 {
-	ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	if(!PlayerCha) return;
+	const bool PlayerRefCacheResult = TryCachePlayerRef();
+	
+	if(!PlayerRefCacheResult) return;
 
-	if(PlayerCha->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
-		if(Show)
-			ICharacterActionInterface::Execute_OnShowPlayerIndicatorHUD(PlayerCha);
-		else
-			ICharacterActionInterface::Execute_OnHidePlayerIndicatorHUD(PlayerCha);
+	if(PlayerRef->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+		ICharacterActionInterface::Execute_OnChangePlayerIndicatorHUD_Visibility(PlayerRef, Show);
 }
 
 void AEnemyRanged::OnRifleBeginAiming_Implementation()
@@ -83,8 +123,10 @@ void AEnemyRanged::OnRifleBeginAiming_Implementation()
 		AttackIndicatorRef->ShowIndicator();
 
 	// Show Player attack indicator HUD
-	ShowOrHidePlayerHUD(true);
+	SpawnOrCollapsePlayerHUD(true);
+
 	
+	World->GetTimerManager().SetTimer(CheckInSightTimerHandle, this, &AEnemyRanged::InSightConditionUpdate, CheckInSightTick, true, -1);
 }
 
 void AEnemyRanged::OnRifleFinishFiring_Implementation()
@@ -100,7 +142,8 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 {
 	Super::TryToDamagePlayer_Implementation();
 
-	ShowOrHidePlayerHUD(false);
+	SpawnOrCollapsePlayerHUD(false);
+	StopCheckInSightTimer();
 
 	AActor* SupposeDamageActor = GetDamageActorByLineTrace();
 
@@ -124,12 +167,13 @@ void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AA
 		// Stop current montage
 		StopAnimMontage();
 
-		// Stop timer
+		// Stop timers
 		StopAimingTimer();
+		StopCheckInSightTimer();
 		
 		// Stop Both attack indicators
 		OnHideAttackIndicator();
-		ShowOrHidePlayerHUD(false);
+		SpawnOrCollapsePlayerHUD(false);
 		
 		// Finish task
 		TryFinishAttackTask(EEnemyCurrentState::Damaged);

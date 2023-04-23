@@ -23,6 +23,14 @@ void UUserWidget_HitIndicator::CollapseIndicator()
 	PlayAnimationForward(HideHitIndicator);
 }
 
+void UUserWidget_HitIndicator::ChangeVisibility(bool IsVisible)
+{
+	if(IsVisible)
+		HitIndicator->SetVisibility(ESlateVisibility::Hidden);
+	else
+		HitIndicator->SetVisibility(ESlateVisibility::Visible);
+}
+
 
 void UUserWidget_HitIndicator::NativeConstruct()
 {

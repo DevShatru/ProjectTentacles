@@ -37,11 +37,16 @@ protected:
 
 	
 	FTimerHandle AimingTimerHandle;
+	FTimerHandle CheckInSightTimerHandle;
 
+	float CheckInSightTick = 0.01f; 
+	
 
 	UFUNCTION()
 	void BeginFire();
-	
+
+	UFUNCTION()
+	void InSightConditionUpdate();
 
 public:
 
@@ -62,9 +67,17 @@ public:
 
 private:
 
+	ACharacter* PlayerRef = nullptr; 
+
 	AActor* GetDamageActorByLineTrace();
 
 	void StopAimingTimer();
+
+	void StopCheckInSightTimer();
+
+	bool TryCachePlayerRef();
+	
+	void SpawnOrCollapsePlayerHUD(bool Spawn);
 	
 	void ShowOrHidePlayerHUD(bool Show);
 	
