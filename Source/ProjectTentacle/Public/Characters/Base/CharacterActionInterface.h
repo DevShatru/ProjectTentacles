@@ -6,6 +6,11 @@
 #include "UObject/Interface.h"
 #include "CharacterActionInterface.generated.h"
 
+
+
+class AEnemyBase;
+
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UCharacterActionInterface : public UInterface
@@ -16,6 +21,9 @@ class UCharacterActionInterface : public UInterface
 /**
  * 
  */
+
+
+
 class PROJECTTENTACLE_API ICharacterActionInterface
 {
 	GENERATED_BODY()
@@ -34,6 +42,40 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void DetachEnemyTarget();
+
+
+	// Player Delegate
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void TryStoreCounterTarget(AEnemyBase* CounterTarget);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void TryRemoveCounterTarget(AEnemyBase* CounterTarget);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnActivateComboResetTimer();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnShowPlayerIndicatorHUD(bool Show);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnChangePlayerIndicatorHUD_Visibility(bool IsVisible);
+	
+
+	// Enemy Delegate
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnCounterTimeEnd();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnResumeMovement();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnResetEnemyCurrentState();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnSetIsCountered(bool Countered);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnStartCounteredAnimation();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ReceiveAttackInCounterState(AActor* CounteringTarget);

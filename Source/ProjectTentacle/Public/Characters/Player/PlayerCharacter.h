@@ -55,7 +55,9 @@ public:
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnExecutingPlayerAction, EActionState, ExecutingAction);
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAmount, AActor*, DamageCauser, EEnemyAttackType, ReceivingAttackType);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggeringCounter, AActor*, DamageCauser);
-DECLARE_DYNAMIC_DELEGATE(FOnClearingComboCount);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEnteringPreCounterState, AActor*, CounterTarget);
+
+DECLARE_DYNAMIC_DELEGATE(FOnEnableComboResetTimer);
 
 
 /**
@@ -76,6 +78,16 @@ private:
 	void RegeneratingStamina();
 	
 protected:
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	class UUserWidget_HitIndicator* HUDRef;
+
+	UPROPERTY()
+	AEnemyBase* RangeAimingEnemy;
+
+	UPROPERTY()
+	float IndicatorHUDRemainTime = 0;
+	
+	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
@@ -99,6 +111,11 @@ protected:
 
 	UPROPERTY()
 	AEnemyBase* DamagingActor;
+
+	UPROPERTY()
+	AEnemyBase* CounteringVictim;
+
+	bool IsPlayerCounterable = false;
 	
 	
 	UPROPERTY()
@@ -157,12 +174,15 @@ protected:
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
 
 public:
-
+	void ShowHitIndicator(float CounterTime, const FVector HitLocation) const;
+	void CollapseHitIndicator() const;
+	
 	// Delegate signature
 	FOnExecutingPlayerAction OnExecutePlayerAction;
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
 	FOnTriggeringCounter OnTriggeringCounter;
-	FOnClearingComboCount OnClearingComboCount;
+	FOnEnteringPreCounterState OnEnteringPreCounterState;
+	FOnEnableComboResetTimer OnEnableComboResetTimer;
 	
 	APlayerCharacter();
 
@@ -190,6 +210,8 @@ public:
 	
 	void TryDodge();
 
+	bool CheckCanPerformAction();
+
 	// ================================================= Utility Functions ================================================
 
 	void UnsetCurrentTarget();
@@ -197,8 +219,11 @@ public:
 	
 	// ================================================= Get And Set Functions ============================================
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}
-	
 
+	void SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime);
+	void TryClearStoredRange(AEnemyBase* ClearingEnemy) {if(RangeAimingEnemy == ClearingEnemy) RangeAimingEnemy = nullptr;}
+	
+	
 	float GetCurrentStamina() const {return CurrentStamina;}
 	void SetStamina(float NewStamina) {CurrentStamina = NewStamina;}
 	
@@ -207,6 +232,14 @@ public:
 
 	AEnemyBase* GetDamagingActor() const {return DamagingActor;}
 	void SetDamagingActor(AEnemyBase* NewDamagingActor) {DamagingActor = NewDamagingActor;}
+
+	bool GetIsPlayerCounterable() const {return IsPlayerCounterable;}
+	void TryTurnCounterCapable(bool IsOn) {if(IsPlayerCounterable != IsOn) IsPlayerCounterable = IsOn;}
+
+	
+	AEnemyBase* GetCounteringTarget() const {return CounteringVictim;}
+	void SetCounteringTarget(AEnemyBase* NewCounterTarget) {if(CounteringVictim != NewCounterTarget) CounteringVictim = NewCounterTarget;}
+	void ClearCounteringTarget(AEnemyBase* RemovingCounterTarget) {if(CounteringVictim == RemovingCounterTarget) CounteringVictim = nullptr;}
 
 	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}
@@ -219,8 +252,14 @@ public:
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
 
+	// UFUNCTION()
+	// virtual void ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget) override;
+	
 	UFUNCTION()
-	virtual void ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget) override;
+	virtual void TryStoreCounterTarget_Implementation(AEnemyBase* CounterTarget) override;
+
+	UFUNCTION()
+	virtual void TryRemoveCounterTarget_Implementation(AEnemyBase* CounterTarget) override;
 	
 	UFUNCTION()
 	virtual void ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType EnemyAttackType) override;
@@ -228,8 +267,16 @@ public:
 	UFUNCTION()
 	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
 
-	virtual void DetachEnemyTarget_Implementation() override;
+	UFUNCTION()
+	virtual void OnActivateComboResetTimer_Implementation() override;
 	
+	UFUNCTION()
+	virtual void DetachEnemyTarget_Implementation() override;
 
+	UFUNCTION()
+	virtual void OnShowPlayerIndicatorHUD_Implementation(bool Show) override;	
+	
+	UFUNCTION()
+	virtual void OnChangePlayerIndicatorHUD_Visibility_Implementation(bool IsVisible) override;
 	
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "PlayerCharacter.h"
 #include "Components/ActorComponent.h"
+#include "Components/TimelineComponent.h"
 #include "PlayerActionComponent.generated.h"
 
 
@@ -19,6 +20,11 @@ public:
 
 private:
 
+	void StopSpecificMovingTimeline(EPlayerAttackType CurrentPlayerAttack);
+
+	void PauseComboResetTimer();
+	void ResumeComboResetTimer();
+	
 	// Attack Animation Timeline
 	// Timeline
 	FTimeline ShortFlipKickTimeLine;
@@ -28,10 +34,19 @@ private:
 	FTimeline DashingDoubleKickTimeLine;
 	FTimeline CloseToPerformFinisherTimeLine;
 	FTimeline DodgeLerpingTimeLine;
-
+	FTimeline TurnRotationTimeline;
+	
 	// Stored positions for later lerp usage
 	FVector MovingStartPos;
 	FVector MovingEndPos;
+
+	FVector CounterMoveStartPos;
+	FVector CounterMoveEndPos;
+	
+	float StartTurnRotationZ;
+	float EndTurnRotationZ;
+
+	
 	
 protected:
 
@@ -117,6 +132,21 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* CounterAttackMontages;
 
+
+	// ================================================= PreCounter =============================================================
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= PreCounterSetting)
+	UCurveFloat* CounterRotationCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= PreCounterSetting)
+	UAnimMontage* RotateAnimationLeft;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= PreCounterSetting)
+	UAnimMontage* RotateAnimationRight;
+	
+	
+
+
+	
 	// ================================================= Dodge Variable Setting ================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge_Setting)
 	float DodgeDistance = 250.0f;
@@ -169,6 +199,8 @@ protected:
 	float CalculateCurrentComboSpeed();
 
 	UFUNCTION()
+	void OnStartingComboResetTimer();
+	
 	void WaitToResetComboCount();
 
 	UFUNCTION()
@@ -179,9 +211,20 @@ protected:
 	// ====================================================== Evade ===================================================
 	void BeginEvade();
 
-	// ================================================== Counter ======================================================
-	void BeginCounterAttack(AActor* CounteringTarget);
+	// ================================================ Pre Counter ====================================================
+	void EnterPreCounterState();
 
+	UFUNCTION()
+	void EnterCounterAttackState();
+	
+	// ================================================== Counter ======================================================
+	void BeginCounterAttack();
+
+	FVector GetCounterPos(AEnemyBase* CounterVictim);
+
+	UFUNCTION()
+	void TurnRotationUpdate(float Alpha);
+	
 	// ================================================== Dodge ========================================================
 	void BeginDodge();
 
@@ -224,6 +267,10 @@ public:
 	
 	UFUNCTION()
 	void ReceivingDamage(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType ReceivingAttackType);
+	
+	UFUNCTION()
+	void TriggerPreCounter(AActor* CounteringTarget);
+
 	
 	UFUNCTION()
 	void TriggerCounterAttack(AActor* CounteringTarget);

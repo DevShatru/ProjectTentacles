@@ -37,7 +37,6 @@ void ASpawnPoint::SpawnUnit()
 	if(!OwningEncounterVolume) return;
 	
 	// Determine what unit to spawn based on weight
-	CheckUnitsToSpawn();
 	const float MeleeSpawnWeight = bShouldSpawnMelee ? MeleeUnitsSpawnWeight : 0.f,
 				RangedSpawnWeight = bShouldSpawnRanged ? RangedUnitsSpawnWeight : 0.f,
 				BruteSpawnWeight = bShouldSpawnBrute ? BruteUnitsSpawnWeight : 0.f;
@@ -62,11 +61,17 @@ void ASpawnPoint::SpawnUnit()
 	Unit->SetActorLocation(GetActorLocation());
 	++UnitsSpawned[TypeToSpawn];
 	OwningEncounterVolume->AddSpawnedUnitToEncounter(Unit);
+	CheckUnitsToSpawn();
 }
 
 void ASpawnPoint::RegisterOwningEncounter(AEncounterVolume* EncounterVolume)
 {
 	OwningEncounterVolume = EncounterVolume;
+}
+
+bool ASpawnPoint::IsSpawningComplete() const
+{
+	return bSpawnComplete;
 }
 
 // Called when the game starts or when spawned
@@ -90,5 +95,6 @@ void ASpawnPoint::CheckUnitsToSpawn()
 	bShouldSpawnMelee = UnitsSpawned[EEnemyType::Melee] < NumMeleeUnitsSpawned;
 	bShouldSpawnRanged = UnitsSpawned[EEnemyType::Ranged] < NumRangedUnitsSpawned;
 	bShouldSpawnBrute = UnitsSpawned[EEnemyType::Brute] < NumBruteUnitsSpawned;
+	bSpawnComplete = !(bShouldSpawnMelee || bShouldSpawnBrute || bShouldSpawnRanged);
 }
 

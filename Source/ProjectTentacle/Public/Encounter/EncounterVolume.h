@@ -8,6 +8,7 @@
 #include "WaveParams.h"
 #include "EncounterVolume.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEncounterComplete);
 class UNavigationInvokerComponent;
 class AEnemyBase;
 
@@ -46,6 +47,9 @@ public:
 	virtual void AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy) override;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
+	FEncounterComplete EncounterComplete;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -69,6 +73,11 @@ protected:
 
 	// Wave system setup
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	float SpawnStartTime = 75.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	float SpawnStartEncounterCompletionPercent = 75.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
+	float DespawnTimer = 5.0f;
 	TArray<FWaveParams> WaveParameters;
 
 	// Attack queue for melee and ranged units
@@ -83,6 +92,10 @@ protected:
 
 	UFUNCTION()
 	void StartSpawn();
+
+	UFUNCTION()
+	void DespawnUnit(AEnemyBaseController* Unit);
+	
 private:
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();
@@ -94,6 +107,8 @@ private:
 	unsigned int bIsEncounterActive:1;
 	// Track if contained spawn points have begun spawning
 	unsigned int bWaveStartedSpawning:1;
+
+	bool AllSpawnsComplete() const;
 	
 	// Timer handle for basic attack queue
 	FTimerHandle BasicQueueTimer;

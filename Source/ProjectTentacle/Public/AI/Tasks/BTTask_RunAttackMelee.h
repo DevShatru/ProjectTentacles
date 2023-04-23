@@ -23,16 +23,21 @@ protected:
 	// Testing methods to ensure queue timing is working
 	// TODO: replace with anim notifies when set up
 	UFUNCTION()
-	void AttackCounterTimeLimit();
+	virtual void AttackCounterTimeLimit();
 	UFUNCTION()
-	void AttackCompletionTimeLimit();
+	virtual void AttackCompletionTimeLimit();
 
 	UFUNCTION()
 	void AttackFinishTask(UBehaviorTreeComponent* BehaviorTreeReference, bool bIsSuccess, bool DoesGetInterupted);
+
+	FTimerHandle CompletionTimer, CounterTimer;
 	
-private:
 	// Cache values for owning BTComp, and Unit's pawn
 	UPROPERTY()
 	UBehaviorTreeComponent* OwningComp;
 	class AEnemyBase* OwnPawn;
+	
+	unsigned int bHasCachedRefs:1;
+
+	virtual void TryCacheRefs(UBehaviorTreeComponent& OwnerComp);
 };

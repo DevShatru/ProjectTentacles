@@ -11,7 +11,6 @@
 #include "Characters/Base/EnemyWidgetInterface.h"
 #include "Characters/Base/Widget_EnemyAttackIndicator.h"
 #include "Characters/Base/Widget_EnemyTargetIconWidget.h"
-#include "Components/TimelineComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
@@ -31,8 +30,23 @@ protected:
 	void InitializeWidgetComponents();
 	
 	void InitializeEnemyControllerRef();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Movement")
+	float WalkSpeed = 600.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Movement")
+	float StrafeSpeed = 300.f;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Combat)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting)
+	bool EnableAttackMovement = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting)
+	bool EnableEnemyAttackTracking = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DebugSetting, meta=(ClampMin=0, ClampMax=1))
+	float AttackTrackingLimitInAlpha = 0.5f; 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	EEnemyType UnitType = EEnemyType::Melee;
 
 	UPROPERTY(EditDefaultsOnly, Category=Combat)
@@ -41,7 +55,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category=Combat)
 	float AttackCounterableTime = 1.4f;
 	
-
+	
 	// Updating Enemy Attack Delegate Signature
 	FOnUpdatingEnemyAttackType OnUpdatingEnemyAttackIndicator;
 	
@@ -73,11 +87,7 @@ protected:
 
 	FTimerHandle GettingUpTimerHandle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Setting_Lying)
-	float TimeToGetUp = 3.0f;	
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Setting_Lying)
-	UAnimMontage* GetUpMontage;
+	class AEnemyBaseController* OwnController;
 	
 	// Enemy Property variable
 	
@@ -88,12 +98,12 @@ protected:
 	int32 MaxHealth = 10;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
-	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::Standing;
+	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::WaitToAttack;
 
 	bool IsDead = false;
-	
-	
 
+	// bool to check if enemy is in attack task
+	bool AttackTaskOn = false;
 	
 	// Receiving Damage Animations
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
@@ -131,41 +141,27 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
 	int32 BaseDamageAmount = 2;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
-	float AttackMovingDistance = 100.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
-	float OffsetFromPlayer = 50.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting)
-	UCurveFloat* AttackMovingCurve;
-
-	bool IsAttacking = false;
 	
 	// Attacking Animation
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Animations)
 	UAnimMontage* CounterableAttackMontage;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Animations)
-	UAnimMontage* CounterVictimMontage;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Animations)
 	UAnimMontage* NotCounterableAttackMontage;
 
 
+	
+	// ===================================================== Task ====================================================
+	void TryFinishAttackTask(EEnemyCurrentState SwitchingState);
+	
 
 	// ===================================================== Attack ====================================================
-	EEnemyAttackAnimMontages SetAttackType();
-
-	FVector CalculateDestinationForAttackMoving(FVector PlayerPos);
+	void SetAttackType();
 	
-	TArray<AActor*> GetActorsInFrontOfEnemy();
-
 	// ===================================================== Receive Damage =================================================
 	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
 	
-	void PlayDeathAnimation(EPlayerAttackType ReceivedAttackType);
-
 	void HealthReduction(float DamageAmount);
 
 	
@@ -176,16 +172,9 @@ protected:
 
 	
 	
-	// ===================================================== Stunning ===========================================
-
-	void BeginLyingCountDown();
-
-	void PlayLyingMontage();
-
-	void RecoverFromLying();
-	
-	
 public:
+	void EnableStrafe(bool bStrafe = true) const;
+	void ExecuteRangedAttack(AActor* Target);
 
 	EEnemyType GetType() const;
 
@@ -210,19 +199,23 @@ public:
 	
 
 	UFUNCTION(BlueprintCallable)
-	void ExecuteAttack();
-	void StartCounterAttackAnimation();
+	virtual void ExecuteAttack();
+	
 	
 	// Instantly rotate to desired direction
 	void InstantRotation(FVector RotatingVector);
 	
 	void PlayFinishedAnimation();
+
+
+	void TryStopMoving();
+	void TryResumeMoving();
 	
 
-	// ============================================= Timeline function ====================================================
-	
-	UFUNCTION()
-	void UpdateAttackingPosition(float Alpha);
+
+	// ============================================= Utility Functions ====================================================
+	void TrySwitchEnemyState(EEnemyCurrentState NewState) { if(CurrentEnemyState != NewState) CurrentEnemyState = NewState;}
+
 	
 
 	// ============================================= Get and Set functions ================================================
@@ -237,23 +230,21 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	EEnemyAttackType GetEnemyStoredAttackType() const {return CurrentAttackType;}
 
+	EEnemyCurrentState GetCurrentEnemyState() const {return CurrentEnemyState;}
+	
 	UFUNCTION(BlueprintCallable)
 	UBehaviorTreeComponent* GetBehaviourTreeComponent() const {return BTComponent;}
 	void SetBehaviourTreeComponent(UBehaviorTreeComponent* NewBehaviourTreeComponent) {BTComponent = NewBehaviourTreeComponent;}
+
 	
 	// ================================================== Interface Functions ============================================
+	
+	virtual void OnResumeMovement_Implementation() override;
 
-	virtual void ActionEnd_Implementation(bool BufferingCheck) override;
+	virtual void OnResetEnemyCurrentState_Implementation() override;
 	
 	virtual void TryToDamagePlayer_Implementation() override;
-
-	virtual void TryTriggerPlayerCounter_Implementation() override;
-
-	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
-
-	virtual void StartLyingOnTheGround_Implementation() override;
-
-	virtual void RepeatLyingOnTheGround_Implementation() override;
+	
 	
 	virtual void ShowEnemyAttackIndicator_Implementation() override;
 
@@ -266,17 +257,12 @@ public:
 
 private:
 	
-	// Timeline for enemy attack movement
-	FTimeline AttackMovingTimeline;
-
-	// Class variables for timeline function usage
-	FVector AttackMovingDestination;
-	FVector SelfAttackStartPos;
-	
-	class AEnemyBaseController* OwnController;
 	void TryGetOwnController();
 
 	void TryClearFromPlayerTarget();
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);
+	
+
+	
 };
