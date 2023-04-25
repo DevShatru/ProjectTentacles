@@ -26,7 +26,6 @@ void AEnemyRanged::BeginFire()
 
 void AEnemyRanged::InSightConditionUpdate()
 {
-	GEngine->AddOnScreenDebugMessage(-1, CheckInSightTick, FColor::Yellow, TEXT("InSightConditionUpdate"));
 	const bool IsInCameraSight = WasRecentlyRendered(CheckInSightTick);
 
 	ShowOrHidePlayerHUD(IsInCameraSight);
