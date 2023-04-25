@@ -25,6 +25,9 @@ void ATentacleProjectPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Counter", IE_Pressed, this, &ATentacleProjectPlayerController::OnEvade);
 	InputComponent->BindAction("MeleeAttack", IE_Pressed, this, &ATentacleProjectPlayerController::OnMeleeAttack);
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ATentacleProjectPlayerController::OnDodge);
+	InputComponent->BindAction("SpecialAbility1", IE_Pressed, this, &ATentacleProjectPlayerController::OnSpecial1);
+	InputComponent->BindAction("SpecialAbility2", IE_Pressed, this, &ATentacleProjectPlayerController::OnSpecial2);
+	InputComponent->BindAction("SpecialAbility3", IE_Pressed, this, &ATentacleProjectPlayerController::OnSpecial3);
 	//
 	// // We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// // "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -79,6 +82,30 @@ void ATentacleProjectPlayerController::OnDodge()
 	if (PossessedPlayerRef)
 	{
 		PossessedPlayerRef->TryDodge();
+	}
+}
+
+void ATentacleProjectPlayerController::OnSpecial1()
+{
+	if (PossessedPlayerRef)
+	{
+		PossessedPlayerRef->TrySpecialAbility1();
+	}
+}
+
+void ATentacleProjectPlayerController::OnSpecial2()
+{
+	if (PossessedPlayerRef)
+	{
+		PossessedPlayerRef->TrySpecialAbility2();
+	}
+}
+
+void ATentacleProjectPlayerController::OnSpecial3()
+{
+	if (PossessedPlayerRef)
+	{
+		PossessedPlayerRef->TrySpecialAbility3();
 	}
 }
 

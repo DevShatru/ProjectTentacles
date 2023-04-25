@@ -42,6 +42,17 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void OnDodge();
+
+	UFUNCTION(BlueprintCallable)
+	void OnSpecial1();
+
+	UFUNCTION(BlueprintCallable)
+	void OnSpecial2();
+
+	UFUNCTION(BlueprintCallable)
+	void OnSpecial3();
+	
+	
 	
 	UFUNCTION(BlueprintCallable)
 	void OnAddControllerYawInput(float Value);

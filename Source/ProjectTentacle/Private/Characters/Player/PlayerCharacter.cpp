@@ -176,6 +176,27 @@ bool APlayerCharacter::CheckCanPerformAction()
 	return CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::PreAction;
 }
 
+void APlayerCharacter::TrySpecialAbility1()
+{
+	// if player is recovering from action or is dodging, return
+	if(CheckCanPerformAction())
+		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::SpecialAbility1);
+}
+
+void APlayerCharacter::TrySpecialAbility2()
+{
+	// if player is recovering from action or is dodging, return
+	if(CheckCanPerformAction())
+		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::SpecialAbility2);
+}
+
+void APlayerCharacter::TrySpecialAbility3()
+{
+	// if player is recovering from action or is dodging, return
+	if(CheckCanPerformAction())
+		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::SpecialAbility3);
+}
+
 // ================================================ Utility ===========================================================
 void APlayerCharacter::UnsetCurrentTarget()
 {
@@ -256,6 +277,14 @@ void APlayerCharacter::StopRegenerateStamina()
 	World->GetTimerManager().ClearTimer(RegenWaitingTimerHandle);
 	World->GetTimerManager().ClearTimer(RegenStaminaTimerHandle);
 }
+
+
+// =============================================== Special Ability ===================================================
+
+
+
+
+
 
 
 

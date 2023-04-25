@@ -64,6 +64,22 @@ void UPlayerActionComponent::ResumeComboResetTimer()
 	World->GetTimerManager().UnPauseTimer(ComboResetTimerHandle);
 }
 
+void UPlayerActionComponent::ClearSpecialAbilityCDTimer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	World->GetTimerManager().ClearTimer(SpecialAbilityCDTimerHandle);
+}
+
+void UPlayerActionComponent::StartSpecialAbilityCDTimer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	World->GetTimerManager().SetTimer(SpecialAbilityCDTimerHandle,this, &UPlayerActionComponent::RestoreAbilitiesInTick, 0.05, true, -1);
+}
+
 
 // =================================================== Begin Functions =======================================================
 void UPlayerActionComponent::BeginPlay()
@@ -634,6 +650,57 @@ UAnimMontage* UPlayerActionComponent::DecideDodgingMontage(FVector PlayerDodging
 	return FrontRollingMontage;
 }
 
+// =============================================== Special Ability ===================================================
+
+void UPlayerActionComponent::ExecuteSpecialAbility(int32 AbilityIndex)
+{
+	switch (AbilityIndex)
+	{
+		case 1:
+			if(CurrentSpecialMeter1 < MaxSpecialMeter) break;
+			ResetAbilityMeters();
+			ClearSpecialAbilityCDTimer();
+			StartSpecialAbilityCDTimer();
+			break;
+		case 2:
+			if(CurrentSpecialMeter2 < MaxSpecialMeter) break;
+			ResetAbilityMeters();
+			ClearSpecialAbilityCDTimer();
+			StartSpecialAbilityCDTimer();
+			break;
+		case 3:
+			if(CurrentSpecialMeter3 < MaxSpecialMeter) break;
+			ResetAbilityMeters();
+			ClearSpecialAbilityCDTimer();
+			StartSpecialAbilityCDTimer();
+			break;
+		default: break;
+	}
+}
+
+void UPlayerActionComponent::ResetAbilityMeters()
+{
+	CurrentSpecialMeter1 = 0;
+	CurrentSpecialMeter2 = 0;
+	CurrentSpecialMeter3 = 0;
+}
+
+void UPlayerActionComponent::RestoreAbilitiesInTick()
+{
+	const float Special1RegenPerTick = (MaxSpecialMeter / SpecialAbilityCooldown1) * 0.05f; 
+	const float Special2RegenPerTick = (MaxSpecialMeter / SpecialAbilityCooldown2) * 0.05f; 
+	const float Special3RegenPerTick = (MaxSpecialMeter / SpecialAbilityCooldown3) * 0.05f;
+
+	CurrentSpecialMeter1 = UKismetMathLibrary::FClamp( CurrentSpecialMeter1 + Special1RegenPerTick, 0, MaxSpecialMeter);
+	CurrentSpecialMeter2 = UKismetMathLibrary::FClamp( CurrentSpecialMeter2 + Special2RegenPerTick, 0, MaxSpecialMeter);
+	CurrentSpecialMeter3 = UKismetMathLibrary::FClamp( CurrentSpecialMeter3 + Special3RegenPerTick, 0, MaxSpecialMeter);
+
+	if(CurrentSpecialMeter1 >= MaxSpecialMeter && CurrentSpecialMeter2 >= MaxSpecialMeter && CurrentSpecialMeter3 >= MaxSpecialMeter)
+		ClearSpecialAbilityCDTimer();
+	
+}
+
+
 // ==================================================== Utility ===============================================
 
 void UPlayerActionComponent::TryToUpdateTarget()
@@ -818,6 +885,15 @@ void UPlayerActionComponent::ExecutePlayerAction(EActionState ExecutingAction)
 			break;
 		case EActionState::Dodge:
 			BeginDodge();
+			break;
+		case EActionState::SpecialAbility1:
+			ExecuteSpecialAbility(1);
+			break;
+		case EActionState::SpecialAbility2:
+			ExecuteSpecialAbility(2);
+			break;
+		case EActionState::SpecialAbility3:
+			ExecuteSpecialAbility(3);
 			break;
 		default: break;
 	}

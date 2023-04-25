@@ -24,6 +24,9 @@ private:
 
 	void PauseComboResetTimer();
 	void ResumeComboResetTimer();
+
+	void ClearSpecialAbilityCDTimer();
+	void StartSpecialAbilityCDTimer();
 	
 	// Attack Animation Timeline
 	// Timeline
@@ -143,10 +146,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= PreCounterSetting)
 	UAnimMontage* RotateAnimationRight;
 	
-	
-
-
-	
 	// ================================================= Dodge Variable Setting ================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge_Setting)
 	float DodgeDistance = 250.0f;
@@ -165,6 +164,30 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= DamageReceive_Setting)
 	float DamageReceiveAnimDistance = 100.0f;
 
+
+	// ================================================ Special Ability Setting =======================================
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SpecialAbilitySetting)
+	float SpecialAbilityCooldown1 = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SpecialAbilitySetting)
+	float SpecialAbilityCooldown2 = 8.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SpecialAbilitySetting)
+	float SpecialAbilityCooldown3 = 15.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	float CurrentSpecialMeter1 = 100.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	float CurrentSpecialMeter2 = 100.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	float CurrentSpecialMeter3 = 100.0f;
+
+	float MaxSpecialMeter = 100.0f;
+	
+	FTimerHandle SpecialAbilityCDTimerHandle;
+	
 	
 	
 	// ================================================== Melee Attack ================================================
@@ -231,6 +254,15 @@ protected:
 	FVector DecideDodgingDirection(FVector PlayerFaceDir);
 
 	UAnimMontage* DecideDodgingMontage(FVector PlayerDodgingDirection);
+
+	// =============================================== Special Ability ===================================================
+
+	void ExecuteSpecialAbility(int32 AbilityIndex);
+
+	void ResetAbilityMeters();
+
+	UFUNCTION()
+	void RestoreAbilitiesInTick();
 	
 	// ================================================== Utility ======================================================
 	void TryToUpdateTarget();
