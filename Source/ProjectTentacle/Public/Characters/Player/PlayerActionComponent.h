@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "PlayerCharacter.h"
+#include "StunTentacle.h"
 #include "Components/ActorComponent.h"
 #include "Components/TimelineComponent.h"
 #include "PlayerActionComponent.generated.h"
@@ -187,7 +188,9 @@ protected:
 	float MaxSpecialMeter = 100.0f;
 	
 	FTimerHandle SpecialAbilityCDTimerHandle;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = TentacleSpawnSetting)
+	TSubclassOf<AStunTentacle> StunTentacleClass;	
 	
 	
 	// ================================================== Melee Attack ================================================
@@ -263,6 +266,8 @@ protected:
 
 	UFUNCTION()
 	void RestoreAbilitiesInTick();
+
+	void SpawnStunTentacle();
 	
 	// ================================================== Utility ======================================================
 	void TryToUpdateTarget();

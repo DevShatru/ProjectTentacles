@@ -660,6 +660,7 @@ void UPlayerActionComponent::ExecuteSpecialAbility(int32 AbilityIndex)
 			if(CurrentSpecialMeter1 < MaxSpecialMeter) break;
 			ResetAbilityMeters();
 			ClearSpecialAbilityCDTimer();
+			SpawnStunTentacle();
 			StartSpecialAbilityCDTimer();
 			break;
 		case 2:
@@ -698,6 +699,21 @@ void UPlayerActionComponent::RestoreAbilitiesInTick()
 	if(CurrentSpecialMeter1 >= MaxSpecialMeter && CurrentSpecialMeter2 >= MaxSpecialMeter && CurrentSpecialMeter3 >= MaxSpecialMeter)
 		ClearSpecialAbilityCDTimer();
 	
+}
+
+void UPlayerActionComponent::SpawnStunTentacle()
+{
+	if(UWorld* World = GetWorld())
+	{
+		// set spawn parameter
+		FActorSpawnParameters StunTentacleParams;
+		StunTentacleParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		FVector SpawnLocation = PlayerOwnerRef->GetActorLocation();
+		
+		// spawn bullet
+		AStunTentacle* SpawnTentacle = World->SpawnActor<AStunTentacle>(StunTentacleClass, SpawnLocation, {0,0,0},StunTentacleParams);
+	}
 }
 
 
