@@ -244,7 +244,9 @@ public:
 	virtual void OnResetEnemyCurrentState_Implementation() override;
 	
 	virtual void TryToDamagePlayer_Implementation() override;
-	
+
+	virtual void OnPullingEnemy_Implementation(FVector PullingDest, float PullingPower, float WorldDeltaSec) override;
+
 	
 	virtual void ShowEnemyAttackIndicator_Implementation() override;
 

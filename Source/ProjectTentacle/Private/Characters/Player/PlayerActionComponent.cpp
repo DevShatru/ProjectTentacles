@@ -709,9 +709,23 @@ void UPlayerActionComponent::SpawnStunTentacle()
 		FActorSpawnParameters StunTentacleParams;
 		StunTentacleParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+		// Get ground location by using line trace
 		FVector SpawnLocation = PlayerOwnerRef->GetActorLocation();
+		const FVector TraceEndLocation = SpawnLocation + ((-1 * PlayerOwnerRef->GetActorUpVector()) * 500.0f);
 		
-		// spawn bullet
+		FHitResult Hit;
+		TArray<AActor*> IgnoreActors;
+		IgnoreActors.Add(PlayerOwnerRef);
+		const bool IsHit = UKismetSystemLibrary::LineTraceSingle(World, SpawnLocation, TraceEndLocation, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+
+		if(IsHit)
+			SpawnLocation = Hit.ImpactPoint;
+		else
+			SpawnLocation = Hit.TraceEnd;
+			
+		
+		
+		// spawn stun tentacle
 		AStunTentacle* SpawnTentacle = World->SpawnActor<AStunTentacle>(StunTentacleClass, SpawnLocation, {0,0,0},StunTentacleParams);
 	}
 }
