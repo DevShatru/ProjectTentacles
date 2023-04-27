@@ -183,8 +183,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	float CurrentSpecialMeter2 = 100.0f;
 
-	UPROPERTY(BlueprintReadOnly)
-	float CurrentSpecialMeter3 = 100.0f;
+	// UPROPERTY(BlueprintReadOnly)
+	// float CurrentSpecialMeter3 = 100.0f;
 
 	float MaxSpecialMeter = 100.0f;
 	

@@ -69,12 +69,8 @@ void AAttackingTentacle::AttackEnemy()
 	ClosestEnemyPos.Z = CurrentTentaclePos.Z;
 	
 	DrawDebugAttackRange(ClosestEnemyPos, AttackingRadius);
-
 	
 	DamageInRange(ClosestEnemyPos);
-
-	
-	
 }
 
 void AAttackingTentacle::LifeCycleBegin()

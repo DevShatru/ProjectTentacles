@@ -670,12 +670,12 @@ void UPlayerActionComponent::ExecuteSpecialAbility(int32 AbilityIndex)
 			SpawnAttackingTentacle();
 			StartSpecialAbilityCDTimer();
 			break;
-		case 3:
-			if(CurrentSpecialMeter3 < MaxSpecialMeter) break;
-			ResetAbilityMeters();
-			ClearSpecialAbilityCDTimer();
-			StartSpecialAbilityCDTimer();
-			break;
+		// case 3:
+		// 	if(CurrentSpecialMeter3 < MaxSpecialMeter) break;
+		// 	ResetAbilityMeters();
+		// 	ClearSpecialAbilityCDTimer();
+		// 	StartSpecialAbilityCDTimer();
+		// 	break;
 		default: break;
 	}
 }
@@ -684,7 +684,7 @@ void UPlayerActionComponent::ResetAbilityMeters()
 {
 	CurrentSpecialMeter1 = 0;
 	CurrentSpecialMeter2 = 0;
-	CurrentSpecialMeter3 = 0;
+	// CurrentSpecialMeter3 = 0;
 }
 
 void UPlayerActionComponent::RestoreAbilitiesInTick()
@@ -695,9 +695,9 @@ void UPlayerActionComponent::RestoreAbilitiesInTick()
 
 	CurrentSpecialMeter1 = UKismetMathLibrary::FClamp( CurrentSpecialMeter1 + Special1RegenPerTick, 0, MaxSpecialMeter);
 	CurrentSpecialMeter2 = UKismetMathLibrary::FClamp( CurrentSpecialMeter2 + Special2RegenPerTick, 0, MaxSpecialMeter);
-	CurrentSpecialMeter3 = UKismetMathLibrary::FClamp( CurrentSpecialMeter3 + Special3RegenPerTick, 0, MaxSpecialMeter);
+	// CurrentSpecialMeter3 = UKismetMathLibrary::FClamp( CurrentSpecialMeter3 + Special3RegenPerTick, 0, MaxSpecialMeter);
 
-	if(CurrentSpecialMeter1 >= MaxSpecialMeter && CurrentSpecialMeter2 >= MaxSpecialMeter && CurrentSpecialMeter3 >= MaxSpecialMeter)
+	if(CurrentSpecialMeter1 >= MaxSpecialMeter && CurrentSpecialMeter2 >= MaxSpecialMeter)
 		ClearSpecialAbilityCDTimer();
 	
 }
