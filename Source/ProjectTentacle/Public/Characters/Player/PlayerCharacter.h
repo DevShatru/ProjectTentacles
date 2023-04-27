@@ -168,7 +168,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInputDirection InputDirection;
 	
-	
 	// Register as visual stimulus for enemies
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
@@ -212,10 +211,22 @@ public:
 
 	bool CheckCanPerformAction();
 
+
+	// =============================================== Special Ability ===================================================
+
+	void TrySpecialAbility1();
+	
+	void TrySpecialAbility2();
+
+	void TrySpecialAbility3();
+	
+
+	
 	// ================================================= Utility Functions ================================================
 
 	void UnsetCurrentTarget();
 
+	
 	
 	// ================================================= Get And Set Functions ============================================
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}

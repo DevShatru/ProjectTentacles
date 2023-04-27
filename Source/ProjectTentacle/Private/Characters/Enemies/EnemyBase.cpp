@@ -235,6 +235,24 @@ void AEnemyBase::TryToDamagePlayer_Implementation()
 	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 }
 
+void AEnemyBase::OnPullingEnemy_Implementation(FVector PullingDest, float PullingPower, float WorldDeltaSec)
+{
+	ICharacterActionInterface::OnPullingEnemy_Implementation(PullingDest, PullingPower, WorldDeltaSec);
+
+	TryStopMoving();
+
+	// move them little bit toward stun tentacle
+	const FVector CurrentEnemyPos = GetActorLocation();
+	
+	FVector OffsetWithoutZ = PullingDest - CurrentEnemyPos;
+	OffsetWithoutZ.Z = 0;
+	
+	const FVector DirToTentacle = UKismetMathLibrary::Normal(OffsetWithoutZ);
+	const FVector DeltaLocation = DirToTentacle * WorldDeltaSec * PullingPower;
+
+	SetActorLocation(CurrentEnemyPos + DeltaLocation, true);
+}
+
 // ===================================================== Damage Receive ========================================================
 
 void AEnemyBase::HealthReduction(float DamageAmount)

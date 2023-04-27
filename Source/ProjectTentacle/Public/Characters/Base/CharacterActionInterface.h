@@ -66,6 +66,9 @@ public:
 	void OnCounterTimeEnd();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnPullingEnemy(FVector PullingDest, float PullingPower, float WorldDeltaSec);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnResumeMovement();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
