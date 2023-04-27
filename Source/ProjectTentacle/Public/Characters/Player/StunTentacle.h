@@ -14,11 +14,6 @@ class PROJECTTENTACLE_API AStunTentacle : public ABaseTentacle
 {
 	GENERATED_BODY()
 
-private:
-
-	TArray<AActor*> GetEnemyInRadius(float DetectionRadius);
-	
-
 protected:
 
 	FTimerHandle AbsorbingEnemyTimerHandle;
@@ -35,12 +30,6 @@ protected:
 	float CurrentExecutionTime = 0;
 	
 	float EachAbsorbPerTick = 0.05f;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
-	TArray<TEnumAsByte<EObjectTypeQuery>> FilterType;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
-	UClass* FilteringClass;
 
 
 	virtual void LifeCycleBegin() override;

@@ -667,6 +667,7 @@ void UPlayerActionComponent::ExecuteSpecialAbility(int32 AbilityIndex)
 			if(CurrentSpecialMeter2 < MaxSpecialMeter) break;
 			ResetAbilityMeters();
 			ClearSpecialAbilityCDTimer();
+			SpawnAttackingTentacle();
 			StartSpecialAbilityCDTimer();
 			break;
 		case 3:
@@ -727,6 +728,35 @@ void UPlayerActionComponent::SpawnStunTentacle()
 		
 		// spawn stun tentacle
 		AStunTentacle* SpawnTentacle = World->SpawnActor<AStunTentacle>(StunTentacleClass, SpawnLocation, {0,0,0},StunTentacleParams);
+	}
+}
+
+void UPlayerActionComponent::SpawnAttackingTentacle()
+{
+	if(UWorld* World = GetWorld())
+	{
+		// set spawn parameter
+		FActorSpawnParameters AttackTentacleParams;
+		AttackTentacleParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// Get ground location by using line trace
+		FVector SpawnLocation = PlayerOwnerRef->GetActorLocation();
+		const FVector TraceEndLocation = SpawnLocation + ((-1 * PlayerOwnerRef->GetActorUpVector()) * 500.0f);
+		
+		FHitResult Hit;
+		TArray<AActor*> IgnoreActors;
+		IgnoreActors.Add(PlayerOwnerRef);
+		const bool IsHit = UKismetSystemLibrary::LineTraceSingle(World, SpawnLocation, TraceEndLocation, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+
+		if(IsHit)
+			SpawnLocation = Hit.ImpactPoint;
+		else
+			SpawnLocation = Hit.TraceEnd;
+			
+		
+		
+		// spawn stun tentacle
+		AAttackingTentacle* SpawnTentacle = World->SpawnActor<AAttackingTentacle>(AttackTentacleClass, SpawnLocation, {0,0,0},AttackTentacleParams);
 	}
 }
 

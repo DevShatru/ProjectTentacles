@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AttackingTentacle.h"
 #include "PlayerCharacter.h"
 #include "StunTentacle.h"
 #include "Components/ActorComponent.h"
@@ -190,8 +191,10 @@ protected:
 	FTimerHandle SpecialAbilityCDTimerHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = TentacleSpawnSetting)
-	TSubclassOf<AStunTentacle> StunTentacleClass;	
-	
+	TSubclassOf<AStunTentacle> StunTentacleClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = TentacleSpawnSetting)
+	TSubclassOf<AAttackingTentacle> AttackTentacleClass;
 	
 	// ================================================== Melee Attack ================================================
 	void BeginMeleeAttack();
@@ -268,6 +271,8 @@ protected:
 	void RestoreAbilitiesInTick();
 
 	void SpawnStunTentacle();
+
+	void SpawnAttackingTentacle();
 	
 	// ================================================== Utility ======================================================
 	void TryToUpdateTarget();

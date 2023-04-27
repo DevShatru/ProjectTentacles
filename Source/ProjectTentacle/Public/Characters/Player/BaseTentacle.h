@@ -23,6 +23,12 @@ protected:
 
 	UWorld* WorldRef;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	TArray<TEnumAsByte<EObjectTypeQuery>> FilterType;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UClass* FilteringClass;
+	
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -34,6 +40,9 @@ protected:
 
 	UFUNCTION()
 	virtual void OnLifeCycleEnd();
+
+	virtual TArray<AActor*> GetEnemyInRadius(float DetectionRadius, FVector OverlapStartPos);
+
 
 	
 	

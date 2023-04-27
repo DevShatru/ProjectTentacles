@@ -7,20 +7,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-TArray<AActor*> AStunTentacle::GetEnemyInRadius(float DetectionRadius)
-{
-	TArray<AActor*> FoundActorList;
-	
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(this);
-
-	const FVector GroundLocation = GetActorLocation();
-	
-	UKismetSystemLibrary::SphereOverlapActors(WorldRef, GroundLocation, DetectionRadius, FilterType, FilteringClass, IgnoreActors,FoundActorList);
-	
-	return FoundActorList;
-}
-
 void AStunTentacle::LifeCycleBegin()
 {
 	Super::LifeCycleBegin();
@@ -33,13 +19,13 @@ void AStunTentacle::LifeCycleBegin()
 void AStunTentacle::AbsorbEnemy()
 {
 	// Get enemy in range
-	TArray<AActor*> FoundEnemyActors = GetEnemyInRadius(AbsorbingRadius);
+	const FVector CurrentTentaclePos = GetActorLocation();
+	
+	TArray<AActor*> FoundEnemyActors = GetEnemyInRadius(AbsorbingRadius, CurrentTentaclePos);
 
 	if(FoundEnemyActors.Num() < 1) return;
-	
-	const FVector CurrentTentaclePos = GetActorLocation();
 
-	float WorldDelta = WorldRef->GetDeltaSeconds();
+	const float WorldDelta = WorldRef->GetDeltaSeconds();
 
 	for (AActor* EachFoundEnemyActor : FoundEnemyActors)
 	{
@@ -64,7 +50,9 @@ void AStunTentacle::AbsorbEnemy()
 void AStunTentacle::StunEnemy()
 {
 	// Get enemy in range
-	TArray<AActor*> FoundEnemyActors = GetEnemyInRadius(AbsorbingRadius);
+	const FVector CurrentTentaclePos = GetActorLocation();
+
+	TArray<AActor*> FoundEnemyActors = GetEnemyInRadius(AbsorbingRadius, CurrentTentaclePos);
 
 	for (AActor* EachFoundEnemyActor : FoundEnemyActors)
 	{

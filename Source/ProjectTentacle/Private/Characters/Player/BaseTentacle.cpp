@@ -3,6 +3,8 @@
 
 #include "Characters/Player/BaseTentacle.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+
 // Sets default values
 ABaseTentacle::ABaseTentacle()
 {
@@ -46,6 +48,18 @@ void ABaseTentacle::OnLifeCycleEnd()
 {
 	// TODO: Change this to object pooling
 	Destroy();
+}
+
+TArray<AActor*> ABaseTentacle::GetEnemyInRadius(float DetectionRadius, FVector OverlapStartPos)
+{
+	TArray<AActor*> FoundActorList;
+	
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	
+	UKismetSystemLibrary::SphereOverlapActors(WorldRef, OverlapStartPos, DetectionRadius, FilterType, FilteringClass, IgnoreActors,FoundActorList);
+	
+	return FoundActorList;
 }
 
 // Called every frame
