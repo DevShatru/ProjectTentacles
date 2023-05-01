@@ -55,6 +55,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category=Combat)
 	float AttackCounterableTime = 1.4f;
 	
+	UPROPERTY(EditDefaultsOnly, Category=Combat)
+	float AttackTimeoutDuration = 10.f;
 	
 	// Updating Enemy Attack Delegate Signature
 	FOnUpdatingEnemyAttackType OnUpdatingEnemyAttackIndicator;
@@ -170,9 +172,11 @@ protected:
 
 	void RagDollPhysicsOnDead();
 
-	
+	UFUNCTION()
+	void TimeoutAttack();
 	
 public:
+	void StartAttackTimeout();
 	void EnableStrafe(bool bStrafe = true) const;
 	void ExecuteRangedAttack(AActor* Target);
 
@@ -265,6 +269,6 @@ private:
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);
 	
-
+	FTimerHandle AttackTimeoutHandle;
 	
 };
