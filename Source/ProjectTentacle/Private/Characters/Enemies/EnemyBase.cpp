@@ -361,7 +361,15 @@ void AEnemyBase::RagDollPhysicsOnDead()
 	SelfCharacterMovement->DisableMovement();
 }
 
+void AEnemyBase::TimeoutAttack()
+{
+	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+}
 
+void AEnemyBase::StartAttackTimeout()
+{
+	GetWorldTimerManager().SetTimer(AttackTimeoutHandle, this, &AEnemyBase::TimeoutAttack, AttackTimeoutDuration);
+}
 
 
 void AEnemyBase::ShowEnemyAttackIndicator_Implementation()

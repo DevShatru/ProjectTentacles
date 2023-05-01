@@ -56,13 +56,12 @@ void UBTTask_RunAttackMelee::AttackCompletionTimeLimit()
 void UBTTask_RunAttackMelee::AttackFinishTask(UBehaviorTreeComponent* BehaviorTreeReference, bool bIsSuccess, bool DoesGetInterupted)
 {
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("%s completed attack"), *OwnPawn->GetHumanReadableName()));
+	
 	FinishLatentTask(*BehaviorTreeReference, EBTNodeResult::Succeeded);
 }
 
 void UBTTask_RunAttackMelee::TryCacheRefs(UBehaviorTreeComponent& OwnerComp)
-{
-	if(bHasCachedRefs) return;
-	
+{	
 	OwningComp = &OwnerComp;
 	const AEnemyBaseController* OwnController = Cast<AEnemyBaseController>(OwnerComp.GetAIOwner());
 	if(!OwnController) return;
