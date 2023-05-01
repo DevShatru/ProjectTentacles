@@ -69,7 +69,6 @@ void AEnemyBaseController::BeginAttack()
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("%s began attack"), *OwnPawn->GetHumanReadableName()));
 	TryCacheBlackboardComp();
 	Blackboard->SetValueAsBool("bIsAttacking", true);
-	OwnPawn->StartAttackTimeout();
 }
 
 void AEnemyBaseController::QuitFromEncounter()
