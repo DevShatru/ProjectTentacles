@@ -144,7 +144,7 @@ void AEncounterVolume::BeginAttackBasic()
 		RandomIndex = FMath::RandRange(0, QueueSize - 1);
 	} while(LastAttacker == AttackQueueBasic[RandomIndex] && QueueSize > 1);
 	
-	AttackQueueBasic[RandomIndex]->BeginAttack();
+	if(AttackQueueBasic[RandomIndex]) AttackQueueBasic[RandomIndex]->BeginAttack();
 	AttackQueueBasic.RemoveAt(RandomIndex);
 }
 
