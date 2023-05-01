@@ -78,6 +78,8 @@ void UBTTask_PerformStrafe::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, ui
 
 void UBTTask_PerformStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
+	if(!IsValid(OwnPawn)) FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+	
 	// Check distance from starting points
 	if(FVector::DistSquared(OwnPawn->GetActorLocation(), StrafeLoopStartLocation) >= LoopDistSqr)
 	{
