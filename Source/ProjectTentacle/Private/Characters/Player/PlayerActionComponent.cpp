@@ -203,7 +203,7 @@ void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
 	
 	// change current action state enum
-	PlayerOwnerRef->SetCurrentActionState(EActionState::Attack);
+	PlayerOwnerRef->SetCurrentActionState(EActionState::BeforeAttack);
 
 	
 	// Check if Enemy is dying or now, if is, finish him
@@ -258,7 +258,7 @@ void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
 	
 	// change current action state enum
-	PlayerOwnerRef->SetCurrentActionState(EActionState::Attack);
+	PlayerOwnerRef->SetCurrentActionState(EActionState::BeforeAttack);
 
 	
 	// Check if Enemy is dying or now, if is, finish him
@@ -578,6 +578,18 @@ void UPlayerActionComponent::BeginDodge()
 {
 	// ref validation check
 	if(PlayerOwnerRef == nullptr) return;
+
+	// if player's current action state is before attacking, cancel movement lerping, clear target, and reset target's movement mode
+	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::BeforeAttack)
+	{
+		// Stop timeline movement
+		StopSpecificMovingTimeline(PlayerOwnerRef->GetCurrentAttackType());
+
+		// Reset target's movement mode to walking
+		AEnemyBase* AllocatedDamageActor = PlayerOwnerRef->GetDamagingActor();
+		AllocatedDamageActor->TryResumeMoving();
+	}
+	
 	
 	// Get Player facing direction
 	const FVector PlayerFaceDir = PlayerOwnerRef->GetActorForwardVector();
@@ -952,8 +964,6 @@ void UPlayerActionComponent::ExecutePlayerAction(EActionState ExecutingAction)
 		case EActionState::SpecialAbility2:
 			ExecuteSpecialAbility(2);
 			break;
-		case EActionState::SpecialAbility3:
-			ExecuteSpecialAbility(3);
 			break;
 		default: break;
 	}

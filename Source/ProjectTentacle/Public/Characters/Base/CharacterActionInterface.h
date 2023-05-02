@@ -38,6 +38,9 @@ public:
 	void StartWaitForCombo();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void EnterUnableCancelAttack();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void TryTriggerPlayerCounter();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

@@ -141,7 +141,7 @@ void APlayerCharacter::MoveRight(float Value)
 void APlayerCharacter::TryMeleeAttack()
 {
 	// if player is recovering from action or is dodging, return
-	if(CheckCanPerformAction())
+	if(CanPerformAttack())
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Attack);
 	
 }
@@ -159,7 +159,7 @@ void APlayerCharacter::TryEvade()
 void APlayerCharacter::TryDodge()
 {
 	// if player is able to dodge, make dodge
-	if(CheckCanPerformAction() && CurrentStamina > CostForEachDodge)
+	if(CanPerformDodge() && CurrentStamina > CostForEachDodge)
 	{
 		StopAnimMontage();	
 		StopRegenerateStamina();
@@ -171,31 +171,36 @@ void APlayerCharacter::TryDodge()
 	}
 }
 
-bool APlayerCharacter::CheckCanPerformAction()
+bool APlayerCharacter::CanPerformAttack()
 {
 	return CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::PreAction;
+}
+
+bool APlayerCharacter::CanPerformDodge()
+{
+	return CurrentActionState == EActionState::BeforeAttack || CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::PreAction;
 }
 
 void APlayerCharacter::TrySpecialAbility1()
 {
 	// if player is recovering from action or is dodging, return
-	if(CheckCanPerformAction())
+	if(CanPerformAttack())
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::SpecialAbility1);
 }
 
 void APlayerCharacter::TrySpecialAbility2()
 {
 	// if player is recovering from action or is dodging, return
-	if(CheckCanPerformAction())
+	if(CanPerformAttack())
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::SpecialAbility2);
 }
 
-void APlayerCharacter::TrySpecialAbility3()
-{
-	// if player is recovering from action or is dodging, return
-	if(CheckCanPerformAction())
-		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::SpecialAbility3);
-}
+// void APlayerCharacter::TrySpecialAbility3()
+// {
+// 	// if player is recovering from action or is dodging, return
+// 	if(CheckCanPerformAction())
+// 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::SpecialAbility3);
+// }
 
 // ================================================ Utility ===========================================================
 void APlayerCharacter::UnsetCurrentTarget()
@@ -303,6 +308,14 @@ void APlayerCharacter::DamagingTarget_Implementation()
 	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, 1, this, CurrentAttackType);
 
 	if(CurrentAttackType == EPlayerAttackType::CounterAttack) UnsetCurrentTarget();
+}
+
+void APlayerCharacter::EnterUnableCancelAttack_Implementation()
+{
+	Super::EnterUnableCancelAttack_Implementation();
+
+	CurrentActionState = EActionState::Attack;
+
 }
 
 void APlayerCharacter::TryStoreCounterTarget_Implementation(AEnemyBase* CounterTarget)

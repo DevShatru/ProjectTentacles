@@ -27,7 +27,7 @@ void ATentacleProjectPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ATentacleProjectPlayerController::OnDodge);
 	InputComponent->BindAction("SpecialAbility1", IE_Pressed, this, &ATentacleProjectPlayerController::OnSpecial1);
 	InputComponent->BindAction("SpecialAbility2", IE_Pressed, this, &ATentacleProjectPlayerController::OnSpecial2);
-	InputComponent->BindAction("SpecialAbility3", IE_Pressed, this, &ATentacleProjectPlayerController::OnSpecial3);
+	//InputComponent->BindAction("SpecialAbility3", IE_Pressed, this, &ATentacleProjectPlayerController::OnSpecial3);
 	//
 	// // We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// // "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -101,13 +101,13 @@ void ATentacleProjectPlayerController::OnSpecial2()
 	}
 }
 
-void ATentacleProjectPlayerController::OnSpecial3()
-{
-	if (PossessedPlayerRef)
-	{
-		PossessedPlayerRef->TrySpecialAbility3();
-	}
-}
+// void ATentacleProjectPlayerController::OnSpecial3()
+// {
+// 	if (PossessedPlayerRef)
+// 	{
+// 		PossessedPlayerRef->TrySpecialAbility3();
+// 	}
+// }
 
 void ATentacleProjectPlayerController::OnAddControllerYawInput(float Value)
 {

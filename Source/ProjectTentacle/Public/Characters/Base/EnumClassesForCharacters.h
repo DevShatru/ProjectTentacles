@@ -28,10 +28,9 @@ enum class EActionState: uint8
 	SpecialAttack = 5 UMETA(DisplayName = "SPECIALATTACK"),
 	PreAction = 6 UMETA(DisplayName = "PreAction"),
 	Dodge = 7 UMETA(DisplayName = "DODGE"),
-	SpecialAbility1 = 8 UMETA(DisplayName = "SpecialAbility1"),
-	SpecialAbility2 = 9 UMETA(DisplayName = "SpecialAbility2"),
-	SpecialAbility3 = 10 UMETA(DisplayName = "SpecialAbility3"),
-	
+	BeforeAttack = 8 UMETA(DisplayName = "BeforeAttack"),
+	SpecialAbility1 = 9 UMETA(DisplayName = "SpecialAbility1"),
+	SpecialAbility2 = 10 UMETA(DisplayName = "SpecialAbility2"),
 };
 
 UENUM(BlueprintType)
