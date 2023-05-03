@@ -16,7 +16,12 @@ class PROJECTTENTACLE_API AEnemyMelee : public AEnemyBase
 	GENERATED_BODY()
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Healing")
+	bool bShouldHealOnDeath = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Healing")
+	float HealAmount = 15.f;
 
+	virtual void OnDeath() override;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Setting)
 	float AttackMovingDistance = 100.0f;
