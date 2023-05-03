@@ -209,7 +209,9 @@ public:
 	
 	void TryDodge();
 
-	bool CheckCanPerformAction();
+	bool CanPerformAttack();
+
+	bool CanPerformDodge();
 
 
 	// =============================================== Special Ability ===================================================
@@ -218,7 +220,7 @@ public:
 	
 	void TrySpecialAbility2();
 
-	void TrySpecialAbility3();
+	//void TrySpecialAbility3();
 	
 
 	
@@ -265,6 +267,9 @@ public:
 
 	// UFUNCTION()
 	// virtual void ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget) override;
+
+	UFUNCTION()
+	virtual void EnterUnableCancelAttack_Implementation() override;
 	
 	UFUNCTION()
 	virtual void TryStoreCounterTarget_Implementation(AEnemyBase* CounterTarget) override;

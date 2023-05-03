@@ -16,7 +16,7 @@ class PROJECTTENTACLE_API AStunTentacle : public ABaseTentacle
 
 protected:
 
-	FTimerHandle AbsorbingEnemyTimerHandle;
+	FTimerHandle StunEnemyTimerHandle;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TimeToExecuteStun = 5.0f;
@@ -34,8 +34,8 @@ protected:
 
 	virtual void LifeCycleBegin() override;
 
-	UFUNCTION()
-	void AbsorbEnemy();
+	// UFUNCTION()
+	// void AbsorbEnemy();
 	
 	UFUNCTION()
 	void StunEnemy();

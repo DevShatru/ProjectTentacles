@@ -49,8 +49,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnSpecial2();
 
-	UFUNCTION(BlueprintCallable)
-	void OnSpecial3();
+	// UFUNCTION(BlueprintCallable)
+	// void OnSpecial3();
 	
 	
 	
