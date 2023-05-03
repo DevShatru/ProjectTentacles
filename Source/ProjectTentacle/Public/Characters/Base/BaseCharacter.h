@@ -18,6 +18,7 @@ class PROJECTTENTACLE_API ABaseCharacter : public ACharacter , public ICharacter
 public:
 	// Sets default values for this character's properties
 	ABaseCharacter();
+	void Heal(float Amount);
 
 protected:
 

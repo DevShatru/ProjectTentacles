@@ -47,6 +47,12 @@ void AEnemyMelee::ExecuteAttack()
 
 }
 
+void AEnemyMelee::OnDeath()
+{
+	if(bShouldHealOnDeath && OwnController)	OwnController->HealEncounterTarget(HealAmount);
+	Super::OnDeath();
+}
+
 FVector AEnemyMelee::CalculateDestinationForAttackMoving(FVector PlayerPos)
 {
 	// Get direction from self to player

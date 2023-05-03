@@ -31,6 +31,12 @@ ABaseCharacter::ABaseCharacter()
 	GetCharacterMovement()->AirControl = 0.2f;
 }
 
+void ABaseCharacter::Heal(float Amount)
+{
+	const int8 AttemptedHeal = CharacterCurrentHealth + Amount;
+	CharacterCurrentHealth = (AttemptedHeal > CharacterMaxHealth) ? CharacterMaxHealth : AttemptedHeal;
+}
+
 // Called when the game starts or when spawned
 void ABaseCharacter::BeginPlay()
 {

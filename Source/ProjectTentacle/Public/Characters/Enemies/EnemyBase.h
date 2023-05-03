@@ -168,7 +168,7 @@ protected:
 
 	
 	// ===================================================== On Death =======================================================
-	void OnDeath();
+	virtual void OnDeath();
 
 	void RagDollPhysicsOnDead();
 

@@ -6,6 +6,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Encounter/EncounterVolume.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "Characters/Player/PlayerCharacter.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 
@@ -124,6 +125,12 @@ void AEnemyBaseController::OnDeath()
 	Reset();
 	if(!OwningEncounter) return;
 	OwningEncounter->RegisterUnitDestroyed(this);
+}
+
+void AEnemyBaseController::HealEncounterTarget(float HealAmount)
+{
+	if(!EncounterTarget) return;
+	Cast<APlayerCharacter>(EncounterTarget)->Heal(HealAmount);
 }
 
 void AEnemyBaseController::ClearBlackboard()

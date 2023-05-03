@@ -39,8 +39,9 @@ void ASpawnPoint::SpawnUnit()
 	// Determine what unit to spawn based on weight
 	const float MeleeSpawnWeight = bShouldSpawnMelee ? MeleeUnitsSpawnWeight : 0.f,
 				RangedSpawnWeight = bShouldSpawnRanged ? RangedUnitsSpawnWeight : 0.f,
-				BruteSpawnWeight = bShouldSpawnBrute ? BruteUnitsSpawnWeight : 0.f;
-	const float SpawnWeightSum = MeleeSpawnWeight + RangedSpawnWeight + BruteSpawnWeight;
+				BruteSpawnWeight = bShouldSpawnBrute ? BruteUnitsSpawnWeight : 0.f,
+				HealerSpawnWeight = bShouldSpawnHealer ? HealerUnitsSpawnWeight : 0.f;
+	const float SpawnWeightSum = MeleeSpawnWeight + RangedSpawnWeight + BruteSpawnWeight + HealerSpawnWeight;
 
 	if (SpawnWeightSum <= 0.f) {
 		StopSpawningUnits();
@@ -51,13 +52,15 @@ void ASpawnPoint::SpawnUnit()
 
 	// Determine type of unit to spawn based on which band WeightedRandom is in
 	const EEnemyType TypeToSpawn = WeightedRandom <= MeleeSpawnWeight ? EEnemyType::Melee :
-								   (WeightedRandom <= MeleeSpawnWeight + RangedSpawnWeight ? EEnemyType::Ranged : EEnemyType::Brute);
+								   WeightedRandom <= MeleeSpawnWeight + RangedSpawnWeight ? EEnemyType::Ranged :
+								   WeightedRandom <= MeleeSpawnWeight + RangedSpawnWeight + BruteSpawnWeight ? EEnemyType::Brute : EEnemyType::Healer;
 
 	// Get Unit from pool
 	// Spawn if pool is unavailable
 	AEnemyBase* Unit = UnitPool ? UnitPool->GetUnitFromPool(TypeToSpawn) :
 					   GetWorld()->SpawnActor<AEnemyBase>(TypeToSpawn == EEnemyType::Melee ? MeleeUnitClass :
-					   (TypeToSpawn == EEnemyType::Ranged ? RangedUnitClass : BruteUnitClass));
+														  TypeToSpawn == EEnemyType::Ranged ? RangedUnitClass :
+														  TypeToSpawn == EEnemyType::Brute ? BruteUnitClass : HealerUnitClass);
 	Unit->SetActorLocation(GetActorLocation());
 	++UnitsSpawned[TypeToSpawn];
 	OwningEncounterVolume->AddSpawnedUnitToEncounter(Unit);
@@ -95,6 +98,7 @@ void ASpawnPoint::CheckUnitsToSpawn()
 	bShouldSpawnMelee = UnitsSpawned[EEnemyType::Melee] < NumMeleeUnitsSpawned;
 	bShouldSpawnRanged = UnitsSpawned[EEnemyType::Ranged] < NumRangedUnitsSpawned;
 	bShouldSpawnBrute = UnitsSpawned[EEnemyType::Brute] < NumBruteUnitsSpawned;
+	bShouldSpawnHealer = UnitsSpawned[EEnemyType::Healer] < NumHealerUnitsSpawned;
 	bSpawnComplete = !(bShouldSpawnMelee || bShouldSpawnBrute || bShouldSpawnRanged);
 }
 
