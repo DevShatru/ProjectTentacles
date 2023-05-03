@@ -36,6 +36,13 @@ protected:
 	TSubclassOf<class AEnemyBase> MeleeUnitClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=MeleeSpawn)
 	float MeleeUnitsSpawnWeight = 5.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=HealerSpawn)
+	int32 NumHealerUnitsSpawned = 5;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=HealerSpawn)
+	TSubclassOf<class AEnemyBase> HealerUnitClass;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=HealerSpawn)
+	float HealerUnitsSpawnWeight = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=RangedSpawn)
 	int32 NumRangedUnitsSpawned = 5;
@@ -59,6 +66,6 @@ private:
 	AEncounterVolume* OwningEncounterVolume;
 	FTimerHandle SpawnTimerHandle;
 	TMap<EEnemyType, int8> UnitsSpawned;
-	unsigned int bShouldSpawnMelee:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1, bSpawnComplete:1;
+	unsigned int bShouldSpawnMelee:1, bShouldSpawnHealer:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1, bSpawnComplete:1;
 	void CheckUnitsToSpawn();
 };
