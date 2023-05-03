@@ -45,6 +45,8 @@ AEnemyBase* AUnitPool::GetUnitFromPool(EEnemyType Type)
 			return World->SpawnActor<AEnemyBase>(DefaultRangedClass);
 		case EEnemyType::Brute:
 			return World->SpawnActor<AEnemyBase>(DefaultBruteClass);
+		case EEnemyType::Healer:
+			return World->SpawnActor<AEnemyBase>(DefaultHealerClass);
 		default:
 			return nullptr;
 	}

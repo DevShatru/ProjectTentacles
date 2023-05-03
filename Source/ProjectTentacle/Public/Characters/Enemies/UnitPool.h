@@ -29,6 +29,8 @@ protected:
 	TSubclassOf<AEnemyBase> DefaultRangedClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Default Classes")
 	TSubclassOf<AEnemyBase> DefaultBruteClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Default Classes")
+	TSubclassOf<AEnemyBase> DefaultHealerClass;
 	
 	UPROPERTY()
 	TArray<AEnemyBase*> PooledUnits;
