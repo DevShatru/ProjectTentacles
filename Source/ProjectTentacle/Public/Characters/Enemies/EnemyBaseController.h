@@ -42,6 +42,8 @@ public:
 	virtual void Reset() override;
 
 	void OnDeath();
+
+	void HealEncounterTarget(float HealAmount);
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
