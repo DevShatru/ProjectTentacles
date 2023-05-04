@@ -79,7 +79,7 @@ private:
 	void RegeneratingStamina();
 
 	void MoveCameraTo(class USpringArmComponent* DestinationSpringArm, float ChangedRelativeRotation);
-
+	bool AbleRotateVision = true; 
 	
 protected:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -255,6 +255,8 @@ public:
 	
 	
 	// ================================================= Get And Set Functions ============================================
+	bool GetAbleRotateVision() const {return AbleRotateVision;}
+	
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}
 
 	void SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime);

@@ -193,8 +193,8 @@ void APlayerCharacter::OnFinishCameraMovement()
 {
 	if(CurrentCameraType == EPlayerCameraType::InCombat)
 	{
-		// TODO: Enable Camera control
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Camera Control Enable!"));	
+		// Enable Camera control
+		AbleRotateVision = true;
 	}
 
 }
@@ -403,13 +403,16 @@ void APlayerCharacter::OnSwitchingToExecutionCamera_Implementation()
 {
 	IPlayerCameraInterface::OnSwitchingToExecutionCamera_Implementation();
 
+	CurrentCameraType = EPlayerCameraType::Execution;
 	MoveCameraTo(ActionSpringArmComp, 300);
+	AbleRotateVision = false;
 }
 
 void APlayerCharacter::OnSwitchingBackToDefaultCamera_Implementation()
 {
 	IPlayerCameraInterface::OnSwitchingBackToDefaultCamera_Implementation();
 
+	CurrentCameraType = EPlayerCameraType::InCombat;
 	MoveCameraTo(CameraBoom, 0);
 }
 
