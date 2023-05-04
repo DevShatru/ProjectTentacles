@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GenericTeamAgentInterface.h"
+#include "PlayerCameraInterface.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -64,7 +65,7 @@ DECLARE_DYNAMIC_DELEGATE(FOnEnableComboResetTimer);
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IDamageInterface
+class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IDamageInterface, public IPlayerCameraInterface
 {
 	GENERATED_BODY()
 
@@ -76,6 +77,9 @@ private:
 	void WaitToRegenStamina();
 	void BeginRegenerateStamina();
 	void RegeneratingStamina();
+
+	void MoveCameraTo(class USpringArmComponent* DestinationSpringArm, float ChangedRelativeRotation);
+
 	
 protected:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -96,6 +100,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class USpringArmComponent* ActionSpringArmComp;
+	
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
@@ -116,6 +123,18 @@ protected:
 	AEnemyBase* CounteringVictim;
 
 	bool IsPlayerCounterable = false;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DynamicCameraSetting)
+	bool CameraMoveEaseOut = true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DynamicCameraSetting)
+	bool CameraMoveEaseIn = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DynamicCameraSetting)
+	float CameraMoveTime = 0.4f;
+
+	EPlayerCameraType CurrentCameraType = EPlayerCameraType::InCombat;
 	
 	
 	UPROPERTY()
@@ -214,13 +233,16 @@ public:
 	bool CanPerformDodge();
 
 
+	// =================================================== Camera ========================================================
+	UFUNCTION()
+	void OnFinishCameraMovement();
+	
+
 	// =============================================== Special Ability ===================================================
 
 	void TrySpecialAbility1();
 	
 	void TrySpecialAbility2();
-
-	//void TrySpecialAbility3();
 	
 
 	
@@ -228,6 +250,8 @@ public:
 
 	void UnsetCurrentTarget();
 
+	UFUNCTION(BlueprintCallable)
+	void DebugTestFunction();
 	
 	
 	// ================================================= Get And Set Functions ============================================
@@ -265,9 +289,6 @@ public:
 	UFUNCTION()
 	virtual void DamagingTarget_Implementation() override;
 
-	// UFUNCTION()
-	// virtual void ReceiveAttackInCounterState_Implementation(AActor* CounteringTarget) override;
-
 	UFUNCTION()
 	virtual void EnterUnableCancelAttack_Implementation() override;
 	
@@ -279,6 +300,12 @@ public:
 	
 	UFUNCTION()
 	virtual void ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser, EEnemyAttackType EnemyAttackType) override;
+
+	UFUNCTION()
+	virtual void OnSwitchingToExecutionCamera_Implementation() override;
+
+	UFUNCTION()
+	virtual void OnSwitchingBackToDefaultCamera_Implementation() override;
 
 	UFUNCTION()
 	virtual void ActionEnd_Implementation(bool BufferingCheck) override;

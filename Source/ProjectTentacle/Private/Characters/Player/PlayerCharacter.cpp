@@ -25,11 +25,19 @@ void APlayerCharacter::CollapseHitIndicator() const
 
 APlayerCharacter::APlayerCharacter()
 {
+	USkeletalMeshComponent* PlayerSkeletonMeshComp = GetMesh();
+	if(!PlayerSkeletonMeshComp) return;
+	
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->SetupAttachment(PlayerSkeletonMeshComp, "Spine2");
 	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	
+	ActionSpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("ActionSpringArmComp"));
+	ActionSpringArmComp->SetupAttachment(PlayerSkeletonMeshComp, "Spine");
+	ActionSpringArmComp->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	ActionSpringArmComp->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	
 	// Create a follow camera
@@ -181,6 +189,16 @@ bool APlayerCharacter::CanPerformDodge()
 	return CurrentActionState == EActionState::BeforeAttack || CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::PreAction;
 }
 
+void APlayerCharacter::OnFinishCameraMovement()
+{
+	if(CurrentCameraType == EPlayerCameraType::InCombat)
+	{
+		// TODO: Enable Camera control
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Camera Control Enable!"));	
+	}
+
+}
+
 void APlayerCharacter::TrySpecialAbility1()
 {
 	// if player is recovering from action or is dodging, return
@@ -216,6 +234,11 @@ void APlayerCharacter::UnsetCurrentTarget()
 	}
 
 	
+}
+
+void APlayerCharacter::DebugTestFunction()
+{
+
 }
 
 void APlayerCharacter::SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime)
@@ -274,6 +297,7 @@ void APlayerCharacter::RegeneratingStamina()
 		StopRegenerateStamina();
 }
 
+
 void APlayerCharacter::StopRegenerateStamina()
 {
 	const UWorld* World = GetWorld();
@@ -284,9 +308,26 @@ void APlayerCharacter::StopRegenerateStamina()
 }
 
 
-// =============================================== Special Ability ===================================================
+// =============================================== Camera ===================================================
 
 
+void APlayerCharacter::MoveCameraTo(USpringArmComponent* DestinationSpringArm, float ChangedRelativeRotation)
+{
+	const FAttachmentTransformRules AttachRule = FAttachmentTransformRules(EAttachmentRule::KeepWorld, true);
+	FollowCamera->AttachToComponent(DestinationSpringArm, AttachRule);
+
+	const FVector RelativeLoc = FVector(0,0,0);
+	const FRotator RelativeRot = FRotator(0,ChangedRelativeRotation,0);
+	const TEnumAsByte<EMoveComponentAction::Type> CameraMovement = EMoveComponentAction::Move;
+	FLatentActionInfo LatentActionInfo;
+	LatentActionInfo.CallbackTarget = this;
+	LatentActionInfo.ExecutionFunction = FName("OnFinishCameraMovement");
+	LatentActionInfo.Linkage = 0;
+	LatentActionInfo.UUID = 0;
+	
+	UKismetSystemLibrary::MoveComponentTo(FollowCamera, RelativeLoc, RelativeRot, CameraMoveEaseOut, CameraMoveEaseIn, CameraMoveTime, true, CameraMovement, LatentActionInfo);
+
+}
 
 
 
@@ -356,6 +397,20 @@ void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount,
 	IDamageInterface::ReceiveDamageFromEnemy_Implementation(DamageAmount, DamageCauser, EnemyAttackType);
 
 	bool bExecuted = OnReceivingIncomingDamage.ExecuteIfBound(DamageAmount, DamageCauser, EnemyAttackType);
+}
+
+void APlayerCharacter::OnSwitchingToExecutionCamera_Implementation()
+{
+	IPlayerCameraInterface::OnSwitchingToExecutionCamera_Implementation();
+
+	MoveCameraTo(ActionSpringArmComp, 300);
+}
+
+void APlayerCharacter::OnSwitchingBackToDefaultCamera_Implementation()
+{
+	IPlayerCameraInterface::OnSwitchingBackToDefaultCamera_Implementation();
+
+	MoveCameraTo(CameraBoom, 0);
 }
 
 void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
