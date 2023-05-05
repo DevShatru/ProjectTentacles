@@ -3,24 +3,39 @@
 
 #include "ProjectTentacleGameModeBase.h"
 
-#include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "Encounter/Checkpoint.h"
 
 void AProjectTentacleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	CacheCheckpointRefs();
 
 	// TryInitializeEncounterVolumeRef();
 
 	// StartRepositionEnemyLoop();
 }
 
+void AProjectTentacleGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	AllCheckpoints.Empty();
+	Super::EndPlay(EndPlayReason);
+}
+
 void AProjectTentacleGameModeBase::TryInitializeEncounterVolumeRef()
 {
 
-	const UWorld* World = GetWorld();
+	UWorld* World = GetWorld();
 	if(!World) return;
 	
-	AActor* ResultActor = UGameplayStatics::GetActorOfClass(World, AEncounterVolume::StaticClass());
+	AActor* ResultActor = nullptr;
+
+	// Replaced UGameplayStatics import with TActorIterator import (Smaller file, since we're only using one method from it)
+	for (TActorIterator<AEncounterVolume> It(World, AEncounterVolume::StaticClass()); It; ++It)
+	{
+		ResultActor = *It;
+	}
 
 	if(!ResultActor) return;
 
@@ -38,6 +53,20 @@ void AProjectTentacleGameModeBase::StartRepositionEnemyLoop()
 
 
 	World->GetTimerManager().SetTimer(EnemyRepositionTimerHandle,this, &AProjectTentacleGameModeBase::StartRepositionEnemies, GapTimeToReposition, true, -1);
+}
+
+// Get and save a reference to all ACheckpoint actors in the level
+void AProjectTentacleGameModeBase::CacheCheckpointRefs()
+{
+	AllCheckpoints.Empty();
+	UWorld* World = GetWorld();
+	if(!World) return;
+	
+	for (TActorIterator<ACheckpoint> It(World, ACheckpoint::StaticClass()); It; ++It)
+	{
+		const ACheckpoint* Checkpoint = *It;
+		if(Checkpoint) AllCheckpoints.Add(Checkpoint);
+	}
 }
 
 void AProjectTentacleGameModeBase::StartRepositionEnemies()

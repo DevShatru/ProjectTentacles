@@ -29,6 +29,9 @@ private:
 	
 	// 
 	void StartRepositionEnemyLoop();
+
+	void CacheCheckpointRefs();
+	TSet<const class ACheckpoint*> AllCheckpoints;
 	
 	
 protected:
@@ -52,5 +55,6 @@ protected:
 public:
 
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 };
