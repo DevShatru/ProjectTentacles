@@ -295,7 +295,7 @@ void APlayerCharacter::ResetPostDeath()
 
 void APlayerCharacter::TryCacheGameModeRef()
 {
-	if(GameModeRef && IsValidLowLevelFast(GameModeRef)) return;
+	if(GameModeRef) return;
 
 	GameModeRef = Cast<AProjectTentacleGameModeBase>(GetWorld()->GetAuthGameMode());
 }

@@ -45,8 +45,8 @@ protected:
 	bool IncludeHeavy = false;
 
 
-	UFUNCTION()
-	void StartRepositionEnemies();
+	// UFUNCTION()
+	// void StartRepositionEnemies();
 	
 	
 	
@@ -55,6 +55,5 @@ public:
 	virtual void BeginPlay() override;
 	FVector ResetAndGetCheckpointLocation();
 	void ResetEncounters();
-	void SetActiveCheckpointLocation(const ACheckpoint* NewActiveCheckpoint);
-	
+	void SetActiveCheckpointLocation(const class ACheckpoint* NewActiveCheckpoint);
 };
