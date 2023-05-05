@@ -77,6 +77,9 @@ private:
 	void RegeneratingStamina();
 	void OnDeath();
 	void ResetOnDeath();
+	void TryCacheGameModeRef();
+
+	class AProjectTentacleGameModeBase* GameModeRef;
 
 	unsigned int bIsDead:1;
 	
@@ -194,7 +197,6 @@ public:
 	// ================================================= 
 	
 	virtual void BeginPlay() override;
-
 	virtual void Tick(float DeltaSeconds) override;
 	
 

@@ -8,6 +8,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
+#include "ProjectTentacle/ProjectTentacleGameModeBase.h"
 #include "UI/UserWidget_HitIndicator.h"
 
 FGenericTeamId APlayerCharacter::TeamId = FGenericTeamId(1);
@@ -59,6 +60,7 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	CharacterCurrentHealth = CharacterMaxHealth;
+	GameModeRef = nullptr;
 	bIsDead = false;
 	
 }
@@ -283,8 +285,18 @@ void APlayerCharacter::OnDeath()
 
 void APlayerCharacter::ResetOnDeath()
 {
+	TryCacheGameModeRef();
+	if(!GameModeRef) return;
+	
 	bIsDead = false;
 	CharacterCurrentHealth = CharacterMaxHealth;
+}
+
+void APlayerCharacter::TryCacheGameModeRef()
+{
+	if(GameModeRef && IsValidLowLevelFast(GameModeRef)) return;
+
+	GameModeRef = Cast<AProjectTentacleGameModeBase>(GetWorld()->GetAuthGameMode());
 }
 
 void APlayerCharacter::StopRegenerateStamina()
