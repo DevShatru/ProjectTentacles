@@ -48,7 +48,9 @@ EBTNodeResult::Type UBTTask_PerformStrafe::ExecuteTask(UBehaviorTreeComponent& O
 	if(bIsTargetActor)
 	{
 		StrafeActorTarget = Cast<AActor>(Blackboard->GetValueAsObject(TargetKey.SelectedKeyName));
-	} else
+		if(!StrafeActorTarget) return EBTNodeResult::Failed;
+	}
+	else
 	{
 		StrafeLocationTarget = Blackboard->GetValueAsVector(TargetKey.SelectedKeyName);
 	}
