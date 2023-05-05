@@ -19,8 +19,10 @@ public:
 	void StopSpawningUnits();
 	void SetUnitPool(class AUnitPool* NewUnitPool);
 	void SpawnUnit();
-	void RegisterOwningEncounter(class AEncounterVolume* EncounterVolume);
+	void RegisterOwningEncounter(AEncounterVolume* EncounterVolume);
 	bool IsSpawningComplete() const;
+
+	virtual void Reset() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -33,14 +35,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=MeleeSpawn)
 	int32 NumMeleeUnitsSpawned = 5;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=MeleeSpawn)
-	TSubclassOf<class AEnemyBase> MeleeUnitClass;
+	TSubclassOf<AEnemyBase> MeleeUnitClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=MeleeSpawn)
 	float MeleeUnitsSpawnWeight = 5.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=HealerSpawn)
 	int32 NumHealerUnitsSpawned = 5;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=HealerSpawn)
-	TSubclassOf<class AEnemyBase> HealerUnitClass;
+	TSubclassOf<AEnemyBase> HealerUnitClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=HealerSpawn)
 	float HealerUnitsSpawnWeight = 5.0f;
 
@@ -68,4 +70,5 @@ private:
 	TMap<EEnemyType, int8> UnitsSpawned;
 	unsigned int bShouldSpawnMelee:1, bShouldSpawnHealer:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1, bSpawnComplete:1;
 	void CheckUnitsToSpawn();
+	TSet<AEnemyBase*> SpawnedUnits;
 };

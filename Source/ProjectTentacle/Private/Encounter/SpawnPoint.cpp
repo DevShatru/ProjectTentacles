@@ -61,6 +61,7 @@ void ASpawnPoint::SpawnUnit()
 					   GetWorld()->SpawnActor<AEnemyBase>(TypeToSpawn == EEnemyType::Melee ? MeleeUnitClass :
 														  TypeToSpawn == EEnemyType::Ranged ? RangedUnitClass :
 														  TypeToSpawn == EEnemyType::Brute ? BruteUnitClass : HealerUnitClass);
+	SpawnedUnits.Add(Unit);
 	Unit->SetActorLocation(GetActorLocation());
 	++UnitsSpawned[TypeToSpawn];
 	OwningEncounterVolume->AddSpawnedUnitToEncounter(Unit);
@@ -77,10 +78,32 @@ bool ASpawnPoint::IsSpawningComplete() const
 	return bSpawnComplete;
 }
 
+void ASpawnPoint::Reset()
+{
+	bool bShouldReset = false;
+	for(const TPair<EEnemyType, int8> NumSpawnedOfType : UnitsSpawned)
+	{
+		bShouldReset = bShouldReset || NumSpawnedOfType.Value != 0;
+	}
+	
+	if(!bShouldReset) return;
+
+	for(const AEnemyBase* Unit : SpawnedUnits)
+	{
+		AEnemyBaseController* UnitController = Cast<AEnemyBaseController>(Unit->GetController());
+		if(!UnitController) return;
+		UnitController->OnDeath();
+	}
+	
+	Super::Reset();
+	BeginPlay();
+}
+
 // Called when the game starts or when spawned
 void ASpawnPoint::BeginPlay()
 {
 	Super::BeginPlay();
+	SpawnedUnits.Empty();
 	ResetSpawnPoint();
 	CheckUnitsToSpawn();
 }
