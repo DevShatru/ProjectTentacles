@@ -280,16 +280,17 @@ void APlayerCharacter::OnDeath()
 {
 	bIsDead = true;
 	FTimerHandle DeathResetTimer;
-	GetWorldTimerManager().SetTimer(DeathResetTimer, this, &APlayerCharacter::ResetOnDeath, ResetTime);
+	GetWorldTimerManager().SetTimer(DeathResetTimer, this, &APlayerCharacter::ResetPostDeath, ResetTime);
 }
 
-void APlayerCharacter::ResetOnDeath()
+void APlayerCharacter::ResetPostDeath()
 {
 	TryCacheGameModeRef();
 	if(!GameModeRef) return;
 	
 	bIsDead = false;
 	CharacterCurrentHealth = CharacterMaxHealth;
+	SetActorLocation(GameModeRef->ResetAndGetCheckpointLocation());
 }
 
 void APlayerCharacter::TryCacheGameModeRef()

@@ -76,7 +76,7 @@ private:
 	void BeginRegenerateStamina();
 	void RegeneratingStamina();
 	void OnDeath();
-	void ResetOnDeath();
+	void ResetPostDeath();
 	void TryCacheGameModeRef();
 
 	class AProjectTentacleGameModeBase* GameModeRef;
