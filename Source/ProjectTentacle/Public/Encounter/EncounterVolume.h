@@ -48,14 +48,14 @@ public:
 
 	bool IsComplete() const;
 
+	virtual void Reset() override;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
 	FEncounterComplete EncounterComplete;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	virtual void Reset() override;
 
 	// Area around the encounter to generate navigation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
