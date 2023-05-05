@@ -59,7 +59,7 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	CharacterCurrentHealth = CharacterMaxHealth;
-
+	bIsDead = false;
 	
 }
 
@@ -268,10 +268,23 @@ void APlayerCharacter::RegeneratingStamina()
 {
 	const float StaminaRegenPerCustomTick = StaminaRegenPerSecond * StaminaRegenTickTime;
 
-	CurrentStamina = UKismetMathLibrary::FClamp(CurrentStamina + StaminaRegenPerCustomTick, 0 ,MaxStamina);
+	CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenPerCustomTick, 0.f ,MaxStamina);
 	
 	if(CurrentStamina >= MaxStamina)
 		StopRegenerateStamina();
+}
+
+void APlayerCharacter::OnDeath()
+{
+	bIsDead = true;
+	FTimerHandle DeathResetTimer;
+	GetWorldTimerManager().SetTimer(DeathResetTimer, this, &APlayerCharacter::ResetOnDeath, ResetTime);
+}
+
+void APlayerCharacter::ResetOnDeath()
+{
+	bIsDead = false;
+	CharacterCurrentHealth = CharacterMaxHealth;
 }
 
 void APlayerCharacter::StopRegenerateStamina()
@@ -283,6 +296,12 @@ void APlayerCharacter::StopRegenerateStamina()
 	World->GetTimerManager().ClearTimer(RegenStaminaTimerHandle);
 }
 
+void APlayerCharacter::HealthReduction(int32 ReducingAmount)
+{
+	CharacterCurrentHealth = FMath::Clamp((CharacterCurrentHealth - ReducingAmount),0.f, CharacterMaxHealth);
+
+	if(CharacterCurrentHealth <= 0.f) OnDeath();
+}
 
 // =============================================== Special Ability ===================================================
 
