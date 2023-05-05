@@ -34,7 +34,7 @@ public:
 	void RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController);
 	
 	// Fire when a unit is destroyed tp check if we should trigger spawn and update our queues
-	void RegisterUnitDestroyed(AEnemyBaseController* Unit);
+	void RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bForceDespawn);
 
 	void AddSpawnedUnitToEncounter(AEnemyBase* Unit);
 

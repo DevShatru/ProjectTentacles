@@ -63,7 +63,7 @@ void AEncounterVolume::RegisterCompletedBasicAttack(AEnemyBaseController* Regist
 	StartBasicQueueTimer();
 }
 
-void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
+void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bForceDespawn)
 {
 	// Remove units from queues and set
 	if(AttackQueueBasic.Contains(Unit)) AttackQueueBasic.Remove(Unit);
@@ -76,11 +76,17 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 		bIsEncounterComplete = true;
 		if(EncounterComplete.IsBound()) EncounterComplete.Broadcast();
 	}
-	
-	FTimerHandle DespawnHandle;
-	FTimerDelegate DespawnDelegate;
-	DespawnDelegate.BindUFunction(this, FName("DespawnUnit"), Unit);
-	WorldTimerManager->SetTimer(DespawnHandle, DespawnDelegate, DespawnTimer, false);
+
+	if(bForceDespawn)
+	{
+		DespawnUnit(Unit);	
+	} else
+	{
+		FTimerHandle DespawnHandle;
+		FTimerDelegate DespawnDelegate;
+		DespawnDelegate.BindUFunction(this, FName("DespawnUnit"), Unit);
+		WorldTimerManager->SetTimer(DespawnHandle, DespawnDelegate, DespawnTimer, false);
+	}
 	
 	// Check if spawn has started yet
 	if(bWaveStartedSpawning) return;
