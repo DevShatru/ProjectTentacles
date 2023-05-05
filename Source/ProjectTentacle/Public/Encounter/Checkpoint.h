@@ -3,19 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/TargetPoint.h"
 #include "GameFramework/Actor.h"
 #include "Checkpoint.generated.h"
 
 UCLASS()
-class PROJECTTENTACLE_API ACheckpoint : public AActor
+class PROJECTTENTACLE_API ACheckpoint : public ATargetPoint
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
 	ACheckpoint();
-
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	USceneComponent* Base;
 };
