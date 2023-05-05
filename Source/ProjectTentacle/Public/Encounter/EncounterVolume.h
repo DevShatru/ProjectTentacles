@@ -46,6 +46,8 @@ public:
 
 	virtual void AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy) override;
 
+	bool IsComplete() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
 	FEncounterComplete EncounterComplete;
@@ -107,6 +109,8 @@ private:
 	unsigned int bIsEncounterActive:1;
 	// Track if contained spawn points have begun spawning
 	unsigned int bWaveStartedSpawning:1;
+	// Track whether the encounter is complete yet
+	unsigned int bIsEncounterComplete:1;
 
 	bool AllSpawnsComplete() const;
 	
@@ -123,9 +127,7 @@ private:
 	void TriggerNextWave();
 	void ResetSpawnPoints() const;
 
-	int8 InitialUnits;
-	int8 DefeatedUnits;
-	int8 CurrentWave;
+	int8 InitialUnits, DefeatedUnits, CurrentWave;
 	AEnemyBaseController* LastAttacker;
 	AActor* EncounterTarget;
 	FWaveParams* CurrentWaveParams;

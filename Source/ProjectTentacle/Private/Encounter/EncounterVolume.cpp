@@ -70,9 +70,10 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
 	if(AttackQueueHeavy.Contains(Unit)) AttackQueueHeavy.Remove(Unit);
 	if(ContainedUnits.Contains(Unit->GetOwnPawn())) ContainedUnits.Remove(Unit->GetOwnPawn());
 
-	// TODO If contained units is empty and spawn points are done spawning, we're done
+	// Check if the encounter is complete
 	if(ContainedUnits.Num() <= 0 && AllSpawnsComplete())
 	{
+		bIsEncounterComplete = true;
 		if(EncounterComplete.IsBound()) EncounterComplete.Broadcast();
 	}
 	
@@ -122,6 +123,7 @@ void AEncounterVolume::BeginPlay()
 	Super::BeginPlay();
 	WorldTimerManager = &GetWorldTimerManager();
 	bIsEncounterActive = false;
+	bIsEncounterComplete = false;
 	LastAttacker = nullptr;
 	EncounterTarget = nullptr;
 	CurrentWaveParams = nullptr;
@@ -203,6 +205,11 @@ void AEncounterVolume::AssignQueueEnemyToReposition_Implementation(bool DoesIncl
 	IEncounterVolumeInterface::AssignQueueEnemyToReposition_Implementation(DoesIncludeHeavy);
 
 	SendAllEnemyToReposition(DoesIncludeHeavy);
+}
+
+bool AEncounterVolume::IsComplete() const
+{
+	return bIsEncounterComplete;
 }
 
 // Register this encounter with contained units
