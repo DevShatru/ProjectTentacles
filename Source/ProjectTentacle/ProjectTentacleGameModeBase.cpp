@@ -11,11 +11,11 @@ void AProjectTentacleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	RegisterForCheckpoints();
-	
 	World = GetWorld();
 	if(!World) return;
-	
+
+	RegisterForCheckpoints();
+
 	for (TActorIterator<APlayerCharacter> It(World, APlayerCharacter::StaticClass()); It; ++It)
 	{
 		const APlayerCharacter* PC = *It;
