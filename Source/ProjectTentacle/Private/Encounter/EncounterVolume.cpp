@@ -144,6 +144,7 @@ void AEncounterVolume::Reset()
 		}
 	}
 	Super::Reset();
+	BeginPlay();
 }
 
 // Select random unit to attack
