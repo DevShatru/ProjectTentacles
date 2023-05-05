@@ -18,20 +18,18 @@ class PROJECTTENTACLE_API AProjectTentacleGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 private:
-	FTimerHandle EnemyRepositionTimerHandle;
+	// FTimerHandle EnemyRepositionTimerHandle;
 	
-
 	// Try to grab encounter volume in current map and assign it as our encounter volume reference
-	void TryInitializeEncounterVolumeRef();
+	// void TryInitializeEncounterVolumeRef();
 
-	// 
-	void SetupRepositionSignature();
+	// void SetupRepositionSignature();
 	
-	// 
-	void StartRepositionEnemyLoop();
+	// void StartRepositionEnemyLoop();
 
-	void CacheCheckpointRefs();
-	TSet<const class ACheckpoint*> AllCheckpoints;
+	void RegisterForCheckpoints();
+	FVector ActiveCheckpointLocation;
+	UWorld* World;
 	
 	
 protected:
@@ -55,6 +53,8 @@ protected:
 public:
 
 	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	FVector ResetAndGetCheckpointLocation();
+	void ResetEncounters();
+	void SetActiveCheckpointLocation(const ACheckpoint* NewActiveCheckpoint);
 	
 };

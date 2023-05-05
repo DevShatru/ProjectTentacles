@@ -4,29 +4,63 @@
 #include "ProjectTentacleGameModeBase.h"
 
 #include "EngineUtils.h"
+#include "Characters/Player/PlayerCharacter.h"
 #include "Encounter/Checkpoint.h"
 
 void AProjectTentacleGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	CacheCheckpointRefs();
+	RegisterForCheckpoints();
+	
+	World = GetWorld();
+	if(!World) return;
+	
+	for (TActorIterator<APlayerCharacter> It(World, APlayerCharacter::StaticClass()); It; ++It)
+	{
+		const APlayerCharacter* PC = *It;
+		if(PC)
+		{
+			ActiveCheckpointLocation = PC->GetActorLocation();
+			break;
+		}
+	}
 
 	// TryInitializeEncounterVolumeRef();
 
 	// StartRepositionEnemyLoop();
 }
 
-void AProjectTentacleGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+FVector AProjectTentacleGameModeBase::ResetAndGetCheckpointLocation()
 {
-	AllCheckpoints.Empty();
-	Super::EndPlay(EndPlayReason);
+	ResetEncounters();
+	return ActiveCheckpointLocation;
 }
 
+void AProjectTentacleGameModeBase::ResetEncounters()
+{
+}
+
+void AProjectTentacleGameModeBase::SetActiveCheckpointLocation(const ACheckpoint* NewActiveCheckpoint)
+{
+	ActiveCheckpointLocation = NewActiveCheckpoint->GetActorLocation();
+}
+
+// Get and save a reference to all ACheckpoint actors in the level
+void AProjectTentacleGameModeBase::RegisterForCheckpoints()
+{
+	if(!World) return;
+	
+	for (TActorIterator<ACheckpoint> It(World, ACheckpoint::StaticClass()); It; ++It)
+	{
+		ACheckpoint* Checkpoint = *It;
+		if(Checkpoint) Checkpoint->SetGameModeRef(this);
+	}
+}
+
+/*
 void AProjectTentacleGameModeBase::TryInitializeEncounterVolumeRef()
 {
-
-	UWorld* World = GetWorld();
 	if(!World) return;
 	
 	AActor* ResultActor = nullptr;
@@ -45,7 +79,9 @@ void AProjectTentacleGameModeBase::TryInitializeEncounterVolumeRef()
 	
 	CurrentEncounterVolumeRef = CastedEnVolume;
 }
+*/
 
+/*
 void AProjectTentacleGameModeBase::StartRepositionEnemyLoop()
 {
 	const UWorld* World = GetWorld();
@@ -54,21 +90,9 @@ void AProjectTentacleGameModeBase::StartRepositionEnemyLoop()
 
 	World->GetTimerManager().SetTimer(EnemyRepositionTimerHandle,this, &AProjectTentacleGameModeBase::StartRepositionEnemies, GapTimeToReposition, true, -1);
 }
+*/
 
-// Get and save a reference to all ACheckpoint actors in the level
-void AProjectTentacleGameModeBase::CacheCheckpointRefs()
-{
-	AllCheckpoints.Empty();
-	UWorld* World = GetWorld();
-	if(!World) return;
-	
-	for (TActorIterator<ACheckpoint> It(World, ACheckpoint::StaticClass()); It; ++It)
-	{
-		const ACheckpoint* Checkpoint = *It;
-		if(Checkpoint) AllCheckpoints.Add(Checkpoint);
-	}
-}
-
+/*
 void AProjectTentacleGameModeBase::StartRepositionEnemies()
 {
 	if(!CurrentEncounterVolumeRef) return;
@@ -80,4 +104,5 @@ void AProjectTentacleGameModeBase::StartRepositionEnemies()
 		IEncounterVolumeInterface::Execute_AssignQueueEnemyToReposition(CurrentEncounterVolumeRef, IncludeHeavy);
 	}
 }
+*/
 
