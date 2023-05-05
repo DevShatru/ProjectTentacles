@@ -92,7 +92,7 @@ void ASpawnPoint::Reset()
 	{
 		AEnemyBaseController* UnitController = Cast<AEnemyBaseController>(Unit->GetController());
 		if(!UnitController) return;
-		UnitController->OnDeath();
+		UnitController->OnDeath(true);
 	}
 	
 	Super::Reset();
