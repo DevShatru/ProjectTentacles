@@ -120,11 +120,11 @@ void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 	OwningEncounter->TryTriggerEncounter(Actor);
 }
 
-void AEnemyBaseController::OnDeath()
+void AEnemyBaseController::OnDeath(bool bForceDespawn)
 {
 	Reset();
 	if(!OwningEncounter) return;
-	OwningEncounter->RegisterUnitDestroyed(this);
+	OwningEncounter->RegisterUnitDestroyed(this, bForceDespawn);
 }
 
 void AEnemyBaseController::HealEncounterTarget(float HealAmount)

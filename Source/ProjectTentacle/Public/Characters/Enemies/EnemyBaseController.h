@@ -41,7 +41,7 @@ public:
 
 	virtual void Reset() override;
 
-	void OnDeath();
+	void OnDeath(bool bForceDespawn = false);
 
 	void HealEncounterTarget(float HealAmount);
 	
