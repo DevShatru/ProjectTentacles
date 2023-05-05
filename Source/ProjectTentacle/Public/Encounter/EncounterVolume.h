@@ -55,6 +55,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual void Reset() override;
+
 	// Area around the encounter to generate navigation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UNavigationInvokerComponent* NavInvoker;
