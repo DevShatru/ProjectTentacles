@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Encounter/EncounterVolume.h"
 #include "GameFramework/GameModeBase.h"
 #include "ProjectTentacleGameModeBase.generated.h"
 
@@ -28,8 +27,11 @@ private:
 	// void StartRepositionEnemyLoop();
 
 	void RegisterForCheckpoints();
+	void CacheEncounterReferences();
 	FVector ActiveCheckpointLocation;
 	UWorld* World;
+
+	TSet<class AEncounterVolume*> AllEncounters;
 	
 	
 protected:

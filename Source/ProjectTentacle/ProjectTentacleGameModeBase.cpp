@@ -6,6 +6,7 @@
 #include "EngineUtils.h"
 #include "Characters/Player/PlayerCharacter.h"
 #include "Encounter/Checkpoint.h"
+#include "Encounter/EncounterVolume.h"
 
 void AProjectTentacleGameModeBase::BeginPlay()
 {
@@ -15,6 +16,7 @@ void AProjectTentacleGameModeBase::BeginPlay()
 	if(!World) return;
 
 	RegisterForCheckpoints();
+	CacheEncounterReferences();
 
 	for (TActorIterator<APlayerCharacter> It(World, APlayerCharacter::StaticClass()); It; ++It)
 	{
@@ -39,6 +41,10 @@ FVector AProjectTentacleGameModeBase::ResetAndGetCheckpointLocation()
 
 void AProjectTentacleGameModeBase::ResetEncounters()
 {
+	for(AEncounterVolume* Encounter : AllEncounters)
+	{
+		if(!Encounter->IsComplete()) Encounter->Reset();
+	}
 }
 
 void AProjectTentacleGameModeBase::SetActiveCheckpointLocation(const ACheckpoint* NewActiveCheckpoint)
@@ -55,6 +61,17 @@ void AProjectTentacleGameModeBase::RegisterForCheckpoints()
 	{
 		ACheckpoint* Checkpoint = *It;
 		if(Checkpoint) Checkpoint->SetGameModeRef(this);
+	}
+}
+
+void AProjectTentacleGameModeBase::CacheEncounterReferences()
+{
+	if(!World) return;
+	
+	for (TActorIterator<AEncounterVolume> It(World, AEncounterVolume::StaticClass()); It; ++It)
+	{
+		AEncounterVolume* Encounter = *It;
+		if(Encounter) AllEncounters.Add(Encounter);
 	}
 }
 
