@@ -10,13 +10,6 @@
 void UProjectTentacleGameInstance::Init()
 {
 	Super::Init();
-	
-
-	for (TActorIterator<APlayerCharacter> It(GetWorld(), APlayerCharacter::StaticClass()); It; ++It)
-	{
-		PC = *It;
-		if(PC) break;
-	}
 	SaveObject = Cast<UCheckpointSave>(UGameplayStatics::CreateSaveGameObject(SaveObjectClass));
 	SaveGame();
 }
@@ -48,8 +41,21 @@ void UProjectTentacleGameInstance::OnLevelLoad(ULevelStreamingDynamic* LoadedLev
 {
 }
 
-void UProjectTentacleGameInstance::SaveGame() const
+void UProjectTentacleGameInstance::TryCachePC()
 {
+	if(PC) return;
+	
+	for (TActorIterator<APlayerCharacter> It(GetWorld(), APlayerCharacter::StaticClass()); It; ++It)
+	{
+		PC = *It;
+		if(PC) break;
+	}
+}
+
+void UProjectTentacleGameInstance::SaveGame()
+{
+	TryCachePC();
+	if(!PC) return;
 	SaveObject->PlayerHealth = PC->GetCurrentCharacterHealth();
 	SaveObject->PlayerLocation = PC->GetActorLocation();
 	UGameplayStatics::AsyncSaveGameToSlot(SaveObject, SaveObject->GetSlotName(), SaveObject->GetSlotIndex());

@@ -291,7 +291,7 @@ void APlayerCharacter::ResetPostDeath()
 	bIsDead = false;
 	CharacterCurrentHealth = CharacterMaxHealth;
 	
-	TryCacheGameModeRef();
+	TryCacheInstanceRef();
 	if(InstanceRef) InstanceRef->ReloadLastSave();
 	//SetActorLocation(GameModeRef->ResetAndGetCheckpointLocation());
 }

@@ -17,7 +17,7 @@ class PROJECTTENTACLE_API UProjectTentacleGameInstance : public UGameInstance
 
 public:
 	void ReloadLastSave();
-	void SaveGame() const;
+	void SaveGame();
 
 protected:
 	virtual void Init() override;
@@ -34,4 +34,5 @@ protected:
 	
 private:
 	class APlayerCharacter* PC;
+	void TryCachePC();
 };
