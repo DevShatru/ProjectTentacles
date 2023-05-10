@@ -78,27 +78,6 @@ bool ASpawnPoint::IsSpawningComplete() const
 	return bSpawnComplete;
 }
 
-void ASpawnPoint::Reset()
-{
-	bool bShouldReset = false;
-	for(const TPair<EEnemyType, int8> NumSpawnedOfType : UnitsSpawned)
-	{
-		bShouldReset = bShouldReset || NumSpawnedOfType.Value != 0;
-	}
-	
-	if(!bShouldReset) return;
-
-	for(const AEnemyBase* Unit : SpawnedUnits)
-	{
-		AEnemyBaseController* UnitController = Cast<AEnemyBaseController>(Unit->GetController());
-		if(!UnitController) return;
-		UnitController->OnDeath(true);
-	}
-	
-	Super::Reset();
-	Setup();
-}
-
 // Called when the game starts or when spawned
 void ASpawnPoint::BeginPlay()
 {

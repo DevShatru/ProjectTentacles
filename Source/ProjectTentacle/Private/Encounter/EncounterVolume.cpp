@@ -130,21 +130,6 @@ void AEncounterVolume::BeginPlay()
 	Setup();
 }
 
-void AEncounterVolume::Reset()
-{
-	if(!bIsEncounterActive) return;
-
-	for(int8 i = 0; i < WaveParameters.Num(); ++i)
-	{
-		for(ASpawnPoint* SpawnPoint: (&WaveParameters[i])->ContainedSpawnPoints)
-		{
-			SpawnPoint->Reset();
-		}
-	}
-	Super::Reset();
-	Setup();
-}
-
 // Select random unit to attack
 void AEncounterVolume::BeginAttackBasic()
 {

@@ -48,8 +48,6 @@ public:
 
 	bool IsComplete() const;
 
-	virtual void Reset() override;
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
 	FEncounterComplete EncounterComplete;
