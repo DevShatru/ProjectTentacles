@@ -24,6 +24,7 @@ void UProjectTentacleGameInstance::OnSaveLoad(const FString& SlotName, const int
 
 	SaveObject = AsCheckpointSave;
 
+	AllEncounterVolumes.Empty();
 	const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
 	UGameplayStatics::OpenLevel(GetWorld(), FName(*CurrentLevelName));
 
@@ -68,6 +69,11 @@ void UProjectTentacleGameInstance::SaveGame()
 	SaveObject->PlayerLocation = PC->GetActorLocation();
 	UGameplayStatics::AsyncSaveGameToSlot(SaveObject, SaveObject->GetSlotName(), SaveObject->GetSlotIndex());
 	if(!bCompletedFirstSave) bCompletedFirstSave = true;
+}
+
+void UProjectTentacleGameInstance::RegisterEncounterVolume(AEncounterVolume* Volume)
+{
+	AllEncounterVolumes.Add(Volume);
 }
 
 bool UProjectTentacleGameInstance::ShouldSaveAtPCSpawn() const

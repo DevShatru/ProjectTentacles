@@ -18,6 +18,7 @@ class PROJECTTENTACLE_API UProjectTentacleGameInstance : public UGameInstance
 public:
 	void ReloadLastSave();
 	void SaveGame();
+	void RegisterEncounterVolume(class AEncounterVolume* Volume);
 	bool ShouldSaveAtPCSpawn() const;
 
 protected:
@@ -39,4 +40,5 @@ private:
 	class APlayerCharacter* PC;
 	unsigned int bCompletedFirstSave:1;
 	void TryCachePC(bool bForce = false);
+	TSet<AEncounterVolume*> AllEncounterVolumes;
 };

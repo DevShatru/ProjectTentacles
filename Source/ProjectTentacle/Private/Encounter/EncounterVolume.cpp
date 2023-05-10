@@ -4,6 +4,7 @@
 #include "Encounter/EncounterVolume.h"
 
 #include "NavigationInvokerComponent.h"
+#include "ProjectTentacleGameInstance.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"
@@ -188,6 +189,7 @@ void AEncounterVolume::Setup()
 	InitialUnits = ContainedUnits.Num();
 	CurrentWave = -1;
 	RegisterEncounterForUnits();
+	Cast<UProjectTentacleGameInstance>(GetGameInstance())->RegisterEncounterVolume(this);
 }
 
 // for loop to send all enemy to reposition
