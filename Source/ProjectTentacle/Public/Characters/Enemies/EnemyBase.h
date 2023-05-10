@@ -24,6 +24,8 @@ class PROJECTTENTACLE_API AEnemyBase : public ACharacter, public ICharacterActio
 	GENERATED_BODY()
 
 protected:
+	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

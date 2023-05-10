@@ -38,6 +38,28 @@ void AEnemyBase::EngageTarget(AActor* Target)
 	OwnController->EngageTarget(Target);
 }
 
+void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
+	EPlayerAttackType PlayerAttackType)
+{
+	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
+	
+	HealthReduction(DamageAmount);
+	
+	if((Health - DamageAmount) > 0)
+	{
+		PlayReceiveDamageAnimation(PlayerAttackType);
+		return;
+	}
+
+	if(CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered)
+	{
+		TryGetOwnController();
+		OwnController->RegisterCompletedAttack();
+	}
+	
+	OnDeath();
+}
+
 // Called when the game starts or when spawned
 void AEnemyBase::BeginPlay()
 {
