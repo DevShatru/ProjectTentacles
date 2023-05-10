@@ -41,7 +41,7 @@ void ACheckpoint::OnTrigger(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if(const APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
 	{
 		bIsActive = false;
-		GameModeRef->SetActiveCheckpointLocation(this);
+		GameModeRef->SaveGame();
 		if(CheckpointTrigger->OnComponentBeginOverlap.IsAlreadyBound(this, &ACheckpoint::OnTrigger)) CheckpointTrigger->OnComponentBeginOverlap.RemoveDynamic(this, &ACheckpoint::OnTrigger);
 	}
 }
