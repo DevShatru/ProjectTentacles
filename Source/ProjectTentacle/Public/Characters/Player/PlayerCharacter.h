@@ -266,6 +266,7 @@ public:
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}
 
 	int32 GetCurrentCharacterHealth() const {return CharacterCurrentHealth;}
+	void SetCurrentCharacterHealth(float CurrentHealth) {CharacterCurrentHealth = FMath::Clamp(CurrentHealth, 0.f, CharacterMaxHealth);}
 	void HealthReduction(int32 ReducingAmount); 
 
 	// ================================================= Interface implementation =========================================
