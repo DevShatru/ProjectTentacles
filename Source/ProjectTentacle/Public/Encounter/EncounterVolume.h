@@ -101,6 +101,8 @@ protected:
 	void DespawnUnit(AEnemyBaseController* Unit);
 	
 private:
+	// Called on begin play and reset
+	void Setup();
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();
 	// Register the encounter object with each contained spawn point

@@ -64,6 +64,7 @@ protected:
 	AUnitPool* UnitPool;
 	
 private:
+	void Setup();
 	void ResetSpawnPoint();
 	AEncounterVolume* OwningEncounterVolume;
 	FTimerHandle SpawnTimerHandle;

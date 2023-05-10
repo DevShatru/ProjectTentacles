@@ -96,13 +96,18 @@ void ASpawnPoint::Reset()
 	}
 	
 	Super::Reset();
-	BeginPlay();
+	Setup();
 }
 
 // Called when the game starts or when spawned
 void ASpawnPoint::BeginPlay()
 {
 	Super::BeginPlay();
+	Setup();
+}
+
+void ASpawnPoint::Setup()
+{
 	SpawnedUnits.Empty();
 	ResetSpawnPoint();
 	CheckUnitsToSpawn();

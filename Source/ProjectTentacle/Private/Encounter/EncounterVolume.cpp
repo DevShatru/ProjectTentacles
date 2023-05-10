@@ -127,15 +127,7 @@ void AEncounterVolume::RemoveDeadUnitFromEncounter(AEnemyBaseController* DeadUni
 void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	WorldTimerManager = &GetWorldTimerManager();
-	bIsEncounterActive = false;
-	bIsEncounterComplete = false;
-	LastAttacker = nullptr;
-	EncounterTarget = nullptr;
-	CurrentWaveParams = nullptr;
-	InitialUnits = ContainedUnits.Num();
-	CurrentWave = -1;
-	RegisterEncounterForUnits();
+	Setup();
 }
 
 void AEncounterVolume::Reset()
@@ -150,7 +142,7 @@ void AEncounterVolume::Reset()
 		}
 	}
 	Super::Reset();
-	BeginPlay();
+	Setup();
 }
 
 // Select random unit to attack
@@ -198,6 +190,19 @@ void AEncounterVolume::DespawnUnit(AEnemyBaseController* Unit)
 		return;
 	}
 	UnitPool->AddUnitToPool(Unit->GetOwnPawn());
+}
+
+void AEncounterVolume::Setup()
+{
+	WorldTimerManager = &GetWorldTimerManager();
+	bIsEncounterActive = false;
+	bIsEncounterComplete = false;
+	LastAttacker = nullptr;
+	EncounterTarget = nullptr;
+	CurrentWaveParams = nullptr;
+	InitialUnits = ContainedUnits.Num();
+	CurrentWave = -1;
+	RegisterEncounterForUnits();
 }
 
 // for loop to send all enemy to reposition
