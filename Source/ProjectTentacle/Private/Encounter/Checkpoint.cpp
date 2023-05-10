@@ -3,6 +3,7 @@
 
 #include "Encounter/Checkpoint.h"
 
+#include "ProjectTentacleGameInstance.h"
 #include "Characters/Player/PlayerCharacter.h"
 #include "Components/BoxComponent.h"
 #include "ProjectTentacle/ProjectTentacleGameModeBase.h"
@@ -21,11 +22,7 @@ void ACheckpoint::BeginPlay()
 {
 	Super::BeginPlay();
 	bIsActive = true;
-}
-
-void ACheckpoint::SetGameModeRef(AProjectTentacleGameModeBase* GameMode)
-{
-	GameModeRef = GameMode;
+	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
 }
 
 FVector ACheckpoint::GetOffsetLocation() const
@@ -41,7 +38,7 @@ void ACheckpoint::OnTrigger(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if(const APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
 	{
 		bIsActive = false;
-		GameModeRef->SaveGame();
+		if(InstanceRef) InstanceRef->SaveGame();
 		if(CheckpointTrigger->OnComponentBeginOverlap.IsAlreadyBound(this, &ACheckpoint::OnTrigger)) CheckpointTrigger->OnComponentBeginOverlap.RemoveDynamic(this, &ACheckpoint::OnTrigger);
 	}
 }

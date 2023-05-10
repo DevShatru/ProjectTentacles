@@ -27,7 +27,6 @@ private:
 	
 	// void StartRepositionEnemyLoop();
 
-	void RegisterForCheckpoints();
 	void CacheEncounterReferences();
 	FVector ActiveCheckpointLocation;
 	UWorld* World;
@@ -53,7 +52,4 @@ protected:
 	
 public:
 	virtual void BeginPlay() override;
-	FVector ResetAndGetCheckpointLocation();
-	void ResetEncounters();
-	void SetActiveCheckpointLocation(const class ACheckpoint* NewActiveCheckpoint);
 };

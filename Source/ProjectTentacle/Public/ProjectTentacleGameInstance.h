@@ -14,7 +14,11 @@ UCLASS()
 class PROJECTTENTACLE_API UProjectTentacleGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	
+
+public:
+	void ReloadLastSave();
+	void SaveGame() const;
+
 protected:
 	virtual void Init() override;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -30,6 +34,4 @@ protected:
 	
 private:
 	class APlayerCharacter* PC;
-	void SaveGame() const;
-	void ReloadLastSave();
 };

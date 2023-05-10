@@ -19,7 +19,7 @@ public:
 	void StopSpawningUnits();
 	void SetUnitPool(class AUnitPool* NewUnitPool);
 	void SpawnUnit();
-	void RegisterOwningEncounter(AEncounterVolume* EncounterVolume);
+	void RegisterOwningEncounter(class AEncounterVolume* EncounterVolume);
 	bool IsSpawningComplete() const;
 
 	virtual void Reset() override;
@@ -35,7 +35,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=MeleeSpawn)
 	int32 NumMeleeUnitsSpawned = 5;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=MeleeSpawn)
-	TSubclassOf<AEnemyBase> MeleeUnitClass;
+	TSubclassOf<class AEnemyBase> MeleeUnitClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=MeleeSpawn)
 	float MeleeUnitsSpawnWeight = 5.0f;
 	

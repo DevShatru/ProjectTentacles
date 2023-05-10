@@ -78,8 +78,10 @@ private:
 	void OnDeath();
 	void ResetPostDeath();
 	void TryCacheGameModeRef();
+	void TryCacheInstanceRef();
 
 	class AProjectTentacleGameModeBase* GameModeRef;
+	class UProjectTentacleGameInstance* InstanceRef;
 
 	unsigned int bIsDead:1;
 	

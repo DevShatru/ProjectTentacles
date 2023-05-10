@@ -5,11 +5,7 @@
 
 #include "EngineUtils.h"
 #include "Characters/Player/PlayerCharacter.h"
-#include "Encounter/Checkpoint.h"
-#include "Encounter/CheckpointSave.h"
 #include "Encounter/EncounterVolume.h"
-#include "Engine/LevelStreamingDynamic.h"
-#include "Kismet/GameplayStatics.h"
 
 void AProjectTentacleGameModeBase::BeginPlay()
 {
@@ -18,7 +14,6 @@ void AProjectTentacleGameModeBase::BeginPlay()
 	World = GetWorld();
 	if(!World) return;
 
-	RegisterForCheckpoints();
 	CacheEncounterReferences();
 
 	for (TActorIterator<APlayerCharacter> It(World, APlayerCharacter::StaticClass()); It; ++It)
@@ -33,37 +28,6 @@ void AProjectTentacleGameModeBase::BeginPlay()
 	// TryInitializeEncounterVolumeRef();
 
 	// StartRepositionEnemyLoop();
-}
-
-FVector AProjectTentacleGameModeBase::ResetAndGetCheckpointLocation()
-{
-	ResetEncounters();
-	return ActiveCheckpointLocation;
-}
-
-void AProjectTentacleGameModeBase::ResetEncounters()
-{
-	for(AEncounterVolume* Encounter : AllEncounters)
-	{
-		if(!Encounter->IsComplete()) Encounter->Reset();
-	}
-}
-
-void AProjectTentacleGameModeBase::SetActiveCheckpointLocation(const ACheckpoint* NewActiveCheckpoint)
-{
-	ActiveCheckpointLocation = NewActiveCheckpoint->GetOffsetLocation();
-}
-
-// Get and save a reference to all ACheckpoint actors in the level
-void AProjectTentacleGameModeBase::RegisterForCheckpoints()
-{
-	if(!World) return;
-	
-	for (TActorIterator<ACheckpoint> It(World, ACheckpoint::StaticClass()); It; ++It)
-	{
-		ACheckpoint* Checkpoint = *It;
-		if(Checkpoint) Checkpoint->SetGameModeRef(this);
-	}
 }
 
 void AProjectTentacleGameModeBase::CacheEncounterReferences()

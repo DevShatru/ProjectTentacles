@@ -3,6 +3,7 @@
 
 #include "Characters/Player/PlayerCharacter.h"
 
+#include "ProjectTentacleGameInstance.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -291,7 +292,7 @@ void APlayerCharacter::ResetPostDeath()
 	CharacterCurrentHealth = CharacterMaxHealth;
 	
 	TryCacheGameModeRef();
-	GameModeRef->ReloadLastSave();
+	if(InstanceRef) InstanceRef->ReloadLastSave();
 	//SetActorLocation(GameModeRef->ResetAndGetCheckpointLocation());
 }
 
@@ -300,6 +301,13 @@ void APlayerCharacter::TryCacheGameModeRef()
 	if(GameModeRef) return;
 
 	GameModeRef = Cast<AProjectTentacleGameModeBase>(GetWorld()->GetAuthGameMode());
+}
+
+void APlayerCharacter::TryCacheInstanceRef()
+{
+	if(InstanceRef) return;
+
+	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
 }
 
 void APlayerCharacter::StopRegenerateStamina()

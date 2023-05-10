@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "Checkpoint.generated.h"
 
+class UProjectTentacleGameInstance;
 UCLASS()
 class PROJECTTENTACLE_API ACheckpoint : public ATargetPoint
 {
@@ -16,7 +17,6 @@ public:
 	// Sets default values for this actor's properties
 	ACheckpoint();
 	virtual void BeginPlay() override;
-	void SetGameModeRef(class AProjectTentacleGameModeBase* GameMode);
 	FVector GetOffsetLocation() const;
 
 protected:
@@ -30,6 +30,6 @@ protected:
 	void OnTrigger(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	
 private:
-	AProjectTentacleGameModeBase* GameModeRef;
+	UProjectTentacleGameInstance* InstanceRef;
 	unsigned int bIsActive;
 };
