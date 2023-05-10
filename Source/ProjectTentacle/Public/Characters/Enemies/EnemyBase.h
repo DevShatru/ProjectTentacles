@@ -24,6 +24,8 @@ class PROJECTTENTACLE_API AEnemyBase : public ACharacter, public ICharacterActio
 	GENERATED_BODY()
 
 protected:
+	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -165,17 +167,16 @@ protected:
 	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
 	
 	void HealthReduction(float DamageAmount);
-
 	
-	// ===================================================== On Death =======================================================
-	virtual void OnDeath();
-
 	void RagDollPhysicsOnDead();
 
 	UFUNCTION()
 	void TimeoutAttack();
 	
 public:
+	// ===================================================== On Death =======================================================
+	virtual void OnDeath();
+	
 	void StartAttackTimeout();
 	void EnableStrafe(bool bStrafe = true) const;
 	void ExecuteRangedAttack(AActor* Target);
@@ -260,11 +261,9 @@ public:
 	
 	virtual void UnShowPlayerTargetIndicator_Implementation() override;
 	
-
-private:
-	
 	void TryGetOwnController();
-
+	
+private:
 	void TryClearFromPlayerTarget();
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);

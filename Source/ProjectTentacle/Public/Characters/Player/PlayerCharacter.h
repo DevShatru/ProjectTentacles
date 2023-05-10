@@ -84,8 +84,20 @@ private:
 	void RegeneratingStamina();
 
 	bool AbleRotateVision = true; 
+	void OnDeath();
+	void ResetPostDeath();
+	void TryCacheGameModeRef();
+	void TryCacheInstanceRef();
+
+	class AProjectTentacleGameModeBase* GameModeRef;
+	class UProjectTentacleGameInstance* InstanceRef;
+
+	unsigned int bIsDead:1;
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
+	float ResetTime = 5.f;
+	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	class UUserWidget_HitIndicator* HUDRef;
 
@@ -236,7 +248,6 @@ public:
 	// ================================================= 
 	
 	virtual void BeginPlay() override;
-
 	virtual void Tick(float DeltaSeconds) override;
 	
 
@@ -318,7 +329,8 @@ public:
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}
 
 	int32 GetCurrentCharacterHealth() const {return CharacterCurrentHealth;}
-	void HealthReduction(int32 ReducingAmount) {CharacterCurrentHealth = UKismetMathLibrary::Clamp((CharacterCurrentHealth - ReducingAmount),0, CharacterMaxHealth);}
+	void SetCurrentCharacterHealth(float CurrentHealth) {CharacterCurrentHealth = FMath::Clamp(CurrentHealth, 0.f, CharacterMaxHealth);}
+	void HealthReduction(int32 ReducingAmount); 
 
 	// ================================================= Interface implementation =========================================
 	
