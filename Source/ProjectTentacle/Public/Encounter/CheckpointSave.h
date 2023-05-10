@@ -20,6 +20,9 @@ public:
 	
 	UPROPERTY()
 	float PlayerHealth;
+
+	UPROPERTY()
+	TSet<FString> CompletedEncounters;
 	
 	FString GetSlotName();
 	int32 GetSlotIndex() const;

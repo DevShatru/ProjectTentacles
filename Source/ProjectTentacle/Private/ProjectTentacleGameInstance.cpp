@@ -5,6 +5,7 @@
 
 #include "EngineUtils.h"
 #include "Characters/Player/PlayerCharacter.h"
+#include "Encounter/EncounterVolume.h"
 #include "Engine/LevelStreaming.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -67,6 +68,12 @@ void UProjectTentacleGameInstance::SaveGame()
 	if(!PC) return;
 	SaveObject->PlayerHealth = PC->GetCurrentCharacterHealth();
 	SaveObject->PlayerLocation = PC->GetActorLocation();
+	
+	for(const AEncounterVolume* Volume: AllEncounterVolumes)
+	{
+		if(Volume->IsComplete()) SaveObject->CompletedEncounters.Add(Volume->GetName());	
+	}
+	
 	UGameplayStatics::AsyncSaveGameToSlot(SaveObject, SaveObject->GetSlotName(), SaveObject->GetSlotIndex());
 	if(!bCompletedFirstSave) bCompletedFirstSave = true;
 }
