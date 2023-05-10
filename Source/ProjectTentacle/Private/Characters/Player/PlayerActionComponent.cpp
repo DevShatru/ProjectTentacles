@@ -923,12 +923,18 @@ void UPlayerActionComponent::MovingAttackMovement(float Alpha)
 void UPlayerActionComponent::DodgeMovement(float Alpha)
 {
 	const FVector CharacterCurrentPos = PlayerOwnerRef->GetActorLocation();
-	
 	const FVector MovingPos = UKismetMathLibrary::VLerp(MovingStartPos, MovingEndPos, Alpha);
-
 	const FVector LaunchingPos = FVector(MovingPos.X, MovingPos.Y, CharacterCurrentPos.Z);
 
-	PlayerOwnerRef->SetActorLocation(LaunchingPos);
+	// // Try To Get if building is blocking or not
+	// FHitResult Hit;
+	// TArray<AActor*> IgnoreActors;
+	// IgnoreActors.Add(PlayerOwnerRef);
+	// const bool IsHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), CharacterCurrentPos, LaunchingPos, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+	//
+	// if(!IsHit)
+
+	PlayerOwnerRef->SetActorLocation(LaunchingPos, true);
 }
 
 void UPlayerActionComponent::UpdateTargetPosition()

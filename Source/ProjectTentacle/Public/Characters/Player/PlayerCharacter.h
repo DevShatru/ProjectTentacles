@@ -76,13 +76,13 @@ private:
 
 	void CreatCameraComponents();
 
+	void TryCachePlayerController();
 	
 	void StopRegenerateStamina();
 	void WaitToRegenStamina();
 	void BeginRegenerateStamina();
 	void RegeneratingStamina();
 
-	void SetDifferentViewTarget(APlayerController* PlayerControl, AActor* NewCameraActor);
 	bool AbleRotateVision = true; 
 	
 protected:
@@ -94,6 +94,9 @@ protected:
 
 	UPROPERTY()
 	float IndicatorHUDRemainTime = 0;
+
+	UPROPERTY()
+	APlayerController* PlayerCurrentController;
 	
 	
 	// APawn interface
@@ -102,10 +105,10 @@ protected:
 	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
+	class USpringArmComponent* CombatSpringArm;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* ActionSpringArmComp;
+	class USpringArmComponent* ExecutionSpringArm;
 	
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -142,12 +145,6 @@ protected:
 	UPROPERTY()
 	EPlayerAttackType CurrentAttackType;
 	
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
-	float DistanceToPlayer = 200.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
-	float DesiredRotationToPlayer = 270.0f;
 	
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
 	// bool CameraMoveEaseOut = true;
