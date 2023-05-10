@@ -46,6 +46,7 @@ public:
 
 	virtual void AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy) override;
 
+	void MarkComplete();
 	bool IsComplete() const;
 
 protected:

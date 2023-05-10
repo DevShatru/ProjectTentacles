@@ -4,6 +4,7 @@
 #include "Encounter/EncounterVolume.h"
 
 #include "NavigationInvokerComponent.h"
+#include "ProjectTentacleGameInstance.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"
@@ -28,7 +29,7 @@ AEncounterVolume::AEncounterVolume()
 void AEncounterVolume::TryTriggerEncounter(AActor* Target)
 {
 	// Early return if encounter has already begun
-	if(bIsEncounterActive) return;
+	if(bIsEncounterActive || bIsEncounterComplete) return;
 	bIsEncounterActive = true;
 	EngageContainedUnits(Target);
 	TriggerNextWave();
@@ -188,6 +189,7 @@ void AEncounterVolume::Setup()
 	InitialUnits = ContainedUnits.Num();
 	CurrentWave = -1;
 	RegisterEncounterForUnits();
+	Cast<UProjectTentacleGameInstance>(GetGameInstance())->RegisterEncounterVolume(this);
 }
 
 // for loop to send all enemy to reposition
@@ -216,6 +218,16 @@ void AEncounterVolume::AssignQueueEnemyToReposition_Implementation(bool DoesIncl
 	IEncounterVolumeInterface::AssignQueueEnemyToReposition_Implementation(DoesIncludeHeavy);
 
 	SendAllEnemyToReposition(DoesIncludeHeavy);
+}
+
+void AEncounterVolume::MarkComplete()
+{
+	bIsEncounterComplete = true;
+	for(AEnemyBase* Unit: ContainedUnits)
+	{
+		ContainedUnits.Remove(Unit);
+		Unit->OnDeath();
+	}
 }
 
 bool AEncounterVolume::IsComplete() const

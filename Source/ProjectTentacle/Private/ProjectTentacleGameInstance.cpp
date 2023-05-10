@@ -5,6 +5,7 @@
 
 #include "EngineUtils.h"
 #include "Characters/Player/PlayerCharacter.h"
+#include "Encounter/EncounterVolume.h"
 #include "Engine/LevelStreaming.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -24,6 +25,7 @@ void UProjectTentacleGameInstance::OnSaveLoad(const FString& SlotName, const int
 
 	SaveObject = AsCheckpointSave;
 
+	AllEncounterVolumes.Empty();
 	const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
 	UGameplayStatics::OpenLevel(GetWorld(), FName(*CurrentLevelName));
 
@@ -35,6 +37,10 @@ void UProjectTentacleGameInstance::OnLevelLoad()
 	TryCachePC();
 	PC->SetActorLocation(SaveObject->PlayerLocation);
 	PC->SetCurrentCharacterHealth(SaveObject->PlayerHealth);
+	for(AEncounterVolume* Volume: AllEncounterVolumes)
+	{
+		if(SaveObject->CompletedEncounters.Contains(Volume->GetName())) Volume->MarkComplete();
+	}
 }
 
 void UProjectTentacleGameInstance::WaitForLevelLoad()
@@ -66,8 +72,19 @@ void UProjectTentacleGameInstance::SaveGame()
 	if(!PC) return;
 	SaveObject->PlayerHealth = PC->GetCurrentCharacterHealth();
 	SaveObject->PlayerLocation = PC->GetActorLocation();
+	
+	for(const AEncounterVolume* Volume: AllEncounterVolumes)
+	{
+		if(Volume->IsComplete()) SaveObject->CompletedEncounters.Add(Volume->GetName());	
+	}
+	
 	UGameplayStatics::AsyncSaveGameToSlot(SaveObject, SaveObject->GetSlotName(), SaveObject->GetSlotIndex());
 	if(!bCompletedFirstSave) bCompletedFirstSave = true;
+}
+
+void UProjectTentacleGameInstance::RegisterEncounterVolume(AEncounterVolume* Volume)
+{
+	AllEncounterVolumes.Add(Volume);
 }
 
 bool UProjectTentacleGameInstance::ShouldSaveAtPCSpawn() const
