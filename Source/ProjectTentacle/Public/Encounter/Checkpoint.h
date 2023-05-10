@@ -17,11 +17,15 @@ public:
 	ACheckpoint();
 	virtual void BeginPlay() override;
 	void SetGameModeRef(class AProjectTentacleGameModeBase* GameMode);
+	FVector GetOffsetLocation() const;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FVector HeightOffset = FVector(0.f, 0.f, 88.f);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UBoxComponent* CheckpointTrigger;
-
+	
 	UFUNCTION()
 	void OnTrigger(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	

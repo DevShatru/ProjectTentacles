@@ -49,7 +49,7 @@ void AProjectTentacleGameModeBase::ResetEncounters()
 
 void AProjectTentacleGameModeBase::SetActiveCheckpointLocation(const ACheckpoint* NewActiveCheckpoint)
 {
-	ActiveCheckpointLocation = NewActiveCheckpoint->GetActorLocation();
+	ActiveCheckpointLocation = NewActiveCheckpoint->GetOffsetLocation();
 }
 
 // Get and save a reference to all ACheckpoint actors in the level
