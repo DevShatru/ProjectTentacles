@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Encounter/CheckpointSave.h"
 #include "GameFramework/GameModeBase.h"
 #include "ProjectTentacleGameModeBase.generated.h"
 
@@ -35,6 +36,17 @@ private:
 	
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UCheckpointSave> SaveObjectClass = UCheckpointSave::StaticClass();
+
+	UPROPERTY()
+	UCheckpointSave* SaveObject;
+
+	UFUNCTION()
+	void OnSaveLoad(const FString& SlotName, const int32 SlotID, USaveGame* Save);
+	
+	UFUNCTION()
+	void OnLevelLoad(ULevelStreamingDynamic* LoadedLevel, bool bIsSuccess, const FString& Error, const FVector& NewLocation);
 
 	// encounter volume reference
 	UPROPERTY()
@@ -53,9 +65,11 @@ protected:
 	
 	
 public:
-
+	class APlayerCharacter* PC;
 	virtual void BeginPlay() override;
 	FVector ResetAndGetCheckpointLocation();
 	void ResetEncounters();
 	void SetActiveCheckpointLocation(const class ACheckpoint* NewActiveCheckpoint);
+	void SaveGame() const;
+	void ReloadLastSave();
 };
