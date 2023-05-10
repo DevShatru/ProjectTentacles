@@ -7,6 +7,7 @@
 #include "PlayerCameraInterface.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "Components/TimelineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerCharacter.generated.h"
 
@@ -73,12 +74,15 @@ private:
 	static FGenericTeamId TeamId;
 	virtual FGenericTeamId GetGenericTeamId() const override;
 
+	void CreatCameraComponents();
+
+	
 	void StopRegenerateStamina();
 	void WaitToRegenStamina();
 	void BeginRegenerateStamina();
 	void RegeneratingStamina();
 
-	void MoveCameraTo(class USpringArmComponent* DestinationSpringArm, float ChangedRelativeRotation);
+	void SetDifferentViewTarget(APlayerController* PlayerControl, AActor* NewCameraActor);
 	bool AbleRotateVision = true; 
 	
 protected:
@@ -105,8 +109,16 @@ protected:
 	
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FollowCamera;
+	class UCameraComponent* CombatCamera;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UChildActorComponent* CombatCameraChild;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* ExecutionCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UChildActorComponent* ExecutionCameraChild;
 
 	// Current playing reference to be check if valid
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -124,21 +136,39 @@ protected:
 
 	bool IsPlayerCounterable = false;
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DynamicCameraSetting)
-	bool CameraMoveEaseOut = true;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DynamicCameraSetting)
-	bool CameraMoveEaseIn = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DynamicCameraSetting)
-	float CameraMoveTime = 0.4f;
-
 	EPlayerCameraType CurrentCameraType = EPlayerCameraType::InCombat;
 	
 	
 	UPROPERTY()
 	EPlayerAttackType CurrentAttackType;
+	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
+	float DistanceToPlayer = 200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
+	float DesiredRotationToPlayer = 270.0f;
+	
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
+	// bool CameraMoveEaseOut = true;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
+	// bool CameraMoveEaseIn = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
+	float CameraMoveTime = 0.2f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
+	UCurveFloat* CameraRotationCurve;
+	
+	
+	// timeline
+	FTimeline CameraSwitchingTimeline;
+	
+	FRotator CurrentCameraRotation = FRotator(0,0,0);
+	FRotator ExecutionCameraRotation = FRotator(0,0,0);
+		
+	
 
 	// Animation montages
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
@@ -201,6 +231,8 @@ public:
 	FOnTriggeringCounter OnTriggeringCounter;
 	FOnEnteringPreCounterState OnEnteringPreCounterState;
 	FOnEnableComboResetTimer OnEnableComboResetTimer;
+
+	
 	
 	APlayerCharacter();
 
@@ -236,6 +268,9 @@ public:
 	// =================================================== Camera ========================================================
 	UFUNCTION()
 	void OnFinishCameraMovement();
+
+	UFUNCTION()
+	void OnUpdatingCameraMovement(float Alpha);
 	
 
 	// =============================================== Special Ability ===================================================
@@ -252,6 +287,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void DebugTestFunction();
+
+	bool DebugingBool = false;
 	
 	
 	// ================================================= Get And Set Functions ============================================

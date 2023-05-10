@@ -4,7 +4,9 @@
 #include "Characters/Player/PlayerCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -25,25 +27,7 @@ void APlayerCharacter::CollapseHitIndicator() const
 
 APlayerCharacter::APlayerCharacter()
 {
-	USkeletalMeshComponent* PlayerSkeletonMeshComp = GetMesh();
-	if(!PlayerSkeletonMeshComp) return;
-	
-	// Create a camera boom (pulls in towards the player if there is a collision)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(PlayerSkeletonMeshComp, "Spine2");
-	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
-	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-	
-	ActionSpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("ActionSpringArmComp"));
-	ActionSpringArmComp->SetupAttachment(PlayerSkeletonMeshComp, "Spine");
-	ActionSpringArmComp->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
-	ActionSpringArmComp->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-
-	
-	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	CreatCameraComponents();
 	
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimuli Source"));
 	StimuliSource->bAutoRegister = true;
@@ -53,6 +37,42 @@ APlayerCharacter::APlayerCharacter()
 FGenericTeamId APlayerCharacter::GetGenericTeamId() const
 {
 	return TeamId;
+}
+
+void APlayerCharacter::CreatCameraComponents()
+{
+	USkeletalMeshComponent* PlayerSkeletonMeshComp = GetMesh();
+	if(!PlayerSkeletonMeshComp) return;
+
+	UCapsuleComponent* PlayerCapsule = GetCapsuleComponent();
+	
+	// Create a camera boom (pulls in towards the player if there is a collision)
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(PlayerSkeletonMeshComp, "Spine");
+	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	
+	ActionSpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("ActionSpringArmComp"));
+	ActionSpringArmComp->SetupAttachment(PlayerSkeletonMeshComp, "Spine2");
+	ActionSpringArmComp->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	ActionSpringArmComp->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+
+	
+	// Create a combat camera
+	CombatCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("CombatCamera"));
+	CombatCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	CombatCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	CombatCameraChild = CreateDefaultSubobject<UChildActorComponent>(TEXT("CombatCameraChild"));
+	CombatCameraChild->SetupAttachment(CombatCamera, USpringArmComponent::SocketName);
+	
+	// Create a execution camera
+	ExecutionCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ExecutionCamera"));
+	ExecutionCamera->SetupAttachment(ActionSpringArmComp, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	ExecutionCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	ExecutionCameraChild = CreateDefaultSubobject<UChildActorComponent>(TEXT("ExecutionCameraChild"));
+	ExecutionCameraChild->SetupAttachment(ExecutionCamera, USpringArmComponent::SocketName);
 }
 
 
@@ -68,12 +88,23 @@ void APlayerCharacter::BeginPlay()
 
 	CharacterCurrentHealth = CharacterMaxHealth;
 
+	FOnTimelineFloat CameraRotationUpdate;
+	CameraRotationUpdate.BindDynamic(this, &APlayerCharacter::OnUpdatingCameraMovement);
+	
+	FOnTimelineEvent CameraRotationFinish;
+	CameraRotationFinish.BindDynamic(this, &APlayerCharacter::OnFinishCameraMovement);
+	
+	CameraSwitchingTimeline.AddInterpFloat(CameraRotationCurve, CameraRotationUpdate);
+	CameraSwitchingTimeline.SetTimelineFinishedFunc(CameraRotationFinish);
+
 	
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	CameraSwitchingTimeline.TickTimeline(DeltaSeconds);
 
 	const APlayerController* PlayerControl = GetWorld()->GetFirstPlayerController();
 	// reset input vector
@@ -196,7 +227,17 @@ void APlayerCharacter::OnFinishCameraMovement()
 		// Enable Camera control
 		AbleRotateVision = true;
 	}
+}
 
+void APlayerCharacter::OnUpdatingCameraMovement(float Alpha)
+{
+	APlayerController* PlayerControl = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if(!PlayerControl) return;
+
+	const FRotator SettingRotation = UKismetMathLibrary::RLerp(CurrentCameraRotation, ExecutionCameraRotation, Alpha, true);
+
+	PlayerControl->SetControlRotation(SettingRotation);
+	
 }
 
 void APlayerCharacter::TrySpecialAbility1()
@@ -238,7 +279,16 @@ void APlayerCharacter::UnsetCurrentTarget()
 
 void APlayerCharacter::DebugTestFunction()
 {
-
+	if(!DebugingBool)
+	{
+		OnSwitchingToExecutionCamera_Implementation();
+		DebugingBool = true;
+	}
+	else
+	{
+		OnSwitchingBackToDefaultCamera_Implementation();
+		DebugingBool = false;
+	}
 }
 
 void APlayerCharacter::SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime)
@@ -307,25 +357,51 @@ void APlayerCharacter::StopRegenerateStamina()
 	World->GetTimerManager().ClearTimer(RegenStaminaTimerHandle);
 }
 
+/*
+// Determine the desired camera distance and height
+float CameraDistance = 200.0f;
+float CameraHeight = 50.0f;
+
+// Calculate the desired camera offset
+FVector CameraOffset = FVector(-CameraDistance, 0.0f, CameraHeight);
+
+// Rotate the camera offset by the player's rotation
+FVector RotatedOffset = PlayerPawn->GetActorRotation().RotateVector(CameraOffset);
+
+// Get the Spring Arm component and set its target arm length and offset
+USpringArmComponent* SpringArm = PlayerController->FindComponentByClass<USpringArmComponent>();
+SpringArm->TargetArmLength = CameraDistance;
+SpringArm->SocketOffset = RotatedOffset;
+
+// Set the Spring Arm's rotation to the player's rotation
+SpringArm->SetWorldRotation(PlayerPawn->GetActorRotation());
+ * 
+ */
+
+
+
+
 
 // =============================================== Camera ===================================================
 
 
-void APlayerCharacter::MoveCameraTo(USpringArmComponent* DestinationSpringArm, float ChangedRelativeRotation)
+void APlayerCharacter::SetDifferentViewTarget(APlayerController* PlayerControl, AActor* NewCameraActor)
 {
-	const FAttachmentTransformRules AttachRule = FAttachmentTransformRules(EAttachmentRule::KeepWorld, true);
-	FollowCamera->AttachToComponent(DestinationSpringArm, AttachRule);
-
-	const FVector RelativeLoc = FVector(0,0,0);
-	const FRotator RelativeRot = FRotator(0,ChangedRelativeRotation,0);
-	const TEnumAsByte<EMoveComponentAction::Type> CameraMovement = EMoveComponentAction::Move;
-	FLatentActionInfo LatentActionInfo;
-	LatentActionInfo.CallbackTarget = this;
-	LatentActionInfo.ExecutionFunction = FName("OnFinishCameraMovement");
-	LatentActionInfo.Linkage = 0;
-	LatentActionInfo.UUID = 0;
+	PlayerControl->SetViewTargetWithBlend(NewCameraActor, CameraMoveTime, EViewTargetBlendFunction::VTBlend_EaseInOut, 1.0, false);
 	
-	UKismetSystemLibrary::MoveComponentTo(FollowCamera, RelativeLoc, RelativeRot, CameraMoveEaseOut, CameraMoveEaseIn, CameraMoveTime, true, CameraMovement, LatentActionInfo);
+	// const FAttachmentTransformRules AttachRule = FAttachmentTransformRules(EAttachmentRule::KeepWorld, true);
+	// CombatCamera->AttachToComponent(DestinationSpringArm, AttachRule);
+	//
+	// const FVector RelativeLoc = FVector(0,0,0);
+	// const FRotator RelativeRot = FRotator(0,ChangedRelativeRotation,0);
+	// const TEnumAsByte<EMoveComponentAction::Type> CameraMovement = EMoveComponentAction::Move;
+	// FLatentActionInfo LatentActionInfo;
+	// LatentActionInfo.CallbackTarget = this;
+	// LatentActionInfo.ExecutionFunction = FName("OnFinishCameraMovement");
+	// LatentActionInfo.Linkage = 0;
+	// LatentActionInfo.UUID = 0;
+	//
+	// UKismetSystemLibrary::MoveComponentTo(CombatCamera, RelativeLoc, RelativeRot, CameraMoveEaseOut, CameraMoveEaseIn, CameraMoveTime, true, CameraMovement, LatentActionInfo);
 
 }
 
@@ -403,8 +479,23 @@ void APlayerCharacter::OnSwitchingToExecutionCamera_Implementation()
 {
 	IPlayerCameraInterface::OnSwitchingToExecutionCamera_Implementation();
 
+	// try to get valid references
+	APlayerController* PlayerControl = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if(!PlayerControl) return;
+
+	USkeletalMeshComponent* PlayerMesh = GetMesh();
+	if(!PlayerMesh) return;
+	
+	// set enum to execution
 	CurrentCameraType = EPlayerCameraType::Execution;
-	MoveCameraTo(ActionSpringArmComp, 300);
+
+	
+	CurrentCameraRotation = PlayerControl->PlayerCameraManager->GetCameraRotation(); 
+	ExecutionCameraRotation = UKismetMathLibrary::MakeRotFromX(PlayerMesh->GetRightVector());
+
+	
+	PlayerControl->SetViewTargetWithBlend(ExecutionCameraChild->GetChildActor(), CameraMoveTime, EViewTargetBlendFunction::VTBlend_EaseInOut, 1.0, false);
+	//CameraSwitchingTimeline.PlayFromStart();
 	AbleRotateVision = false;
 }
 
@@ -412,8 +503,13 @@ void APlayerCharacter::OnSwitchingBackToDefaultCamera_Implementation()
 {
 	IPlayerCameraInterface::OnSwitchingBackToDefaultCamera_Implementation();
 
+	// try to get valid references
+	APlayerController* PlayerControl = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if(!PlayerControl) return;
+	
 	CurrentCameraType = EPlayerCameraType::InCombat;
-	MoveCameraTo(CameraBoom, 0);
+	PlayerControl->SetViewTargetWithBlend(CombatCameraChild->GetChildActor(), CameraMoveTime, EViewTargetBlendFunction::VTBlend_EaseInOut, 1.0, false);
+	//CameraSwitchingTimeline.ReverseFromEnd();
 }
 
 void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
