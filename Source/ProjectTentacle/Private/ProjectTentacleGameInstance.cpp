@@ -5,13 +5,13 @@
 
 #include "EngineUtils.h"
 #include "Characters/Player/PlayerCharacter.h"
+#include "Engine/LevelStreaming.h"
 #include "Kismet/GameplayStatics.h"
 
 void UProjectTentacleGameInstance::Init()
 {
 	Super::Init();
 	SaveObject = Cast<UCheckpointSave>(UGameplayStatics::CreateSaveGameObject(SaveObjectClass));
-	SaveGame();
 }
 
 void UProjectTentacleGameInstance::OnSaveLoad(const FString& SlotName, const int32 SlotID, USaveGame* Save)
@@ -24,26 +24,33 @@ void UProjectTentacleGameInstance::OnSaveLoad(const FString& SlotName, const int
 	SaveObject = AsCheckpointSave;
 
 	const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
-	UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName), true);
-	
-	// Create a level streaming instance for the new level
-	//ULevelStreamingDynamic* LevelStreamingInstance = ULevelStreamingDynamic::LoadLevelInstanceBySoftObjectPtr(GetWorld(), SoftObjectPtrToLevel);
+	UGameplayStatics::OpenLevel(GetWorld(), FName(*CurrentLevelName));
 
-	// Register a delegate to be called when the level is loaded
-	//LevelStreamingInstance->OnLevelLoaded.AddDynamic(this, &UMyGameInstance::OnLevelLoaded, NewLocation);
-	
-	PC->SetActorLocation(AsCheckpointSave->PlayerLocation);
-	PC->SetCurrentCharacterHealth(AsCheckpointSave->PlayerHealth);
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UProjectTentacleGameInstance::WaitForLevelLoad);
 }
 
-void UProjectTentacleGameInstance::OnLevelLoad(ULevelStreamingDynamic* LoadedLevel, bool bIsSuccess,
-	const FString& Error, const FVector& NewLocation)
+void UProjectTentacleGameInstance::OnLevelLoad()
 {
+	TryCachePC();
+	PC->SetActorLocation(SaveObject->PlayerLocation);
+	PC->SetCurrentCharacterHealth(SaveObject->PlayerHealth);
 }
 
-void UProjectTentacleGameInstance::TryCachePC()
+void UProjectTentacleGameInstance::WaitForLevelLoad()
 {
-	if(PC) return;
+	APlayerCharacter* InitialRef = PC;
+	TryCachePC(true);
+	if(PC == InitialRef)
+	{
+		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UProjectTentacleGameInstance::WaitForLevelLoad);
+		return;
+	}
+	OnLevelLoad();
+}
+
+void UProjectTentacleGameInstance::TryCachePC(bool bForce)
+{
+	if(PC && !bForce) return;
 	
 	for (TActorIterator<APlayerCharacter> It(GetWorld(), APlayerCharacter::StaticClass()); It; ++It)
 	{

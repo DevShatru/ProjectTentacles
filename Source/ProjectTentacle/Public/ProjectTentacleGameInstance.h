@@ -30,9 +30,11 @@ protected:
 	UFUNCTION()
 	void OnSaveLoad(const FString& SlotName, const int32 SlotID, USaveGame* Save);
 	UFUNCTION()
-	void OnLevelLoad(ULevelStreamingDynamic* LoadedLevel, bool bIsSuccess, const FString& Error, const FVector& NewLocation);
+	void OnLevelLoad();
+	UFUNCTION()
+	void WaitForLevelLoad();
 	
 private:
 	class APlayerCharacter* PC;
-	void TryCachePC();
+	void TryCachePC(bool bForce = false);
 };
