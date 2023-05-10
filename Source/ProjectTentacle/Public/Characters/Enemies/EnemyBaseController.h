@@ -47,6 +47,13 @@ public:
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
+
+	// Timeout attacks if they take too long
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Combat)
+	float AttackTimeout = 10.f;
+	UFUNCTION()
+	void TimeoutIncompleteAttack();
+	
 	// Base behavior tree, run on start
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=AI)
 	UBehaviorTree* BehaviorTree;
@@ -65,6 +72,7 @@ private:
 	void ClearBlackboard();
 	void TryCacheBlackboardComp();
 
+	unsigned int bIsAttacking:1;
 	UBlackboardComponent* Blackboard;
 	AEnemyBase* OwnPawn;
 	AEncounterVolume* OwningEncounter;

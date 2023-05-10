@@ -259,11 +259,9 @@ public:
 	
 	virtual void UnShowPlayerTargetIndicator_Implementation() override;
 	
-
-private:
-	
 	void TryGetOwnController();
-
+	
+private:
 	void TryClearFromPlayerTarget();
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);
