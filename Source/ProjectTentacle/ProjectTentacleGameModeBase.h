@@ -35,18 +35,7 @@ private:
 	TSet<class AEncounterVolume*> AllEncounters;
 	
 	
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TSubclassOf<UCheckpointSave> SaveObjectClass = UCheckpointSave::StaticClass();
-
-	UPROPERTY()
-	UCheckpointSave* SaveObject;
-
-	UFUNCTION()
-	void OnSaveLoad(const FString& SlotName, const int32 SlotID, USaveGame* Save);
-	
-	UFUNCTION()
-	void OnLevelLoad(ULevelStreamingDynamic* LoadedLevel, bool bIsSuccess, const FString& Error, const FVector& NewLocation);
+protected:	
 
 	// encounter volume reference
 	UPROPERTY()
@@ -62,14 +51,9 @@ protected:
 	// UFUNCTION()
 	// void StartRepositionEnemies();
 	
-	
-	
 public:
-	class APlayerCharacter* PC;
 	virtual void BeginPlay() override;
 	FVector ResetAndGetCheckpointLocation();
 	void ResetEncounters();
 	void SetActiveCheckpointLocation(const class ACheckpoint* NewActiveCheckpoint);
-	void SaveGame() const;
-	void ReloadLastSave();
 };

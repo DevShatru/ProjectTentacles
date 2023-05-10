@@ -23,16 +23,13 @@ void AProjectTentacleGameModeBase::BeginPlay()
 
 	for (TActorIterator<APlayerCharacter> It(World, APlayerCharacter::StaticClass()); It; ++It)
 	{
-		PC = *It;
+		const APlayerCharacter* PC = *It;
 		if(PC)
 		{
 			ActiveCheckpointLocation = PC->GetActorLocation();
 			break;
 		}
 	}
-	
-	SaveObject = Cast<UCheckpointSave>(UGameplayStatics::CreateSaveGameObject(SaveObjectClass));
-	SaveGame();
 	// TryInitializeEncounterVolumeRef();
 
 	// StartRepositionEnemyLoop();
@@ -42,41 +39,6 @@ FVector AProjectTentacleGameModeBase::ResetAndGetCheckpointLocation()
 {
 	ResetEncounters();
 	return ActiveCheckpointLocation;
-}
-
-void AProjectTentacleGameModeBase::ReloadLastSave()
-{
-	FAsyncLoadGameFromSlotDelegate LoadDelegate;
-	LoadDelegate.BindUFunction(this, FName("OnSaveLoad"));
-
-	UGameplayStatics::AsyncLoadGameFromSlot(SaveObject->GetSlotName(), SaveObject->GetSlotIndex(), LoadDelegate);
-}
-
-void AProjectTentacleGameModeBase::OnSaveLoad(const FString& SlotName, const int32 SlotID, USaveGame* Save)
-{
-	if(!Save) return;
-
-	UCheckpointSave* AsCheckpointSave = Cast<UCheckpointSave>(Save);
-	if(!AsCheckpointSave) return;
-
-	SaveObject = AsCheckpointSave;
-
-	const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
-	UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName), true);
-	
-	// Create a level streaming instance for the new level
-	ULevelStreamingDynamic* LevelStreamingInstance = ULevelStreamingDynamic::LoadLevelInstanceBySoftObjectPtr(GetWorld(), SoftObjectPtrToLevel);
-
-	// Register a delegate to be called when the level is loaded
-	LevelStreamingInstance->OnLevelLoaded.AddDynamic(this, &UMyGameInstance::OnLevelLoaded, NewLocation);
-	
-	PC->SetActorLocation(AsCheckpointSave->PlayerLocation);
-	PC->SetCurrentCharacterHealth(AsCheckpointSave->PlayerHealth);
-}
-
-void AProjectTentacleGameModeBase::OnLevelLoad(ULevelStreamingDynamic* LoadedLevel, bool bIsSuccess,
-	const FString& Error, const FVector& NewLocation)
-{
 }
 
 void AProjectTentacleGameModeBase::ResetEncounters()
@@ -90,13 +52,6 @@ void AProjectTentacleGameModeBase::ResetEncounters()
 void AProjectTentacleGameModeBase::SetActiveCheckpointLocation(const ACheckpoint* NewActiveCheckpoint)
 {
 	ActiveCheckpointLocation = NewActiveCheckpoint->GetOffsetLocation();
-}
-
-void AProjectTentacleGameModeBase::SaveGame() const
-{
-	SaveObject->PlayerHealth = PC->GetCurrentCharacterHealth();
-	SaveObject->PlayerLocation = PC->GetActorLocation();
-	UGameplayStatics::AsyncSaveGameToSlot(SaveObject, SaveObject->GetSlotName(), SaveObject->GetSlotIndex());
 }
 
 // Get and save a reference to all ACheckpoint actors in the level
