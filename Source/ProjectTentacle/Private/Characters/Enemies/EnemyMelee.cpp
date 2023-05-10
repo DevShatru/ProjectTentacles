@@ -312,6 +312,7 @@ void AEnemyMelee::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAc
 	Super::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 
 	bool StateChanged = false;
+	const EEnemyCurrentState InitialState = CurrentEnemyState;
 	
 	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate
 	if(CurrentEnemyState == EEnemyCurrentState::Attacking && PlayerAttackType != EPlayerAttackType::CounterAttack)
@@ -351,6 +352,12 @@ void AEnemyMelee::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAc
 	{
 		PlayReceiveDamageAnimation(PlayerAttackType);
 		return;
+	}
+
+	if(InitialState == EEnemyCurrentState::Attacking || InitialState == EEnemyCurrentState::Countered)
+	{
+		TryGetOwnController();
+		OwnController->RegisterCompletedAttack();
 	}
 	
 	OnDeath();
