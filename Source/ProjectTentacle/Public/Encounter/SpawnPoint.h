@@ -40,7 +40,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=HealerSpawn)
 	int32 NumHealerUnitsSpawned = 5;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=HealerSpawn)
-	TSubclassOf<class AEnemyBase> HealerUnitClass;
+	TSubclassOf<AEnemyBase> HealerUnitClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=HealerSpawn)
 	float HealerUnitsSpawnWeight = 5.0f;
 
@@ -62,10 +62,12 @@ protected:
 	AUnitPool* UnitPool;
 	
 private:
+	void Setup();
 	void ResetSpawnPoint();
 	AEncounterVolume* OwningEncounterVolume;
 	FTimerHandle SpawnTimerHandle;
 	TMap<EEnemyType, int8> UnitsSpawned;
 	unsigned int bShouldSpawnMelee:1, bShouldSpawnHealer:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1, bSpawnComplete:1;
 	void CheckUnitsToSpawn();
+	TSet<AEnemyBase*> SpawnedUnits;
 };

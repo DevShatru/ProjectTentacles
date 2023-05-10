@@ -34,7 +34,7 @@ public:
 	void RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController);
 	
 	// Fire when a unit is destroyed tp check if we should trigger spawn and update our queues
-	void RegisterUnitDestroyed(AEnemyBaseController* Unit);
+	void RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bForceDespawn);
 
 	void AddSpawnedUnitToEncounter(AEnemyBase* Unit);
 
@@ -45,6 +45,8 @@ public:
 	void SendAllEnemyToReposition(bool DoesIncludeHeavy);
 
 	virtual void AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy) override;
+
+	bool IsComplete() const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
@@ -97,6 +99,8 @@ protected:
 	void DespawnUnit(AEnemyBaseController* Unit);
 	
 private:
+	// Called on begin play and reset
+	void Setup();
 	// Register the encounter object with each contained units
 	void RegisterEncounterForUnits();
 	// Register the encounter object with each contained spawn point
@@ -107,6 +111,8 @@ private:
 	unsigned int bIsEncounterActive:1;
 	// Track if contained spawn points have begun spawning
 	unsigned int bWaveStartedSpawning:1;
+	// Track whether the encounter is complete yet
+	unsigned int bIsEncounterComplete:1;
 
 	bool AllSpawnsComplete() const;
 	
@@ -123,9 +129,7 @@ private:
 	void TriggerNextWave();
 	void ResetSpawnPoints() const;
 
-	int8 InitialUnits;
-	int8 DefeatedUnits;
-	int8 CurrentWave;
+	int8 InitialUnits, DefeatedUnits, CurrentWave;
 	AEnemyBaseController* LastAttacker;
 	AActor* EncounterTarget;
 	FWaveParams* CurrentWaveParams;

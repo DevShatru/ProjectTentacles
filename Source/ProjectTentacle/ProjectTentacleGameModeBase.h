@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Encounter/EncounterVolume.h"
+#include "Encounter/CheckpointSave.h"
 #include "GameFramework/GameModeBase.h"
 #include "ProjectTentacleGameModeBase.generated.h"
 
@@ -18,20 +18,23 @@ class PROJECTTENTACLE_API AProjectTentacleGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 private:
-	FTimerHandle EnemyRepositionTimerHandle;
+	// FTimerHandle EnemyRepositionTimerHandle;
 	
-
 	// Try to grab encounter volume in current map and assign it as our encounter volume reference
-	void TryInitializeEncounterVolumeRef();
+	// void TryInitializeEncounterVolumeRef();
 
-	// 
-	void SetupRepositionSignature();
+	// void SetupRepositionSignature();
 	
-	// 
-	void StartRepositionEnemyLoop();
+	// void StartRepositionEnemyLoop();
+
+	void CacheEncounterReferences();
+	FVector ActiveCheckpointLocation;
+	UWorld* World;
+
+	TSet<class AEncounterVolume*> AllEncounters;
 	
 	
-protected:
+protected:	
 
 	// encounter volume reference
 	UPROPERTY()
@@ -44,13 +47,9 @@ protected:
 	bool IncludeHeavy = false;
 
 
-	UFUNCTION()
-	void StartRepositionEnemies();
-	
-	
+	// UFUNCTION()
+	// void StartRepositionEnemies();
 	
 public:
-
 	virtual void BeginPlay() override;
-	
 };

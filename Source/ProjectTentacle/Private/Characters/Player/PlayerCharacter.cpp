@@ -3,11 +3,13 @@
 
 #include "Characters/Player/PlayerCharacter.h"
 
+#include "ProjectTentacleGameInstance.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
+#include "ProjectTentacle/ProjectTentacleGameModeBase.h"
 #include "UI/UserWidget_HitIndicator.h"
 
 FGenericTeamId APlayerCharacter::TeamId = FGenericTeamId(1);
@@ -59,8 +61,11 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	CharacterCurrentHealth = CharacterMaxHealth;
+	GameModeRef = nullptr;
+	bIsDead = false;
 
-	
+	TryCacheInstanceRef();
+	if(InstanceRef && InstanceRef->ShouldSaveAtPCSpawn()) InstanceRef->SaveGame();
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -268,10 +273,43 @@ void APlayerCharacter::RegeneratingStamina()
 {
 	const float StaminaRegenPerCustomTick = StaminaRegenPerSecond * StaminaRegenTickTime;
 
-	CurrentStamina = UKismetMathLibrary::FClamp(CurrentStamina + StaminaRegenPerCustomTick, 0 ,MaxStamina);
+	CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenPerCustomTick, 0.f ,MaxStamina);
 	
 	if(CurrentStamina >= MaxStamina)
 		StopRegenerateStamina();
+}
+
+void APlayerCharacter::OnDeath()
+{
+	bIsDead = true;
+	FTimerHandle DeathResetTimer;
+	
+	GetWorldTimerManager().SetTimer(DeathResetTimer, this, &APlayerCharacter::ResetPostDeath, ResetTime);
+}
+
+void APlayerCharacter::ResetPostDeath()
+{
+	
+	bIsDead = false;
+	CharacterCurrentHealth = CharacterMaxHealth;
+	
+	TryCacheInstanceRef();
+	if(InstanceRef) InstanceRef->ReloadLastSave();
+	//SetActorLocation(GameModeRef->ResetAndGetCheckpointLocation());
+}
+
+void APlayerCharacter::TryCacheGameModeRef()
+{
+	if(GameModeRef) return;
+
+	GameModeRef = Cast<AProjectTentacleGameModeBase>(GetWorld()->GetAuthGameMode());
+}
+
+void APlayerCharacter::TryCacheInstanceRef()
+{
+	if(InstanceRef) return;
+
+	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
 }
 
 void APlayerCharacter::StopRegenerateStamina()
@@ -283,6 +321,12 @@ void APlayerCharacter::StopRegenerateStamina()
 	World->GetTimerManager().ClearTimer(RegenStaminaTimerHandle);
 }
 
+void APlayerCharacter::HealthReduction(int32 ReducingAmount)
+{
+	CharacterCurrentHealth = FMath::Clamp((CharacterCurrentHealth - ReducingAmount),0.f, CharacterMaxHealth);
+
+	if(CharacterCurrentHealth <= 0.f) OnDeath();
+}
 
 // =============================================== Special Ability ===================================================
 

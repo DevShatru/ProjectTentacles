@@ -63,23 +63,30 @@ void AEncounterVolume::RegisterCompletedBasicAttack(AEnemyBaseController* Regist
 	StartBasicQueueTimer();
 }
 
-void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit)
+void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bForceDespawn)
 {
 	// Remove units from queues and set
 	if(AttackQueueBasic.Contains(Unit)) AttackQueueBasic.Remove(Unit);
 	if(AttackQueueHeavy.Contains(Unit)) AttackQueueHeavy.Remove(Unit);
 	if(ContainedUnits.Contains(Unit->GetOwnPawn())) ContainedUnits.Remove(Unit->GetOwnPawn());
 
-	// TODO If contained units is empty and spawn points are done spawning, we're done
+	// Check if the encounter is complete
 	if(ContainedUnits.Num() <= 0 && AllSpawnsComplete())
 	{
+		bIsEncounterComplete = true;
 		if(EncounterComplete.IsBound()) EncounterComplete.Broadcast();
 	}
-	
-	FTimerHandle DespawnHandle;
-	FTimerDelegate DespawnDelegate;
-	DespawnDelegate.BindUFunction(this, FName("DespawnUnit"), Unit);
-	WorldTimerManager->SetTimer(DespawnHandle, DespawnDelegate, DespawnTimer, false);
+
+	if(bForceDespawn)
+	{
+		DespawnUnit(Unit);	
+	} else
+	{
+		FTimerHandle DespawnHandle;
+		FTimerDelegate DespawnDelegate;
+		DespawnDelegate.BindUFunction(this, FName("DespawnUnit"), Unit);
+		WorldTimerManager->SetTimer(DespawnHandle, DespawnDelegate, DespawnTimer, false);
+	}
 	
 	// Check if spawn has started yet
 	if(bWaveStartedSpawning) return;
@@ -120,14 +127,7 @@ void AEncounterVolume::RemoveDeadUnitFromEncounter(AEnemyBaseController* DeadUni
 void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	WorldTimerManager = &GetWorldTimerManager();
-	bIsEncounterActive = false;
-	LastAttacker = nullptr;
-	EncounterTarget = nullptr;
-	CurrentWaveParams = nullptr;
-	InitialUnits = ContainedUnits.Num();
-	CurrentWave = -1;
-	RegisterEncounterForUnits();
+	Setup();
 }
 
 // Select random unit to attack
@@ -177,6 +177,19 @@ void AEncounterVolume::DespawnUnit(AEnemyBaseController* Unit)
 	UnitPool->AddUnitToPool(Unit->GetOwnPawn());
 }
 
+void AEncounterVolume::Setup()
+{
+	WorldTimerManager = &GetWorldTimerManager();
+	bIsEncounterActive = false;
+	bIsEncounterComplete = false;
+	LastAttacker = nullptr;
+	EncounterTarget = nullptr;
+	CurrentWaveParams = nullptr;
+	InitialUnits = ContainedUnits.Num();
+	CurrentWave = -1;
+	RegisterEncounterForUnits();
+}
+
 // for loop to send all enemy to reposition
 void AEncounterVolume::SendAllEnemyToReposition(bool DoesIncludeHeavy)
 {
@@ -203,6 +216,11 @@ void AEncounterVolume::AssignQueueEnemyToReposition_Implementation(bool DoesIncl
 	IEncounterVolumeInterface::AssignQueueEnemyToReposition_Implementation(DoesIncludeHeavy);
 
 	SendAllEnemyToReposition(DoesIncludeHeavy);
+}
+
+bool AEncounterVolume::IsComplete() const
+{
+	return bIsEncounterComplete;
 }
 
 // Register this encounter with contained units
