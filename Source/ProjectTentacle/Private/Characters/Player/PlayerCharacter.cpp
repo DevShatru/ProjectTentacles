@@ -65,7 +65,7 @@ void APlayerCharacter::BeginPlay()
 	bIsDead = false;
 
 	TryCacheInstanceRef();
-	if(InstanceRef) InstanceRef->SaveGame();
+	if(InstanceRef && InstanceRef->ShouldSaveAtPCSpawn()) InstanceRef->SaveGame();
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)

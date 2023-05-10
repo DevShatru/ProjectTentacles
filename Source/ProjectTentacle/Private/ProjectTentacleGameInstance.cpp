@@ -11,6 +11,7 @@
 void UProjectTentacleGameInstance::Init()
 {
 	Super::Init();
+	bCompletedFirstSave = false;
 	SaveObject = Cast<UCheckpointSave>(UGameplayStatics::CreateSaveGameObject(SaveObjectClass));
 }
 
@@ -66,6 +67,12 @@ void UProjectTentacleGameInstance::SaveGame()
 	SaveObject->PlayerHealth = PC->GetCurrentCharacterHealth();
 	SaveObject->PlayerLocation = PC->GetActorLocation();
 	UGameplayStatics::AsyncSaveGameToSlot(SaveObject, SaveObject->GetSlotName(), SaveObject->GetSlotIndex());
+	if(!bCompletedFirstSave) bCompletedFirstSave = true;
+}
+
+bool UProjectTentacleGameInstance::ShouldSaveAtPCSpawn() const
+{
+	return !bCompletedFirstSave;
 }
 
 void UProjectTentacleGameInstance::ReloadLastSave()
