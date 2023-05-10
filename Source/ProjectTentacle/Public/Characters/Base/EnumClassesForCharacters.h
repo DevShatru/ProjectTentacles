@@ -18,6 +18,14 @@ enum class EPlayerAttackType: uint8
 };
 
 UENUM(BlueprintType)
+enum class EPlayerCameraType: uint8
+{
+	OutOfCombat = 0 UMETA(DisplayName = "OutOfCombat"),
+	InCombat = 1 UMETA(DisplayName = "InCombat"),
+	Execution = 2 UMETA(DisplayName = "Execution"),
+};
+
+UENUM(BlueprintType)
 enum class EActionState: uint8
 {
 	Idle = 0 UMETA(DisplayName = "IDLE"),

@@ -113,6 +113,8 @@ void ATentacleProjectPlayerController::OnAddControllerYawInput(float Value)
 {
 	if (PossessedPlayerRef)
 	{
+		if(!PossessedPlayerRef->GetAbleRotateVision()) return;
+		
 		PossessedPlayerRef->AddControllerYawInput(Value);
 	}
 }
@@ -121,6 +123,8 @@ void ATentacleProjectPlayerController::OnTurnAtRate(float Rate)
 {
 	if (PossessedPlayerRef)
 	{
+		if(!PossessedPlayerRef->GetAbleRotateVision()) return;
+		
 		PossessedPlayerRef->TurnAtRate(Rate);
 	}
 }
@@ -129,6 +133,8 @@ void ATentacleProjectPlayerController::OnAddControllerPitchInput(float Value)
 {
 	if (PossessedPlayerRef)
 	{
+		if(!PossessedPlayerRef->GetAbleRotateVision()) return;
+		
 		PossessedPlayerRef->AddControllerPitchInput(Value);
 	}
 }
@@ -137,6 +143,8 @@ void ATentacleProjectPlayerController::OnLookUpAtRate(float Rate)
 {
 	if (PossessedPlayerRef)
 	{
+		if(!PossessedPlayerRef->GetAbleRotateVision()) return;
+		
 		PossessedPlayerRef->LookUpAtRate(Rate);
 	}
 }
