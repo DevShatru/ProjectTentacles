@@ -63,7 +63,9 @@ void APlayerCharacter::BeginPlay()
 	CharacterCurrentHealth = CharacterMaxHealth;
 	GameModeRef = nullptr;
 	bIsDead = false;
-	
+
+	TryCacheInstanceRef();
+	if(InstanceRef) InstanceRef->SaveGame();
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
