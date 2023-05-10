@@ -165,17 +165,16 @@ protected:
 	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
 	
 	void HealthReduction(float DamageAmount);
-
 	
-	// ===================================================== On Death =======================================================
-	virtual void OnDeath();
-
 	void RagDollPhysicsOnDead();
 
 	UFUNCTION()
 	void TimeoutAttack();
 	
 public:
+	// ===================================================== On Death =======================================================
+	virtual void OnDeath();
+	
 	void StartAttackTimeout();
 	void EnableStrafe(bool bStrafe = true) const;
 	void ExecuteRangedAttack(AActor* Target);

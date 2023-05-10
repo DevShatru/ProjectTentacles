@@ -37,6 +37,10 @@ void UProjectTentacleGameInstance::OnLevelLoad()
 	TryCachePC();
 	PC->SetActorLocation(SaveObject->PlayerLocation);
 	PC->SetCurrentCharacterHealth(SaveObject->PlayerHealth);
+	for(AEncounterVolume* Volume: AllEncounterVolumes)
+	{
+		if(SaveObject->CompletedEncounters.Contains(Volume->GetName())) Volume->MarkComplete();
+	}
 }
 
 void UProjectTentacleGameInstance::WaitForLevelLoad()
