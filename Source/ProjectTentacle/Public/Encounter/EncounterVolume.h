@@ -81,6 +81,7 @@ protected:
 	float SpawnStartEncounterCompletionPercent = 75.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	float DespawnTimer = 5.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	TArray<FWaveParams> WaveParameters;
 
 	// Attack queue for melee and ranged units
