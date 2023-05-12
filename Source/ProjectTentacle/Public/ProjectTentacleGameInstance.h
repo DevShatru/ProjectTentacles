@@ -16,8 +16,10 @@ class PROJECTTENTACLE_API UProjectTentacleGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 public:
-	void ReloadLastSave();
+	UFUNCTION(BlueprintCallable)
 	void SaveGame();
+	UFUNCTION(BlueprintCallable)
+	void ReloadLastSave();
 	void RegisterEncounterVolume(class AEncounterVolume* Volume);
 	bool ShouldSaveAtPCSpawn() const;
 
