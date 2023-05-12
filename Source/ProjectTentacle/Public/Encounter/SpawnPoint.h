@@ -26,6 +26,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UStaticMeshComponent* ShackMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USceneComponent* SpawnLocation;
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Spawn Parameters")
 	float TimeBetweenSpawns = 5.0f;
 

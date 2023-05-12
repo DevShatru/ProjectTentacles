@@ -13,6 +13,11 @@ ASpawnPoint::ASpawnPoint()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	ShackMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shack Mesh"));
+	SpawnLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Spawn Location"));
+
+	SetRootComponent(ShackMesh);
+	SpawnLocation->SetupAttachment(RootComponent);
 }
 
 void ASpawnPoint::StartSpawningUnits()
@@ -62,7 +67,7 @@ void ASpawnPoint::SpawnUnit()
 														  TypeToSpawn == EEnemyType::Ranged ? RangedUnitClass :
 														  TypeToSpawn == EEnemyType::Brute ? BruteUnitClass : HealerUnitClass);
 	SpawnedUnits.Add(Unit);
-	Unit->SetActorLocation(GetActorLocation());
+	Unit->SetActorLocation(SpawnLocation->GetComponentLocation());
 	++UnitsSpawned[TypeToSpawn];
 	OwningEncounterVolume->AddSpawnedUnitToEncounter(Unit);
 	CheckUnitsToSpawn();
