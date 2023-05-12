@@ -25,12 +25,37 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UStaticMeshComponent* ShackMesh;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UStaticMeshComponent* DoorMesh;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UStaticMeshComponent* PlaneMesh;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	class UBoxComponent* DoorOpeningVolume;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	USceneComponent* SpawnLocation;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
+	float DoorClosedYaw = 0.f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
+	float DoorOpenedYaw = -90.f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
+	float DoorOpeningTime = 1.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
+	float DoorHeldOpenTime = 1.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
+	float DoorClosingTime = 1.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
+	UCurveFloat* DoorOpenCurve;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Spawn Parameters")
 	float TimeBetweenSpawns = 5.0f;
@@ -66,14 +91,29 @@ protected:
 
 	UPROPERTY()
 	AUnitPool* UnitPool;
+
+	UFUNCTION()
+	void TryOpenDoor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	UFUNCTION()
+	void TryCloseDoor();
+
+	UFUNCTION()
+	void DoorOpenTransition();
+	UFUNCTION()
+	void DoorCloseTransition();
 	
 private:
 	void Setup();
 	void ResetSpawnPoint();
+	void CalculateDoorOpenness();
+	UWorld* World;
+	FTimerManager* TimerManager;
+	FTimerHandle DoorTimerHandle;
 	AEncounterVolume* OwningEncounterVolume;
 	FTimerHandle SpawnTimerHandle;
 	TMap<EEnemyType, int8> UnitsSpawned;
-	unsigned int bShouldSpawnMelee:1, bShouldSpawnHealer:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1, bSpawnComplete:1;
+	unsigned int bShouldSpawnMelee:1, bShouldSpawnHealer:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1, bSpawnComplete:1, bIsDoorOpen:1;
+	float DoorOpenness, DoorTransitionStartTime;
 	void CheckUnitsToSpawn();
 	TSet<AEnemyBase*> SpawnedUnits;
 };

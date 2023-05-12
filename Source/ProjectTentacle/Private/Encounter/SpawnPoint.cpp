@@ -5,6 +5,7 @@
 
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/UnitPool.h"
+#include "Components/BoxComponent.h"
 #include "Encounter/EncounterVolume.h"
 
 // Sets default values
@@ -14,20 +15,33 @@ ASpawnPoint::ASpawnPoint()
 	PrimaryActorTick.bCanEverTick = false;
 
 	ShackMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shack Mesh"));
+	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Door Mesh"));
+	PlaneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Black Pane"));
+	DoorOpeningVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("Door Opening Volume"));
 	SpawnLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Spawn Location"));
 
+	DoorMesh->SetCanEverAffectNavigation(false);
+	PlaneMesh->SetCanEverAffectNavigation(false);
+
+	PlaneMesh->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+	DoorOpeningVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
+	DoorOpeningVolume->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
+	
 	SetRootComponent(ShackMesh);
+	DoorMesh->SetupAttachment(RootComponent);
+	PlaneMesh->SetupAttachment(RootComponent);
+	DoorOpeningVolume->SetupAttachment(RootComponent);
 	SpawnLocation->SetupAttachment(RootComponent);
 }
 
 void ASpawnPoint::StartSpawningUnits()
 {
-	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ASpawnPoint::SpawnUnit, TimeBetweenSpawns, true, TimeBetweenSpawns);
+	TimerManager->SetTimer(SpawnTimerHandle, this, &ASpawnPoint::SpawnUnit, TimeBetweenSpawns, true, TimeBetweenSpawns);
 }
 
 void ASpawnPoint::StopSpawningUnits()
 {
-	GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
+	TimerManager->ClearTimer(SpawnTimerHandle);
 	ResetSpawnPoint();
 }
 
@@ -63,7 +77,7 @@ void ASpawnPoint::SpawnUnit()
 	// Get Unit from pool
 	// Spawn if pool is unavailable
 	AEnemyBase* Unit = UnitPool ? UnitPool->GetUnitFromPool(TypeToSpawn) :
-					   GetWorld()->SpawnActor<AEnemyBase>(TypeToSpawn == EEnemyType::Melee ? MeleeUnitClass :
+					   World->SpawnActor<AEnemyBase>(TypeToSpawn == EEnemyType::Melee ? MeleeUnitClass :
 														  TypeToSpawn == EEnemyType::Ranged ? RangedUnitClass :
 														  TypeToSpawn == EEnemyType::Brute ? BruteUnitClass : HealerUnitClass);
 	SpawnedUnits.Add(Unit);
@@ -90,9 +104,69 @@ void ASpawnPoint::BeginPlay()
 	Setup();
 }
 
+void ASpawnPoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	DoorOpeningVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ASpawnPoint::TryOpenDoor);
+	Super::EndPlay(EndPlayReason);
+}
+
+void ASpawnPoint::TryOpenDoor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// If open, extend open time
+	if(bIsDoorOpen)
+	{
+		TimerManager->ClearTimer(DoorTimerHandle);
+		TimerManager->SetTimer(DoorTimerHandle, this, &ASpawnPoint::TryCloseDoor, DoorHeldOpenTime, false);
+		return;
+	}	
+	// If closed or partly open, start opening timer
+	CalculateDoorOpenness();
+	DoorTransitionStartTime = World->GetTimeSeconds();
+	TimerManager->SetTimerForNextTick(this, &ASpawnPoint::DoorOpenTransition);
+}
+
+void ASpawnPoint::DoorOpenTransition()
+{
+	const float Alpha = DoorOpenness + (World->GetTimeSeconds() - DoorTransitionStartTime) / DoorOpeningTime;
+	const float Delta = FMath::Clamp(DoorOpenCurve ? DoorOpenCurve->GetFloatValue(Alpha) : Alpha, 0.f, 1.f);
+	const FRotator CurrentRotation = DoorMesh->GetRelativeRotation();
+	DoorMesh->SetRelativeRotation(FRotator(CurrentRotation.Pitch,  FMath::Lerp(DoorClosedYaw, DoorOpenedYaw, Delta), CurrentRotation.Roll));
+
+	if(Alpha >= 1.f)
+	{
+		bIsDoorOpen = true;
+		TimerManager->SetTimer(DoorTimerHandle, this, &ASpawnPoint::TryCloseDoor, DoorHeldOpenTime, false);
+		return;	
+	}
+	TimerManager->SetTimerForNextTick(this, &ASpawnPoint::DoorOpenTransition);
+}
+
+void ASpawnPoint::TryCloseDoor()
+{
+	bIsDoorOpen = false;
+	DoorTransitionStartTime = World->GetTimeSeconds();
+	TimerManager->SetTimerForNextTick(this, &ASpawnPoint::DoorCloseTransition);
+}
+
+void ASpawnPoint::DoorCloseTransition()
+{
+	const float Alpha = (World->GetTimeSeconds() - DoorTransitionStartTime) / DoorClosingTime;
+	const float Delta = FMath::Clamp(DoorOpenCurve ? DoorOpenCurve->GetFloatValue(Alpha) : Alpha, 0.f, 1.f);
+	const FRotator CurrentRotation = DoorMesh->GetRelativeRotation();
+	DoorMesh->SetRelativeRotation(FRotator(CurrentRotation.Pitch,  FMath::Lerp(DoorClosedYaw, DoorOpenedYaw, 1.f - Delta), CurrentRotation.Roll));
+
+	if(Alpha >= 1.f) return;
+	TimerManager->SetTimerForNextTick(this, &ASpawnPoint::DoorCloseTransition);
+}
+
 void ASpawnPoint::Setup()
 {
+	DoorOpeningVolume->OnComponentBeginOverlap.AddDynamic(this, &ASpawnPoint::TryOpenDoor);
+	bIsDoorOpen = false;
+	World = GetWorld();
 	SpawnedUnits.Empty();
+	TimerManager = &World->GetTimerManager();
 	ResetSpawnPoint();
 	CheckUnitsToSpawn();
 }
@@ -103,6 +177,12 @@ void ASpawnPoint::ResetSpawnPoint()
 	{
 		UnitsSpawned.Add(Type, 0);
 	}
+}
+
+void ASpawnPoint::CalculateDoorOpenness()
+{
+	const float ClampedYaw = DoorClosedYaw > DoorOpenedYaw ? FMath::Clamp(DoorMesh->GetRelativeRotation().Yaw, DoorOpenedYaw,DoorClosedYaw) : FMath::Clamp(DoorMesh->GetRelativeRotation().Yaw, DoorClosedYaw, DoorOpenedYaw);
+	DoorOpenness = ClampedYaw / FMath::Abs(DoorOpenedYaw - DoorClosedYaw);
 }
 
 void ASpawnPoint::CheckUnitsToSpawn()
