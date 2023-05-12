@@ -21,7 +21,6 @@ ACheckpoint::ACheckpoint()
 void ACheckpoint::BeginPlay()
 {
 	Super::BeginPlay();
-	bIsActive = true;
 	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
 }
 

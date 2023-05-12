@@ -25,11 +25,13 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UBoxComponent* CheckpointTrigger;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsActive = true;
 	
 	UFUNCTION()
 	void OnTrigger(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	
 private:
 	UProjectTentacleGameInstance* InstanceRef;
-	unsigned int bIsActive;
 };
