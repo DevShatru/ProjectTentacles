@@ -34,6 +34,7 @@ AEnemyBaseController::AEnemyBaseController()
 void AEnemyBaseController::BeginPlay()
 {
 	Super::BeginPlay();
+	bIsAttacking = false;
 	EncounterTarget = nullptr;
 }
 
@@ -70,6 +71,9 @@ void AEnemyBaseController::BeginAttack()
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("%s began attack"), *OwnPawn->GetHumanReadableName()));
 	TryCacheBlackboardComp();
 	Blackboard->SetValueAsBool("bIsAttacking", true);
+	bIsAttacking = true;
+	FTimerHandle AttackTimeoutTimer;
+	GetWorld()->GetTimerManager().SetTimer(AttackTimeoutTimer, this, &AEnemyBaseController::TimeoutIncompleteAttack, AttackTimeout);
 }
 
 void AEnemyBaseController::QuitFromEncounter()
@@ -83,7 +87,8 @@ void AEnemyBaseController::QuitFromEncounter()
 // Register after attack has completed
 void AEnemyBaseController::RegisterCompletedAttack()
 {
-	if(!OwningEncounter) return;
+	if(!OwningEncounter || !bIsAttacking) return;
+	bIsAttacking = false;
 	OwningEncounter->RegisterCompletedBasicAttack(this);
 }
 
@@ -113,6 +118,11 @@ void AEnemyBaseController::OnPossess(APawn* InPawn)
 	Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyBaseController::UpdatePerception);
 }
 
+void AEnemyBaseController::TimeoutIncompleteAttack()
+{
+	RegisterCompletedAttack();
+}
+
 void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 {
 	// GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, Actor->GetHumanReadableName());
@@ -120,11 +130,11 @@ void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 	OwningEncounter->TryTriggerEncounter(Actor);
 }
 
-void AEnemyBaseController::OnDeath()
+void AEnemyBaseController::OnDeath(bool bForceDespawn)
 {
 	Reset();
 	if(!OwningEncounter) return;
-	OwningEncounter->RegisterUnitDestroyed(this);
+	OwningEncounter->RegisterUnitDestroyed(this, bForceDespawn);
 }
 
 void AEnemyBaseController::HealEncounterTarget(float HealAmount)

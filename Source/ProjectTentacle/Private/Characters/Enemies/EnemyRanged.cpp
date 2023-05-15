@@ -159,6 +159,7 @@ void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AA
 	Super::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 
 	bool StateChanged = false;
+	const EEnemyCurrentState InitialState = CurrentEnemyState;
 	
 	// if enemy is attack, stop montage, cancel fire timer, unshow attack indicator, and execute onfinish attack delegate
 	if(CurrentEnemyState == EEnemyCurrentState::Attacking)
@@ -182,20 +183,7 @@ void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AA
 
 	}
 	
-	
-	HealthReduction(DamageAmount);
-
-	
 	// if bool StateChanged is false, it means enemy is not taking damage when it get countered or get damaged while doing attack
 	if(!StateChanged) TrySwitchEnemyState(EEnemyCurrentState::Damaged);
-	
-	if((Health - DamageAmount) > 0)
-	{
-		PlayReceiveDamageAnimation(PlayerAttackType);
-		return;
-	}
-	
-	OnDeath();
-
 }
 

@@ -341,20 +341,8 @@ void AEnemyMelee::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAc
 		StateChanged = true;
 	}
 	
-	HealthReduction(DamageAmount);
-
-	
 	// if bool StateChanged is false, it means enemy is not taking damage when it get countered or get damaged while doing attack
 	if(!StateChanged) TrySwitchEnemyState(EEnemyCurrentState::Damaged);
-	
-	if((Health - DamageAmount) > 0)
-	{
-		PlayReceiveDamageAnimation(PlayerAttackType);
-		return;
-	}
-	
-	OnDeath();
-
 }
 
 
