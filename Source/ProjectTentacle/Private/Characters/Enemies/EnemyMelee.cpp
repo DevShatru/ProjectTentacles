@@ -303,6 +303,8 @@ void AEnemyMelee::OnStartCounteredAnimation_Implementation()
 {
 	Super::OnStartCounteredAnimation_Implementation();
 
+	TrySwitchEnemyState(EEnemyCurrentState::Countered);
+	
 	StartCounteredAnimation();
 }
 

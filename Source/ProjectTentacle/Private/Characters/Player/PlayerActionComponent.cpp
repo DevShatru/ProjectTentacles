@@ -512,8 +512,13 @@ void UPlayerActionComponent::BeginCounterAttack()
 	PlayerOwnerRef->SetDamagingActor(StoredCounterTarget);
 	
 	PlayerOwnerRef->SetCurrentAttackType(EPlayerAttackType::CounterAttack);
-	
-	CurrentPlayingMontage = CounterAttackMontages;
+
+	const EEnemyType TargetEnemyType = StoredCounterTarget->GetUnitType();
+
+	if(TargetEnemyType != EEnemyType::Brute)
+		CurrentPlayingMontage = CounterAttackMontages;
+	else
+		CurrentPlayingMontage = CounterBruteMontage;
 
 	MakePlayerEnemyFaceEachOther(StoredCounterTarget);
 	
@@ -522,10 +527,11 @@ void UPlayerActionComponent::BeginCounterAttack()
 	{
 		ICharacterActionInterface::Execute_OnStartCounteredAnimation(StoredCounterTarget);
 	}
-	
-	StoredCounterTarget->TrySwitchEnemyState(EEnemyCurrentState::Countered);
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
+
+		
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
+		
 	ComboCountIncrement();
 
 	// Stop Combo Count timer
