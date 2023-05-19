@@ -219,6 +219,15 @@ void AEnemyBase::TryResumeMoving()
 		MovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
 }
 
+void AEnemyBase::TrySwitchEnemyState(EEnemyCurrentState NewState)
+{
+	if(CurrentEnemyState == NewState) return;
+
+	if(NewState == EEnemyCurrentState::Countered) bUseControllerRotationYaw = false;
+	CurrentEnemyState = NewState;
+	
+}
+
 // Finish attack task and switch to requested task
 void AEnemyBase::TryFinishAttackTask(EEnemyCurrentState SwitchingState)
 {

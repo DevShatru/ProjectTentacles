@@ -219,7 +219,7 @@ public:
 
 
 	// ============================================= Utility Functions ====================================================
-	void TrySwitchEnemyState(EEnemyCurrentState NewState) { if(CurrentEnemyState != NewState) CurrentEnemyState = NewState;}
+	void TrySwitchEnemyState(EEnemyCurrentState NewState);
 
 	
 
