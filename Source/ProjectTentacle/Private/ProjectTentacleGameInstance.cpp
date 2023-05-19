@@ -36,6 +36,7 @@ void UProjectTentacleGameInstance::OnLevelLoad()
 {
 	TryCachePC();
 	PC->SetActorLocation(SaveObject->PlayerLocation);
+	PC->SetActorRotation(SaveObject->PlayerRotation);
 	PC->SetCurrentCharacterHealth(SaveObject->PlayerHealth);
 	for(AEncounterVolume* Volume: AllEncounterVolumes)
 	{
@@ -72,6 +73,7 @@ void UProjectTentacleGameInstance::SaveGame()
 	if(!PC) return;
 	SaveObject->PlayerHealth = PC->GetCurrentCharacterHealth();
 	SaveObject->PlayerLocation = PC->GetActorLocation();
+	SaveObject->PlayerRotation = PC->GetActorRotation();
 	
 	for(const AEncounterVolume* Volume: AllEncounterVolumes)
 	{
