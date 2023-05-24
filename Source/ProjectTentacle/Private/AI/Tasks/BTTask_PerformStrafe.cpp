@@ -40,7 +40,8 @@ EBTNodeResult::Type UBTTask_PerformStrafe::ExecuteTask(UBehaviorTreeComponent& O
 
 	OwnPawn = Cast<AEnemyBase>(OwnController->GetPawn());
 	if(!OwnPawn) return EBTNodeResult::Failed;
-
+	OwningComponent = &OwnerComp;
+	OwnPawn->OnInterruptStrafe.BindDynamic(this, &UBTTask_PerformStrafe::Interrupt);
 	const UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
 	bStrafeRight = Blackboard->GetValueAsBool(CircleDirectionKey.SelectedKeyName);
 	
@@ -88,9 +89,7 @@ void UBTTask_PerformStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* N
 		++LoopIterationsComplete;
 		if(LoopIterationsComplete >= StrafeLoopsAttempted)
 		{
-			// Disable strafe speed on finish
-			OwnPawn->EnableStrafe(false);
-			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+			CompleteStrafe(&OwnerComp, EBTNodeResult::Succeeded);
 			return;
 		}
 		StrafeLoopStartLocation = OwnPawn->GetActorLocation();
@@ -98,6 +97,20 @@ void UBTTask_PerformStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* N
 	}
 
 	OwnPawn->AddMovementInput(StrafeLoopDirection, 1.f);
+}
+
+void UBTTask_PerformStrafe::Interrupt()
+{
+	CompleteStrafe(OwningComponent, EBTNodeResult::Succeeded);
+}
+
+void UBTTask_PerformStrafe::CompleteStrafe(UBehaviorTreeComponent* BTComp, EBTNodeResult::Type Result) const
+{
+	// Disable strafe speed on finish
+	OwnPawn->EnableStrafe(false);
+			
+	OwnPawn->OnInterruptStrafe.Unbind();
+	FinishLatentTask(*BTComp, EBTNodeResult::Succeeded);
 }
 
 FVector UBTTask_PerformStrafe::GetStrafeDirection() const
