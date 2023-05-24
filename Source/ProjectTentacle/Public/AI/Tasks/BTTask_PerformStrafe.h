@@ -23,6 +23,9 @@ public:
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 	
 protected:
+	UFUNCTION()
+	void Interrupt();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Strafe")
 	bool bUseStrafeSpeed = true;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Strafe")
@@ -35,6 +38,7 @@ protected:
 	FBlackboardKeySelector CircleDirectionKey;
 
 private:
+	void CompleteStrafe(UBehaviorTreeComponent* BTComp, EBTNodeResult::Type Result) const;
 	FVector GetStrafeDirection() const;
 	
 	class AEnemyBase* OwnPawn;
@@ -42,7 +46,7 @@ private:
 	FVector StrafeLoopDirection;
 	float LoopDistSqr;
 	int8 LoopIterationsComplete;
-	
+	UBehaviorTreeComponent* OwningComponent;
 	unsigned int bStrafeRight:1, bIsTargetActor:1;
 	AActor* StrafeActorTarget;
 	FVector StrafeLocationTarget;

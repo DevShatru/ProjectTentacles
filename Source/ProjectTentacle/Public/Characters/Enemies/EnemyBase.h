@@ -15,6 +15,7 @@
 #include "GameFramework/Character.h"
 #include "EnemyBase.generated.h"
 
+DECLARE_DYNAMIC_DELEGATE(FOnInterruptStrafe);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnUpdatingEnemyAttackType, EEnemyAttackType, NewAttackType);
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnFinishAttackingTask, UBehaviorTreeComponent*, BehaviorTreeReference, bool, bIsSuccess, bool, DoesGetInterupted);
 
@@ -199,7 +200,7 @@ public:
 	float GetAttackCompletionTime() const;
 	float GetAttackCounterableTime() const;
 
-
+	FOnInterruptStrafe OnInterruptStrafe;
 	void OnHideAttackIndicator();
 	
 
