@@ -108,7 +108,11 @@ void ASpawnPoint::BeginPlay()
 void ASpawnPoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	DoorOpeningVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ASpawnPoint::TryOpenDoor);
-	delete SpawnParams;
+	if(SpawnParams)
+	{
+		delete SpawnParams;
+		SpawnParams = nullptr;
+	}
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -169,7 +173,7 @@ void ASpawnPoint::Setup()
 	World = GetWorld();
 	SpawnedUnits.Empty();
 	TimerManager = &World->GetTimerManager();
-	SpawnParams = new FActorSpawnParameters();
+	if(!SpawnParams) SpawnParams = new FActorSpawnParameters();
 	SpawnParams->bNoFail = true;
 	SpawnParams->SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	ResetSpawnPoint();
