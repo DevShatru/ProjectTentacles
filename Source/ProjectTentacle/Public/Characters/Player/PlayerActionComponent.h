@@ -137,7 +137,9 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Combat_AnimMontages)
 	UAnimMontage* CounterAttackMontages;
 
-
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Combat_AnimMontages)
+	UAnimMontage* CounterBruteMontage;
+	
 	// ================================================= PreCounter =============================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= PreCounterSetting)
 	UCurveFloat* CounterRotationCurve;

@@ -230,6 +230,9 @@ public:
 	int32 GetEnemyHealth() const { return Health;}
 	void SetEnemyHealth(int32 NewHealth) {Health = NewHealth;}
 
+	EEnemyType GetUnitType() const {return UnitType;}
+
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UBlackboardComponent* GetBBComponent() const {return BBComponent;}
 	

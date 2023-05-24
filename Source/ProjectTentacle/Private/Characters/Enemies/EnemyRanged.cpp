@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/EnemyRanged.h"
 
+#include "Characters/Player/PlayerDamageInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -149,8 +150,8 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 	if(!SupposeDamageActor) return;
 
 	
-	if(SupposeDamageActor->GetClass()->ImplementsInterface(UDamageInterface::StaticClass()))
-		IDamageInterface::Execute_ReceiveDamageFromEnemy(SupposeDamageActor, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
+	if(SupposeDamageActor->GetClass()->ImplementsInterface(UPlayerDamageInterface::StaticClass()))
+		IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(SupposeDamageActor, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
 }
 
 void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,

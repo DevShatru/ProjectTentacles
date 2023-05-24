@@ -3,6 +3,7 @@
 
 #include "Characters/Base/AttackTargetTester.h"
 
+#include "Characters/Player/PlayerDamageInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -220,7 +221,7 @@ void AAttackTargetTester::TryToDamagePlayer_Implementation()
 	{
 		for (AActor* EachFoundActor : FoundActorList)
 		{
-			IDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
+			IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
 			//UGameplayStatics::ApplyDamage(EachFoundActor, 30, GetController(), this, DamageType);
 		}
 	}

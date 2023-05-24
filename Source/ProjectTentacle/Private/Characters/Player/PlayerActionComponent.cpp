@@ -512,8 +512,13 @@ void UPlayerActionComponent::BeginCounterAttack()
 	PlayerOwnerRef->SetDamagingActor(StoredCounterTarget);
 	
 	PlayerOwnerRef->SetCurrentAttackType(EPlayerAttackType::CounterAttack);
-	
-	CurrentPlayingMontage = CounterAttackMontages;
+
+	const EEnemyType TargetEnemyType = StoredCounterTarget->GetUnitType();
+
+	if(TargetEnemyType != EEnemyType::Brute)
+		CurrentPlayingMontage = CounterAttackMontages;
+	else
+		CurrentPlayingMontage = CounterBruteMontage;
 
 	MakePlayerEnemyFaceEachOther(StoredCounterTarget);
 	
@@ -522,10 +527,11 @@ void UPlayerActionComponent::BeginCounterAttack()
 	{
 		ICharacterActionInterface::Execute_OnStartCounteredAnimation(StoredCounterTarget);
 	}
-	
-	StoredCounterTarget->TrySwitchEnemyState(EEnemyCurrentState::Countered);
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
 
+
+		
+	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
+		
 	ComboCountIncrement();
 
 	// Stop Combo Count timer
@@ -1018,7 +1024,10 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 
 		// 
 		// Instant Rotate to enemy
-		const FVector FacingEnemyDir = UKismetMathLibrary::Normal(DamageCauser->GetActorLocation() - PlayerOwnerRef->GetActorLocation());
+		const FVector DamageCauserLocation = DamageCauser->GetActorLocation();
+		FVector PlayerLocation = PlayerOwnerRef->GetActorLocation();
+		PlayerLocation.Z = DamageCauserLocation.Z;
+		const FVector FacingEnemyDir = UKismetMathLibrary::Normal( DamageCauserLocation - PlayerLocation);
 		InstantRotation(FacingEnemyDir);
 	
 		CurrentPlayingMontage = ReceiveDamageMontage;
