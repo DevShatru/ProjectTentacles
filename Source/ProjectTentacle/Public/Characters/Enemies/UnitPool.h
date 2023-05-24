@@ -16,7 +16,7 @@ public:
 	// Sets default values for this actor's properties
 	AUnitPool();
 	void AddUnitToPool(class AEnemyBase* Unit);
-	AEnemyBase* GetUnitFromPool(EEnemyType Type);
+	AEnemyBase* GetUnitFromPool(EEnemyType Type, const FActorSpawnParameters* SpawnParameters);
 
 protected:
 	// Called when the game starts or when spawned
