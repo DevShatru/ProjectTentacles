@@ -4,7 +4,6 @@
 #include "Characters/Enemies/UnitPool.h"
 
 #include "Characters/Enemies/EnemyBase.h"
-
 // Sets default values
 AUnitPool::AUnitPool()
 {
@@ -22,7 +21,7 @@ void AUnitPool::AddUnitToPool(AEnemyBase* Unit)
 	PooledUnits.Add(Unit);
 }
 
-AEnemyBase* AUnitPool::GetUnitFromPool(EEnemyType Type)
+AEnemyBase* AUnitPool::GetUnitFromPool(const EEnemyType Type, const FActorSpawnParameters* SpawnParameters)
 {
 	for(AEnemyBase* Unit: PooledUnits)
 	{
@@ -35,21 +34,26 @@ AEnemyBase* AUnitPool::GetUnitFromPool(EEnemyType Type)
 			return Unit;
 		}
 	}
-
+	TSubclassOf<AEnemyBase> ClassToSpawn;
 	// If we don't find one, spawn a new one
 	switch (Type)
 	{
 	case EEnemyType::Melee:
-			return World->SpawnActor<AEnemyBase>(DefaultMeleeClass);
-		case EEnemyType::Ranged:
-			return World->SpawnActor<AEnemyBase>(DefaultRangedClass);
-		case EEnemyType::Brute:
-			return World->SpawnActor<AEnemyBase>(DefaultBruteClass);
-		case EEnemyType::Healer:
-			return World->SpawnActor<AEnemyBase>(DefaultHealerClass);
-		default:
-			return nullptr;
+		ClassToSpawn = DefaultMeleeClass;
+		break;
+	case EEnemyType::Ranged:
+		ClassToSpawn = DefaultRangedClass;
+		break;
+	case EEnemyType::Brute:
+		ClassToSpawn = DefaultBruteClass;
+		break;
+	case EEnemyType::Healer:
+		ClassToSpawn = DefaultHealerClass;
+		break;
+	default:
+		return nullptr;
 	}
+	return World->SpawnActor<AEnemyBase>(ClassToSpawn, *SpawnParameters);
 }
 
 // Called when the game starts or when spawned

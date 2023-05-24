@@ -175,6 +175,11 @@ void AEnemyBrute::PlaySpecificAttackMovingTimeline(EEnemyAttackType EnemyAttack)
 
 EBruteAttackType AEnemyBrute::FindExecutingAttackType()
 {
+
+	// TODO: Debug Testing
+	// SetExecutingAttackTypes(DebugAttackType);
+	// return DebugAttackType;
+	
 	// Get player position and brute's position
 	const ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
 	// if somehow player is invalid, return charging
@@ -236,7 +241,7 @@ void AEnemyBrute::ExecuteAttack()
 {
 	Super::ExecuteAttack();
 
-
+	// TODO: Debug Testing
 	// {
 	// 	FVector PlayerPos = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetActorLocation();
 	//
@@ -260,9 +265,9 @@ void AEnemyBrute::ExecuteAttack()
 	// 	SetActorLocation(PlayerPos + (DirFromPlayer * TestDistance));
 	// 	
 	// }
-	//
-	// if(AttackIndicatorRef)
-	// 	AttackIndicatorRef->OnReceivingNewAttackType(CurrentAttackType);
+	
+	if(AttackIndicatorRef)
+		AttackIndicatorRef->OnReceivingNewAttackType(CurrentAttackType);
 	
 	UpdateAttackingVariables();
 	
@@ -570,9 +575,6 @@ TArray<AActor*> AEnemyBrute::GetActorsAroundEnemy()
 		}
 	
 	UKismetSystemLibrary::SphereOverlapActors(World, StartLocation, AoeDamageRadius, FilterType, FilteringClass, IgnoreActors, FoundActorList);
-
-	DebugSphere(StartLocation, AoeDamageRadius, 0);
-	
 	
 	return FoundActorList;
 }

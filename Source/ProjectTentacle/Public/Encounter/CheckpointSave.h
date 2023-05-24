@@ -19,6 +19,9 @@ public:
 	FVector PlayerLocation;
 	
 	UPROPERTY()
+	FRotator PlayerRotation;
+	
+	UPROPERTY()
 	float PlayerHealth;
 
 	UPROPERTY()

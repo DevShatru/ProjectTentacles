@@ -67,8 +67,8 @@ private:
 protected:
 	
 	
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_General)
-	// EBruteAttackType DebugAttackType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_General)
+	EBruteAttackType DebugAttackType;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_General)
 	float CounterableAttackMovingDistance = 100.0f;

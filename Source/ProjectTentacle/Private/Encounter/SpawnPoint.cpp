@@ -7,6 +7,7 @@
 #include "Characters/Enemies/UnitPool.h"
 #include "Components/BoxComponent.h"
 #include "Encounter/EncounterVolume.h"
+FActorSpawnParameters* ASpawnPoint::SpawnParams = nullptr;
 
 // Sets default values
 ASpawnPoint::ASpawnPoint()
@@ -76,10 +77,10 @@ void ASpawnPoint::SpawnUnit()
 
 	// Get Unit from pool
 	// Spawn if pool is unavailable
-	AEnemyBase* Unit = UnitPool ? UnitPool->GetUnitFromPool(TypeToSpawn) :
+	AEnemyBase* Unit = UnitPool ? UnitPool->GetUnitFromPool(TypeToSpawn, SpawnParams) :
 					   World->SpawnActor<AEnemyBase>(TypeToSpawn == EEnemyType::Melee ? MeleeUnitClass :
 														  TypeToSpawn == EEnemyType::Ranged ? RangedUnitClass :
-														  TypeToSpawn == EEnemyType::Brute ? BruteUnitClass : HealerUnitClass);
+														  TypeToSpawn == EEnemyType::Brute ? BruteUnitClass : HealerUnitClass, *SpawnParams);
 	SpawnedUnits.Add(Unit);
 	Unit->SetActorLocation(SpawnLocation->GetComponentLocation());
 	++UnitsSpawned[TypeToSpawn];
@@ -107,6 +108,11 @@ void ASpawnPoint::BeginPlay()
 void ASpawnPoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	DoorOpeningVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ASpawnPoint::TryOpenDoor);
+	if(SpawnParams)
+	{
+		delete SpawnParams;
+		SpawnParams = nullptr;
+	}
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -167,6 +173,9 @@ void ASpawnPoint::Setup()
 	World = GetWorld();
 	SpawnedUnits.Empty();
 	TimerManager = &World->GetTimerManager();
+	if(!SpawnParams) SpawnParams = new FActorSpawnParameters();
+	SpawnParams->bNoFail = true;
+	SpawnParams->SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	ResetSpawnPoint();
 	CheckUnitsToSpawn();
 }

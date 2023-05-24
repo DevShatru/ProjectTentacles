@@ -21,6 +21,7 @@ public:
 	void SpawnUnit();
 	void RegisterOwningEncounter(class AEncounterVolume* EncounterVolume);
 	bool IsSpawningComplete() const;
+	static FActorSpawnParameters* SpawnParams;
 
 protected:
 	// Called when the game starts or when spawned

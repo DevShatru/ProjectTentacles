@@ -43,7 +43,7 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	EPlayerAttackType PlayerAttackType)
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
-	
+	if(OnInterruptStrafe.IsBound()) OnInterruptStrafe.Execute();
 	HealthReduction(DamageAmount);
 	
 	if(Health > 0)
@@ -219,6 +219,15 @@ void AEnemyBase::TryResumeMoving()
 	UCharacterMovementComponent* MovementComp = GetCharacterMovement();
 	if(MovementComp->MovementMode == EMovementMode::MOVE_None)
 		MovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
+}
+
+void AEnemyBase::TrySwitchEnemyState(EEnemyCurrentState NewState)
+{
+	if(CurrentEnemyState == NewState) return;
+
+	if(NewState == EEnemyCurrentState::Countered) bUseControllerRotationYaw = false;
+	CurrentEnemyState = NewState;
+	
 }
 
 // Finish attack task and switch to requested task
