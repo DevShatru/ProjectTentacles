@@ -90,6 +90,5 @@ void UWidget_EnemyAttackIndicator::NativeConstruct()
 void UWidget_EnemyAttackIndicator::ShowIndicator()
 {
 	Super::ShowIndicator();
-	
 	TryPlayIndicationAnimation();
 }

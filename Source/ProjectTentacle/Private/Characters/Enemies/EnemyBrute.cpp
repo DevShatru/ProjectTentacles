@@ -3,38 +3,50 @@
 
 #include "Characters/Enemies/EnemyBrute.h"
 
+#include "Characters/Player/PlayerDamageInterface.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
+AEnemyBrute::AEnemyBrute()
+{
+
+}
 
 void AEnemyBrute::BeginPlay()
 {
 	Super::BeginPlay();
 
 	InitializeTimelineComp();
-}
 
+	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
+	if(CapsuleComp)
+	CapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &AEnemyBrute::OnDealChargeDamage);
+}
+	
 void AEnemyBrute::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	UnCounterMovingTimeline.TickTimeline(DeltaSeconds);
+	ChargeMovingTimeline.TickTimeline(DeltaSeconds);
 	CounterableMovingTimeline.TickTimeline(DeltaSeconds);
-
+	JumpSlamMovingTimeline.TickTimeline(DeltaSeconds);
 }
 
 void AEnemyBrute::TryToDamagePlayer_Implementation()
 {
 	Super::TryToDamagePlayer_Implementation();
 
+	if(IsSecondAttack || BruteAttack == EBruteAttackType::JumpSlam) TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+	
 	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy(true);
 
 	if(FoundActorList.Num() != 0)
 	{
 		for (AActor* EachFoundActor : FoundActorList)
 		{
-			IDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
+			IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
 		}
 	}
 }
@@ -93,17 +105,45 @@ void AEnemyBrute::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAc
 	// if player is doing counter attack damage
 	if(PlayerAttackType == EPlayerAttackType::CounterAttack)
 	{
-		TryFinishAttackTask(EEnemyCurrentState::Countered);
 
 		if(CounteredTime == 0)
 		{
 			CounteredTime += 1;
+			PlayAnimMontage(DamageReceiveAnimation, 1, "Default");
 			return;
 		}
+
+		TryFinishAttackTask(EEnemyCurrentState::Countered);
+
+		TrySwitchEnemyState(EEnemyCurrentState::Countered);
+		
+		StopAnimMontage();
+		PlayAnimMontage(StunAnimation, 1, "Default");
+		
+		GetWorld()->GetTimerManager().SetTimer(StunningTimerHandle, this, &AEnemyBrute::RecoverFromStunState, TotalStunDuration, false, -1);
 		
 		SetIsCountered(false);
+		return;
 	}
 
+	PlayAnimMontage(DamageReceiveAnimation, 1, "Default");
+}
+
+void AEnemyBrute::OnDealAoeDamage_Implementation()
+{
+	Super::OnDealAoeDamage_Implementation();
+
+	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+	
+	TArray<AActor*> FoundActorList = GetActorsAroundEnemy();
+
+	if(FoundActorList.Num() != 0)
+	{
+		for (AActor* EachFoundActor : FoundActorList)
+		{
+			IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
+		}
+	}
 }
 
 void AEnemyBrute::InitializeTimelineComp()
@@ -111,20 +151,77 @@ void AEnemyBrute::InitializeTimelineComp()
 	// timeline binding
 	FOnTimelineFloat MovingAttackPosUpdate;
 	MovingAttackPosUpdate.BindDynamic(this, &AEnemyBrute::UpdateAttackingPosition);
-	UnCounterMovingTimeline.AddInterpFloat(UncounterableAttackMovingCurve, MovingAttackPosUpdate);
 	CounterableMovingTimeline.AddInterpFloat(CounterableAttackMovingCurve, MovingAttackPosUpdate);
+	JumpSlamMovingTimeline.AddInterpFloat(JumpSlamHeightCurve, MovingAttackPosUpdate);
+	ChargeMovingTimeline.AddInterpFloat(UncounterableAttackMovingCurve, MovingAttackPosUpdate);
 }
 
 
 void AEnemyBrute::PlaySpecificAttackMovingTimeline(EEnemyAttackType EnemyAttack)
 {
+	// switch case to play specific timeline
 	switch (EnemyAttack)
 	{
 	case EEnemyAttackType::AbleToCounter:
 		CounterableMovingTimeline.PlayFromStart();
 		break;
 	case EEnemyAttackType::UnableToCounter:
-		UnCounterMovingTimeline.PlayFromStart();
+		if(BruteAttack == EBruteAttackType::Charging) ChargeMovingTimeline.PlayFromStart();
+		else JumpSlamMovingTimeline.PlayFromStart();
+		break;
+	default: break;
+	}
+}
+
+EBruteAttackType AEnemyBrute::FindExecutingAttackType()
+{
+	// Get player position and brute's position
+	const ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+	// if somehow player is invalid, return charging
+	if(!PlayerCha)
+	{
+		SetExecutingAttackTypes(EBruteAttackType::Charging);
+		return EBruteAttackType::Charging;
+	}
+	
+	const FVector PlayerPos = PlayerCha->GetActorLocation();
+	FVector CurrentLocationWithSameZ = GetActorLocation();
+	CurrentLocationWithSameZ.Z = PlayerPos.Z;
+	
+	// if distance is close enough, get random float to see execute swipe or charge 
+	const float Distance = UKismetMathLibrary::Vector_Distance(CurrentLocationWithSameZ, PlayerPos);
+	if(Distance < DistanceToDecideFarOrClose)
+	{
+		const float RndChance = UKismetMathLibrary::RandomFloatInRange(0,100);
+		if(RndChance < ChanceToExecuteCharging)
+		{
+			SetExecutingAttackTypes(EBruteAttackType::Charging);
+			return EBruteAttackType::Charging;
+		}
+		
+		SetExecutingAttackTypes(EBruteAttackType::Swipe);
+		return EBruteAttackType::Swipe;
+	}
+
+	// if distance is far enough, execute jump slam
+	SetExecutingAttackTypes(EBruteAttackType::JumpSlam);
+	return EBruteAttackType::JumpSlam;
+}
+
+void AEnemyBrute::SetExecutingAttackTypes(EBruteAttackType ExecutingBruteAction)
+{
+	BruteAttack = ExecutingBruteAction;
+
+	switch (BruteAttack)
+	{
+	case EBruteAttackType::Swipe:
+		CurrentAttackType = EEnemyAttackType::AbleToCounter;
+		break;
+	case EBruteAttackType::Charging:
+		CurrentAttackType = EEnemyAttackType::UnableToCounter;
+		break;
+	case EBruteAttackType::JumpSlam:
+		CurrentAttackType = EEnemyAttackType::UnableToCounter;
 		break;
 	default: break;
 	}
@@ -132,49 +229,63 @@ void AEnemyBrute::PlaySpecificAttackMovingTimeline(EEnemyAttackType EnemyAttack)
 
 void AEnemyBrute::TestFunction()
 {
-	FVector PlayerPos = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetActorLocation();
-
-	FVector CurrentPos = GetActorLocation();
-
-	FVector DirFromPlayer = UKismetMathLibrary::Normal((CurrentPos - PlayerPos));
-
-	SetActorLocation(PlayerPos + (DirFromPlayer * 200));
-	
-	SetActorRotation(UKismetMathLibrary::FindLookAtRotation(CurrentPos, PlayerPos));
-	
-	ExecuteAttack();
+	PlayAnimMontage(DamageReceiveAnimation, 1, "Default");
 }
 
 void AEnemyBrute::ExecuteAttack()
 {
 	Super::ExecuteAttack();
 
-	// testing
-	CurrentAttackType = EEnemyAttackType::AbleToCounter;
 
-	//UpdateAttackDestination();
-
-	RemainAttackDistance = AttackTravelDistance_Counterable;
-	float DeltaSecond = GetWorld()->GetDeltaSeconds();
-	float NumOfTickPerSecond = 1 / DeltaSecond;
-	TravelDistancePerTick = AttackTravelDistance_Counterable / (ToTalTravelTime_Counterable * NumOfTickPerSecond);
+	// {
+	// 	FVector PlayerPos = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetActorLocation();
+	//
+	// 	FVector CurrentPos = GetActorLocation();
+	//
+	// 	FVector DirFromPlayer = UKismetMathLibrary::Normal((CurrentPos - PlayerPos));
+	//
+	// 	float TestDistance = 0;
+	//
+	// 	EBruteAttackType DecidedAttackType = FindExecutingAttackType();
+	// 	SetExecutingAttackTypes(DecidedAttackType);
+	//
+	// 	if(DecidedAttackType == EBruteAttackType::Swipe)
+	// 		TestDistance = 200;
+	// 	else if(DecidedAttackType == EBruteAttackType::Charging)
+	// 		TestDistance = 1200;
+	// 	else
+	// 		TestDistance = 700;
+	// 	
+	//
+	// 	SetActorLocation(PlayerPos + (DirFromPlayer * TestDistance));
+	// 	
+	// }
+	//
+	// if(AttackIndicatorRef)
+	// 	AttackIndicatorRef->OnReceivingNewAttackType(CurrentAttackType);
 	
+	UpdateAttackingVariables();
+	
+	IsSecondAttack = false;
 	
 	// switch case on current attack type to fire different animation 
-	switch (CurrentAttackType)
+	switch (BruteAttack)
 	{
-	case EEnemyAttackType::AbleToCounter:
-		if(CounterableAttackMontage != nullptr)
-		{
+		case EBruteAttackType::Swipe:
 			PlayAnimMontage(CounterableAttackMontage, 1, "Default");
 			PlaySpecificAttackMovingTimeline(CurrentAttackType);
-		}
-		break;
-	case EEnemyAttackType::UnableToCounter:
-		if(NotCounterableAttackMontage != nullptr)
-			PlayAnimMontage(NotCounterableAttackMontage, 1, "Default");
-		break;
-	default: break;
+			break;
+		case EBruteAttackType::Charging:
+			if(NotCounterableAttackMontage != nullptr)
+				PlayAnimMontage(NotCounterableAttackMontage, 1, "Default");
+			break;
+		case EBruteAttackType::JumpSlam:
+			if(JumpSlamAttack != nullptr)
+				PlayAnimMontage(JumpSlamAttack, 1, "Default");
+			PlaySpecificAttackMovingTimeline(CurrentAttackType);
+
+			break;
+		default: break;
 	}
 	
 
@@ -225,62 +336,127 @@ FVector AEnemyBrute::CalculateDestinationForAttackMoving(FVector PlayerCurrentPo
 
 void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 {
-	// TODO: REWRITE WHOLE THING
-
 	const ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
 	if(!PlayerCha) return;
 
 	const FVector PlayerPos = PlayerCha->GetActorLocation();
 	const FVector CurrentLocation = GetActorLocation();
 
-	const float Displacement = UKismetMathLibrary::Vector_Distance(PlayerPos, CurrentLocation);
+
+	// Get direction from self to player
+	FVector OffsetWithoutZ = PlayerPos - CurrentLocation;
+	OffsetWithoutZ.Z = 0;
+	const FVector DirFromSelfToPlayer = UKismetMathLibrary::Normal(OffsetWithoutZ);
 	
-	if(RemainAttackDistance > TravelDistancePerTick && Displacement > 90.0f)
+	// if brute's attack is swiping
+	if(BruteAttack == EBruteAttackType::Swipe)
 	{
-		RemainAttackDistance -= TravelDistancePerTick;
+		const float Displacement = UKismetMathLibrary::Vector_Distance(PlayerPos, CurrentLocation);
 		
-		// Get direction from self to player
-		FVector OffsetWithoutZ = PlayerPos - CurrentLocation;
-		OffsetWithoutZ.Z = 0;
-		const FVector DirFromSelfToPlayer = UKismetMathLibrary::Normal(OffsetWithoutZ);
-		const FVector SupposedMovingPos = CurrentLocation + (DirFromSelfToPlayer * TravelDistancePerTick);
+		if(RemainAttackDistance > TravelDistancePerTick && Displacement > 120.0f)
+		{
+			RemainAttackDistance -= TravelDistancePerTick;
+			
+			const FVector SupposedMovingPos = CurrentLocation + (DirFromSelfToPlayer * TravelDistancePerTick);
+			
+			SetActorLocation(SupposedMovingPos);
 
-
+			SetActorRotation(UKismetMathLibrary::FindLookAtRotation(CurrentLocation, PlayerPos));
+		}
 		
-		
-		
-		SetActorLocation(SupposedMovingPos);
-
-		SetActorRotation(UKismetMathLibrary::FindLookAtRotation(CurrentLocation, PlayerPos));
+		return;
 	}
 	
+	// if brute's attack is charging
+	if(BruteAttack == EBruteAttackType::Charging)
+	{
+		const bool ShouldCharge = ShouldKeepCharging(DirFromSelfToPlayer);
+		if(!ShouldCharge)
+		{
+			StopAnimMontage();
+			ChargeMovingTimeline.Stop();
+			SetCapsuleCompCollision(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
+			TryResumeMoving();
+			TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+			return;
+		}
+		
+		
+		RemainAttackDistance -= TravelDistancePerTick;
 
-	
+
+		
+		const FVector ChargingDirection = GetChargeDirection(DirFromSelfToPlayer, CurrentLocation);
+		const FVector SupposedMovingPos = CurrentLocation + (ChargingDirection * TravelDistancePerTick);
+		
+		SetActorLocation(SupposedMovingPos);
+		
+		// record moving direction
+		FVector AttackMovingOffsetWithoutZ = SupposedMovingPos - CurrentLocation;
+		AttackMovingOffsetWithoutZ.Z = 0;
+		AttackMovingDir = UKismetMathLibrary::Normal(AttackMovingOffsetWithoutZ);
+
+		SetActorRotation(UKismetMathLibrary::FindLookAtRotation(CurrentLocation, SupposedMovingPos));
+
+		return;
+	}
 
 
+	RemainAttackDistance -= TravelDistancePerTick;
+
+	const FVector SupposedDestination = GetJumpSlamPosition((DirFromSelfToPlayer * -1), PlayerPos);
+	const float GroundPlayBackPos = JumpSlamMovingTimeline.GetPlaybackPosition();
+	const float GroundAlpha = JumpSlamDistanceCurve->GetFloatValue(GroundPlayBackPos);
 	
+	FVector SupposedMovingPos = UKismetMathLibrary::VLerp(StartJumpingLocation, SupposedDestination, GroundAlpha);
 	
-	// // Update lerping destination if enemy attack tracking is enable and current Alpha is not exceeding limit
-	//
-	// 		const ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
-	// 		if(!PlayerCha) return;
-	//
-	// 		const FVector PlayerPos = PlayerCha->GetActorLocation();
-	//
-	// 		AttackMovingDestination = CalculateDestinationForAttackMoving(PlayerPos, Alpha);
-	//
-	// DebugCircle(AttackMovingDestination);
-	//
-	// //GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("PlayerPos: %s  DestinationPos: %s"), *PlayerPos.ToString(), *AttackMovingDestination.ToString()));
-	//
-	// const FVector CharacterCurrentPos = GetActorLocation();
-	//
-	// const FVector LerpPos = UKismetMathLibrary::VLerp(SelfAttackStartPos,AttackMovingDestination, Alpha);
-	//
-	// const FVector MovingPos = FVector(LerpPos.X, LerpPos.Y, CharacterCurrentPos.Z);
-	//
-	// SetActorLocation(MovingPos);
+	float SupposedHeight = UKismetMathLibrary::Lerp(StartJumpingLocation.Z, StartJumpingLocation.Z + JumpSlamHeight, Alpha);
+
+	SupposedMovingPos.Z = SupposedHeight;
+
+	// TODO: Fix Rotation
+	//SetActorRotation(UKismetMathLibrary::FindLookAtRotation(CurrentLocation, SupposedMovingPos));
+	
+	SetActorLocation(SupposedMovingPos);
+	
 }
+
+FVector AEnemyBrute::GetChargeDirection(FVector DirToPlayer, FVector ActorCurrentPos)
+{
+	const FVector ForwardDir = GetActorForwardVector();
+	const FVector RightDir = GetActorRightVector();
+	const FVector LeftDir = RightDir * -1 ;
+
+
+	const float DotResult = UKismetMathLibrary::Dot_VectorVector(RightDir,DirToPlayer);
+	const bool IsRight = DotResult > 0;
+
+	const float DotAngleOffset = 90 * (1 - (UKismetMathLibrary::Abs(DotResult)));
+
+
+	float DeltaSecond = GetWorld()->GetDeltaSeconds();
+	float NumOfTickPerSecond = 1 / DeltaSecond;
+	float TrackingAnglePerTick = ChargeTrackingAngle / NumOfTickPerSecond;
+	
+	if(DotAngleOffset < TrackingAnglePerTick) return DirToPlayer;
+
+
+	
+	const float ReturnAlpha = TrackingAnglePerTick / 90;
+
+	if(IsRight)
+	{
+		return UKismetMathLibrary::VLerp(ForwardDir, RightDir, ReturnAlpha);
+	}
+
+	return UKismetMathLibrary::VLerp(ForwardDir, LeftDir, ReturnAlpha);
+}
+
+FVector AEnemyBrute::GetJumpSlamPosition(FVector DirFromPlayerToSelf, FVector PlayerPos)
+{
+	return PlayerPos + (DirFromPlayerToSelf * 100);
+}
+
 
 void AEnemyBrute::OnContinueSecondAttackMontage_Implementation()
 {
@@ -291,15 +467,13 @@ void AEnemyBrute::OnContinueSecondAttackMontage_Implementation()
 	SetActorRotation(UKismetMathLibrary::FindLookAtRotation(CurrentPos, PlayerPos));
 
 	PlaySpecificAttackMovingTimeline(CurrentAttackType);
-
 	
+	UpdateAttackingVariables();
 
 	if(CurrentAttackType == EEnemyAttackType::AbleToCounter)
 	{
-		RemainAttackDistance = AttackTravelDistance_Counterable;
-		float DeltaSecond = GetWorld()->GetDeltaSeconds();
-		float NumOfTickPerSecond = 1 / DeltaSecond;
-		TravelDistancePerTick = AttackTravelDistance_Counterable / (ToTalTravelTime_Counterable * NumOfTickPerSecond);
+		IsSecondAttack = true;
+		
 		
 		StopAnimMontage();
 		PlayAnimMontage(CouterableAttackSecond, 1, "Default");
@@ -309,7 +483,8 @@ void AEnemyBrute::OnContinueSecondAttackMontage_Implementation()
 
 	StopAnimMontage();
 	PlayAnimMontage(UnableCounterAttackSecond, 1, "Default");
-	
+	SetCapsuleCompCollision(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
 	
 
 }
@@ -328,10 +503,10 @@ TArray<AActor*> AEnemyBrute::GetActorsInFrontOfEnemy(bool IsDamaging)
 	const UWorld* World = GetWorld();
 	
 	FName AttackSocketName;
-	if(CurrentAttackType == EEnemyAttackType::AbleToCounter)
-		AttackSocketName = "RightHand";
+	if(!IsSecondAttack)
+		AttackSocketName = "LeftHand";
 	else
-		AttackSocketName = "RightFoot";
+		AttackSocketName = "RightHand";
 	
 	const FVector HeadSocketLocation = GetMesh()->GetSocketLocation(AttackSocketName);
 
@@ -364,34 +539,144 @@ TArray<AActor*> AEnemyBrute::GetActorsInFrontOfEnemy(bool IsDamaging)
 		Height = CounterTriggerHeight;
 	}
 	
-	
 	UKismetSystemLibrary::CapsuleOverlapActors(World, HeadSocketLocation, Radius, Height, FilterType, FilteringClass, IgnoreActors, FoundActorList);
 
+	
 	return FoundActorList;
+}
+
+TArray<AActor*> AEnemyBrute::GetActorsAroundEnemy()
+{
+	const UWorld* World = GetWorld();
+	TArray<AActor*> FoundActorList;
+
+	FVector StartLocation = GetActorLocation();
+	const FVector DownwardEnd = StartLocation + ((GetActorUpVector() * -1) * 100.0f);
+
+	// Hit result
+	FHitResult Hit;
+	// Empty array of ignoring actor, maybe add Enemies classes to be ignored
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	
+	const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, StartLocation, DownwardEnd, UEngineTypes::ConvertToTraceType(ECC_Visibility),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
+	if(bHit) StartLocation.Z = Hit.Location.Z;
+	
+	TArray<AEnemyBase*> Allies = OwnController->GetAllies();
+	if(Allies.Num() > 0)
+		for (AEnemyBase* EachAlly : Allies)
+		{
+			IgnoreActors.Add(EachAlly);
+		}
+	
+	UKismetSystemLibrary::SphereOverlapActors(World, StartLocation, AoeDamageRadius, FilterType, FilteringClass, IgnoreActors, FoundActorList);
+
+	DebugSphere(StartLocation, AoeDamageRadius, 0);
+	
+	
+	return FoundActorList;
+}
+
+void AEnemyBrute::OnDeath()
+{
+	Super::OnDeath();
 }
 
 void AEnemyBrute::TryStopAttackMovement()
 {
 }
 
-void AEnemyBrute::UpdateAttackDestination()
+void AEnemyBrute::UpdateAttackingVariables()
 {
-	// Save lerp start and end position for later timeline function usage
-	SelfAttackStartPos = GetActorLocation();
+	float AttackTravelDistance = 0;
+	float TotalTravelTime = 0;
+	if(BruteAttack == EBruteAttackType::Swipe)
+	{
+		AttackTravelDistance = AttackTravelDistance_Swipe;
+		TotalTravelTime = ToTalTravelTime_Swipe;
+	}
+	else if(BruteAttack == EBruteAttackType::Charging)
+	{
+		AttackTravelDistance = AttackTravelDistance_Charge;
+		TotalTravelTime = TotalTravelTime_Charging;
+	}
+	else
+	{
+		AttackTravelDistance = AttackTravelDistance_JumpSlam;
+		TotalTravelTime = TotalTravelTime_JumpSlam;
+		StartJumpingLocation = GetActorLocation();
+	}
+	
+	RemainAttackDistance = AttackTravelDistance;
+	MaxTravelDistance = AttackTravelDistance;
+	float DeltaSecond = GetWorld()->GetDeltaSeconds();
+	float NumOfTickPerSecond = 1 / DeltaSecond;
+	TravelDistancePerTick = AttackTravelDistance / (TotalTravelTime * NumOfTickPerSecond);
+}
 
-	// Get Player Position
-	const ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	FVector PlayerCurrentPos = PlayerCharacter->GetActorLocation();
-		
-	const FVector DestinationPos = CalculateDestinationForAttackMoving(PlayerCurrentPos, 0);
-	AttackMovingDestination = DestinationPos;
+bool AEnemyBrute::ShouldKeepCharging(FVector DirToPlayer)
+{
+	// if brute charge through player, or finish traveling, end task and timeline
+	if(RemainAttackDistance < TravelDistancePerTick)
+	{
+		return false;
+	}
+
+	if(AttackMovingDir != FVector(0,0,0))
+	{
+		const float DotResult = UKismetMathLibrary::Dot_VectorVector(AttackMovingDir, DirToPlayer);
+		if(DotResult < 0.2)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void AEnemyBrute::PlayReceiveCounterAnimation()
 {
-	StopAnimMontage();
-	PlayAnimMontage(StunAnimation, 1, "Default");
+}
+
+void AEnemyBrute::ChargeKnock(AActor* KnockingActor)
+{
+	// TODO:Get knocking force with direction
+
+	const FVector CharForwardDir = GetActorForwardVector();
+	const FVector CharUpDir = GetActorUpVector();
 	
+	const float UpForce = UKismetMathLibrary::DegSin(ChargeKnockAngle) * ChargeKnockForce;
+	const float ForwardForce = UKismetMathLibrary::DegCos(ChargeKnockAngle) * ChargeKnockForce;
+
+	const FVector ForwardForceVector = CharForwardDir * ForwardForce;
+	const FVector UpForceVector = CharUpDir * UpForce;
+
+	const FVector KnockForce = ForwardForceVector + UpForceVector;
 	
-	GetWorld()->GetTimerManager().SetTimer(StunningTimerHandle, this, &AEnemyBrute::RecoverFromStunState, TotalStunDuration, false, -1);
+	ICharacterActionInterface::Execute_OnApplyChargeKnockForce(KnockingActor, KnockForce);
+}
+
+void AEnemyBrute::SetCapsuleCompCollision(ECollisionChannel ResponseChannel, ECollisionResponse RequestResponse)
+{
+	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
+	if(CapsuleComp)
+		CapsuleComp->SetCollisionResponseToChannel(ResponseChannel, RequestResponse);
+}
+
+void AEnemyBrute::OnDealChargeDamage(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+											UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// check if owner class has player damage interface
+	if(OtherActor->GetClass()->ImplementsInterface(UPlayerDamageInterface::StaticClass()))
+	{
+		
+		StopAnimMontage();
+		SetCapsuleCompCollision(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
+		TryResumeMoving();
+		ChargeMovingTimeline.Stop();
+		ChargeKnock(OtherActor);
+		// if it has character action interface, it means its base character, execute its SwitchToIdleState function
+		IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(OtherActor, BaseDamageAmount, this, CurrentAttackType);
+		TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+	}
 }

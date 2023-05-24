@@ -307,6 +307,14 @@ void APlayerCharacter::DebugTestFunction()
 	}
 }
 
+void APlayerCharacter::ResumeSimulatePhysic()
+{
+	UCapsuleComponent* PlayerCap = GetCapsuleComponent();
+	if(!PlayerCap) return;
+
+	PlayerCap->SetSimulatePhysics(false);
+}
+
 void APlayerCharacter::SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime)
 {
 	if(RangeAimingEnemy != NewRegisteringActor)
@@ -470,7 +478,7 @@ void APlayerCharacter::TryRemoveCounterTarget_Implementation(AEnemyBase* Counter
 void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount, AActor* DamageCauser,
                                                              EEnemyAttackType EnemyAttackType)
 {
-	IDamageInterface::ReceiveDamageFromEnemy_Implementation(DamageAmount, DamageCauser, EnemyAttackType);
+	IPlayerDamageInterface::ReceiveDamageFromEnemy_Implementation(DamageAmount, DamageCauser, EnemyAttackType);
 
 	bool bExecuted = OnReceivingIncomingDamage.ExecuteIfBound(DamageAmount, DamageCauser, EnemyAttackType);
 }
@@ -550,6 +558,14 @@ void APlayerCharacter::OnChangePlayerIndicatorHUD_Visibility_Implementation(bool
 	Super::OnChangePlayerIndicatorHUD_Visibility_Implementation(IsVisible);
 
 	HUDRef->ChangeVisibility(IsVisible);
+}
+
+void APlayerCharacter::OnApplyChargeKnockForce_Implementation(FVector ApplyingForce)
+{
+	Super::OnApplyChargeKnockForce_Implementation(ApplyingForce);
+
+	LaunchCharacter(ApplyingForce, true, true);
+
 }
 
 

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GenericTeamAgentInterface.h"
 #include "PlayerCameraInterface.h"
+#include "PlayerDamageInterface.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Components/TimelineComponent.h"
@@ -66,7 +67,7 @@ DECLARE_DYNAMIC_DELEGATE(FOnEnableComboResetTimer);
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IDamageInterface, public IPlayerCameraInterface
+class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IPlayerDamageInterface, public IPlayerCameraInterface
 {
 	GENERATED_BODY()
 
@@ -207,6 +208,10 @@ protected:
 	// Timer handle for waiting to regen and regening
 	FTimerHandle RegenWaitingTimerHandle;
 	FTimerHandle RegenStaminaTimerHandle;
+
+
+	// Timer Handle for resume simulate physics setting
+	FTimerHandle ResumeSimulatePhysicTimer;
 	
 	
 	// input key variables to check
@@ -297,6 +302,9 @@ public:
 	void DebugTestFunction();
 
 	bool DebugingBool = false;
+
+	UFUNCTION()
+	void ResumeSimulatePhysic();
 	
 	
 	// ================================================= Get And Set Functions ============================================
@@ -369,5 +377,8 @@ public:
 	
 	UFUNCTION()
 	virtual void OnChangePlayerIndicatorHUD_Visibility_Implementation(bool IsVisible) override;
+
+	UFUNCTION()
+	virtual void OnApplyChargeKnockForce_Implementation(FVector ApplyingForce) override;
 	
 };

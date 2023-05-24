@@ -1023,7 +1023,10 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 
 		// 
 		// Instant Rotate to enemy
-		const FVector FacingEnemyDir = UKismetMathLibrary::Normal(DamageCauser->GetActorLocation() - PlayerOwnerRef->GetActorLocation());
+		const FVector DamageCauserLocation = DamageCauser->GetActorLocation();
+		FVector PlayerLocation = PlayerOwnerRef->GetActorLocation();
+		PlayerLocation.Z = DamageCauserLocation.Z;
+		const FVector FacingEnemyDir = UKismetMathLibrary::Normal( DamageCauserLocation - PlayerLocation);
 		InstantRotation(FacingEnemyDir);
 	
 		CurrentPlayingMontage = ReceiveDamageMontage;

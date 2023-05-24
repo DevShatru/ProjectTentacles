@@ -65,3 +65,11 @@ enum class EEnemyAttackAnimMontages: uint8
 	HeadButt = 0 UMETA(DisplayName = "HeadButt"),
 	MMAKick = 1 UMETA(DisplayName = "MMAKick"),
 };
+
+UENUM(BlueprintType)
+enum class EBruteAttackType: uint8
+{
+	Swipe = 0 UMETA(DisplayName = "Swipe"),
+	Charging = 1 UMETA(DisplayName = "Charging"),
+	JumpSlam = 2 UMETA(DisplayName = "JumpSlam"),
+};

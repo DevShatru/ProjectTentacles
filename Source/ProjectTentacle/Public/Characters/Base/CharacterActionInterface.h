@@ -62,7 +62,9 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnChangePlayerIndicatorHUD_Visibility(bool IsVisible);
-	
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnApplyChargeKnockForce(FVector ApplyingForce);
 
 	// Enemy Delegate
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
@@ -102,5 +104,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnContinueSecondAttackMontage();
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnDealAoeDamage();
 	
 };

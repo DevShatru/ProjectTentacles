@@ -6,6 +6,7 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBaseController.h"
+#include "Characters/Player/PlayerDamageInterface.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -45,13 +46,13 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	
 	HealthReduction(DamageAmount);
 	
-	if((Health - DamageAmount) > 0)
+	if(Health > 0)
 	{
-		PlayReceiveDamageAnimation(PlayerAttackType);
+		if(UnitType != EEnemyType::Brute) PlayReceiveDamageAnimation(PlayerAttackType);
 		return;
 	}
 
-	if(CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered)
+	if((CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered) && UnitType != EEnemyType::Brute)
 	{
 		TryGetOwnController();
 		OwnController->RegisterCompletedAttack();
@@ -147,15 +148,16 @@ void AEnemyBase::ExecuteAttack()
 {
 	AttackTaskOn = true;
 
-	SetAttackType();
-
-	
-	if(AttackIndicatorRef)
+	if(UnitType != EEnemyType::Brute)
 	{
-		// execute delegate function to update variables in Indicator widget class
-		OnUpdatingEnemyAttackIndicator.Execute(CurrentAttackType);
+		SetAttackType();
+		
 	}
 
+	// Update attack type in indicator's reference
+	if(AttackIndicatorRef)
+			AttackIndicatorRef->OnReceivingNewAttackType(CurrentAttackType);
+	
 	// Set is attacking
 	TrySwitchEnemyState(EEnemyCurrentState::Attacking);
 
@@ -167,8 +169,8 @@ void AEnemyBase::ExecuteAttack()
 
 void AEnemyBase::SetAttackType()
 {
-	// If Unit Type is Range or Brute, the attack is UnableToCounter
-	if(UnitType != EEnemyType::Melee)
+	// If Unit Type is Range, the attack is UnableToCounter
+	if(UnitType == EEnemyType::Ranged)
 	{
 		CurrentAttackType = EEnemyAttackType::UnableToCounter;
 		return;
@@ -189,9 +191,9 @@ void AEnemyBase::EnableStrafe(const bool bStrafe) const
 
 void AEnemyBase::ExecuteRangedAttack(AActor* Target)
 {
-	if(Target->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+	if(Target->GetClass()->ImplementsInterface(UPlayerDamageInterface::StaticClass()))
 	{
-		IDamageInterface::Execute_ReceiveDamageFromEnemy(Target, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
+		IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(Target, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
 	}
 }
 
@@ -222,6 +224,9 @@ void AEnemyBase::TryResumeMoving()
 // Finish attack task and switch to requested task
 void AEnemyBase::TryFinishAttackTask(EEnemyCurrentState SwitchingState)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Finish Attack Task!"));	
+
+	
 	// if BT component is valid and if current enemy state is attacking
 	if(BTComponent && (CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered))
 	{
@@ -254,7 +259,7 @@ void AEnemyBase::TryToDamagePlayer_Implementation()
 {
 	ICharacterActionInterface::TryToDamagePlayer_Implementation();
 
-	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+	if(UnitType != EEnemyType::Brute) TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 }
 
 void AEnemyBase::OnPullingEnemy_Implementation(FVector PullingDest, float PullingPower, float WorldDeltaSec)
@@ -397,7 +402,6 @@ void AEnemyBase::StartAttackTimeout()
 void AEnemyBase::ShowEnemyAttackIndicator_Implementation()
 {
 	IEnemyWidgetInterface::ShowEnemyAttackIndicator_Implementation();
-
 	if(AttackIndicatorRef)
 		AttackIndicatorRef->ShowIndicator();
 }

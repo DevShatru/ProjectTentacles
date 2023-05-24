@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/EnemyMelee.h"
 
+#include "Characters/Player/PlayerDamageInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -259,7 +260,10 @@ void AEnemyMelee::TryToDamagePlayer_Implementation()
 	{
 		for (AActor* EachFoundActor : FoundActorList)
 		{
-			IDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
+			if(EachFoundActor->GetClass()->ImplementsInterface(UPlayerDamageInterface::StaticClass()))
+			{
+				IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
+			}
 		}
 	}
 }
