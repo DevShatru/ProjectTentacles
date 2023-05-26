@@ -18,6 +18,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UStaticMeshComponent* WaterMesh;
@@ -27,4 +28,18 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	class UNavModifierComponent* NavModifier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Swamp Damage")
+	float DamagePerTick = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Swamp Damage")
+	float TickInterval = 3.0f;
+
+	UFUNCTION()
+	void EnterSwamp(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	UFUNCTION()
+	void ExitSwamp(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+private:
+	TArray<AActor*> ContainedActors;
 };

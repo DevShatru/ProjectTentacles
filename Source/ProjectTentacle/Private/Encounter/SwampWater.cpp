@@ -4,6 +4,7 @@
 #include "Encounter/SwampWater.h"
 
 #include "NavModifierComponent.h"
+#include "Characters/Player/PlayerCharacter.h"
 #include "Components/BoxComponent.h"
 
 // Sets default values
@@ -31,6 +32,37 @@ ASwampWater::ASwampWater()
 void ASwampWater::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	ContainedActors.Empty();
+	DamageVolume->OnComponentBeginOverlap.AddDynamic(this, &ASwampWater::EnterSwamp);
+	DamageVolume->OnComponentEndOverlap.AddDynamic(this, &ASwampWater::ExitSwamp);
+}
+
+void ASwampWater::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	DamageVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ASwampWater::EnterSwamp);
+	DamageVolume->OnComponentEndOverlap.RemoveDynamic(this, &ASwampWater::ExitSwamp);
+	Super::EndPlay(EndPlayReason);
+}
+
+void ASwampWater::EnterSwamp(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if(ContainedActors.Contains(OtherActor)) return;
+	APlayerCharacter* AsPC = Cast<APlayerCharacter>(OtherActor);
+	if(!AsPC) return;
+
+	ContainedActors.Add(AsPC);
+	AsPC->StartSwampDamageTick(DamagePerTick, TickInterval);
+}
+
+void ASwampWater::ExitSwamp(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if(!ContainedActors.Contains(OtherActor)) return;
+	APlayerCharacter* AsPC = Cast<APlayerCharacter>(OtherActor);
+	if(!AsPC) return;
+
+	AsPC->StopSwampDamageTick();
+	ContainedActors.Remove(AsPC);
 }
 
