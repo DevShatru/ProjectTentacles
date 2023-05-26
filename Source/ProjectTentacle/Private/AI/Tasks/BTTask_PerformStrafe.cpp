@@ -61,6 +61,9 @@ EBTNodeResult::Type UBTTask_PerformStrafe::ExecuteTask(UBehaviorTreeComponent& O
 	
 	OwnPawn->EnableStrafe(bUseStrafeSpeed);
 	StrafeLoopStartLocation = OwnPawn->GetActorLocation();
+	
+	if(bIsTargetActor && (!StrafeActorTarget || !IsValid(StrafeActorTarget))) return EBTNodeResult::Failed;
+	
 	StrafeLoopDirection = GetStrafeDirection();
 	
 	return EBTNodeResult::InProgress;
@@ -93,6 +96,13 @@ void UBTTask_PerformStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* N
 			return;
 		}
 		StrafeLoopStartLocation = OwnPawn->GetActorLocation();
+		
+		if(bIsTargetActor && (!StrafeActorTarget || !IsValid(StrafeActorTarget)))
+		{
+			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+			return;
+		}
+		
 		StrafeLoopDirection = GetStrafeDirection();
 	}
 
