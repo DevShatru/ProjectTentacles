@@ -95,6 +95,9 @@ private:
 
 	unsigned int bIsDead:1;
 	
+	unsigned int bTakingSwampDamage:1;
+	FTimerDelegate SwampDamageDelegate;
+	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
 	float ResetTime = 5.f;
@@ -235,7 +238,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UAIPerceptionStimuliSourceComponent* StimuliSource;
 
+	UFUNCTION()
+	void DealSwampDamage(float Damage, float TickTime);
+
 public:
+	void StartSwampDamageTick(float Damage, float TickInterval);
+	void StopSwampDamageTick();
 	void ShowHitIndicator(float CounterTime, const FVector HitLocation) const;
 	void CollapseHitIndicator() const;
 	
