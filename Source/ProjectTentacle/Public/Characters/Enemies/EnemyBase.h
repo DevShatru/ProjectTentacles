@@ -92,7 +92,7 @@ protected:
 
 	FTimerHandle GettingUpTimerHandle;
 
-	class AEnemyBaseController* OwnController;
+	AEnemyBaseController* OwnController;
 	
 	// Enemy Property variable
 	

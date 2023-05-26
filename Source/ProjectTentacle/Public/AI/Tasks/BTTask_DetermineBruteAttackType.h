@@ -18,7 +18,7 @@ public:
 	UBTTask_DetermineBruteAttackType();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FBlackboardKeySelector AttackTypeKey;
+// protected:
+	// UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	// FBlackboardKeySelector AttackTypeKey;
 };

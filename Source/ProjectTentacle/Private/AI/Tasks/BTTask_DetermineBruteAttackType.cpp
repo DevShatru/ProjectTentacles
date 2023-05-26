@@ -11,7 +11,7 @@ UBTTask_DetermineBruteAttackType::UBTTask_DetermineBruteAttackType()
 {
 	NodeName = "Determine Brute Attack Type";
 
-	AttackTypeKey.AddEnumFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_DetermineBruteAttackType, AttackTypeKey), StaticEnum<EBruteAttackType>());
+	// AttackTypeKey.AddEnumFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_DetermineBruteAttackType, AttackTypeKey), StaticEnum<EBruteAttackType>());
 }
 
 EBTNodeResult::Type UBTTask_DetermineBruteAttackType::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -22,8 +22,8 @@ EBTNodeResult::Type UBTTask_DetermineBruteAttackType::ExecuteTask(UBehaviorTreeC
 	AEnemyBrute* OwnPawn = Cast<AEnemyBrute>(OwnController->GetPawn());
 	if(!OwnPawn) return EBTNodeResult::Failed;
 
-	EBruteAttackType DeterminedAttackType = OwnPawn->FindExecutingAttackType();
-	OwnerComp.GetBlackboardComponent()->SetValueAsEnum(AttackTypeKey.SelectedKeyName, static_cast<uint8>(DeterminedAttackType));
+	const EBruteAttackType DeterminedAttackType = OwnPawn->FindExecutingAttackType();
+	// OwnerComp.GetBlackboardComponent()->SetValueAsEnum(AttackTypeKey.SelectedKeyName, static_cast<uint8>(DeterminedAttackType));
 	OwnPawn->SetExecutingAttackTypes(DeterminedAttackType);
 	return EBTNodeResult::Succeeded;
 }
