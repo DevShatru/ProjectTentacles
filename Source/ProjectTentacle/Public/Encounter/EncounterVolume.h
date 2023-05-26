@@ -27,11 +27,11 @@ public:
 	// Return list of contained units excluding passed pawn
 	TArray<AEnemyBase*> GetAlliesForPawn(APawn* Pawn);
 
-	// Register basic unit (melee or ranged) on attack queue
-	void RegisterOnBasicAttackQueue(class AEnemyBaseController* RegisteringController);
+	// Register unit on attack queue
+	void RegisterOnAttackQueue(class AEnemyBaseController* RegisteringController);
 	
-	// Register when a basic unit has completed it's attack
-	void RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController);
+	// Register when a unit has completed it's attack
+	void RegisterCompletedAttack(AEnemyBaseController* RegisteringController);
 	
 	// Fire when a unit is destroyed tp check if we should trigger spawn and update our queues
 	void RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bForceDespawn);
@@ -69,7 +69,10 @@ protected:
 	TSet<AEnemyBase*> ContainedUnits;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
-	float AttackStartDelay = 3.0f;
+	float AttackStartDelayBasic = 3.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
+	float AttackStartDelayHeavy = 3.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	class AUnitPool* UnitPool;
@@ -92,7 +95,7 @@ protected:
 
 	// Pop random enemy from the queue and command them to attack
 	UFUNCTION()
-	void BeginAttackBasic();
+	void BeginAttack(bool bIsBasic = true);
 
 	UFUNCTION()
 	void StartSpawn();
@@ -119,20 +122,22 @@ private:
 	bool AllSpawnsComplete() const;
 	
 	// Timer handle for basic attack queue
-	FTimerHandle BasicQueueTimer;
+	FTimerHandle BasicQueueTimer, HeavyQueueTimer;
 	// Timer handle to begin span after elapsed time
 	FTimerHandle SpawnStartTimer;
 
 	// Cache reference to world timer manager
 	static FTimerManager* WorldTimerManager;
 	void TryCacheTimerManager() const;
-	// Start timer for basic queue
-	void StartBasicQueueTimer();
+	// Start timer for queues
+	void StartQueueTimer(bool bIsBasic = true);
+	FTimerDelegate BasicQueueDelegate, HeavyQueueDelegate;
+	TArray<AEnemyBaseController*>* GetAttackQueue(bool bIsBasic = true);
 	void TriggerNextWave();
 	void ResetSpawnPoints() const;
 
 	int8 InitialUnits, DefeatedUnits, CurrentWave;
-	AEnemyBaseController* LastAttacker;
+	AEnemyBaseController* LastAttackerBasic, *LastAttackerHeavy;
 	AActor* EncounterTarget;
 	FWaveParams* CurrentWaveParams;
 };

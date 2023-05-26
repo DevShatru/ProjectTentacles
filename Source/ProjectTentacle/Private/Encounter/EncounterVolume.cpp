@@ -47,28 +47,30 @@ TArray<AEnemyBase*> AEncounterVolume::GetAlliesForPawn(APawn* Pawn)
 	return AlliesForPawn;
 }
 
-void AEncounterVolume::RegisterOnBasicAttackQueue(AEnemyBaseController* RegisteringController)
+void AEncounterVolume::RegisterOnAttackQueue(AEnemyBaseController* RegisteringController)
 {
-	if(AttackQueueBasic.Num() == 0)
+	TArray<AEnemyBaseController*>* AttackQueue = GetAttackQueue(RegisteringController->IsBasic());
+	
+	if(AttackQueue->Num() == 0)
 	{
 		// Start timer to handle the queue
-		StartBasicQueueTimer();
+		StartQueueTimer(RegisteringController->IsBasic());
 	}
 
-	AttackQueueBasic.Add(RegisteringController);
+	AttackQueue->Add(RegisteringController);
 }
 
-void AEncounterVolume::RegisterCompletedBasicAttack(AEnemyBaseController* RegisteringController)
+void AEncounterVolume::RegisterCompletedAttack(AEnemyBaseController* RegisteringController)
 {
-	LastAttacker = RegisteringController;
-	StartBasicQueueTimer();
+	(RegisteringController->IsBasic() ? LastAttackerBasic : LastAttackerHeavy) = RegisteringController;
+	StartQueueTimer(RegisteringController->IsBasic());
 }
 
 void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bForceDespawn)
 {
 	// Remove units from queues and set
-	if(AttackQueueBasic.Contains(Unit)) AttackQueueBasic.Remove(Unit);
-	if(AttackQueueHeavy.Contains(Unit)) AttackQueueHeavy.Remove(Unit);
+	TArray<AEnemyBaseController*>* AttackQueue = GetAttackQueue(Unit->IsBasic());
+	if(AttackQueue->Contains(Unit)) AttackQueue->Remove(Unit);
 	if(ContainedUnits.Contains(Unit->GetOwnPawn())) ContainedUnits.Remove(Unit->GetOwnPawn());
 
 	// Check if the encounter is complete
@@ -131,22 +133,21 @@ void AEncounterVolume::BeginPlay()
 	Setup();
 }
 
-// Select random unit to attack
-void AEncounterVolume::BeginAttackBasic()
+void AEncounterVolume::BeginAttack(bool bIsBasic)
 {
-	const int8 QueueSize = AttackQueueBasic.Num();
+	TArray<AEnemyBaseController*>* AttackQueue = GetAttackQueue(bIsBasic);
+	const int8 QueueSize = AttackQueue->Num();
 	if (QueueSize == 0) return;
+	
+	int8 RandomIndex = FMath::RandRange(0, QueueSize - 1);
 
-	int8 RandomIndex;
-
-	// Don't let same unit attack twice in a row
-	do
+	while(QueueSize > 1 && (bIsBasic ? LastAttackerBasic : LastAttackerHeavy) == (*AttackQueue)[RandomIndex])
 	{
 		RandomIndex = FMath::RandRange(0, QueueSize - 1);
-	} while(LastAttacker == AttackQueueBasic[RandomIndex] && QueueSize > 1);
+	}
 	
-	if(AttackQueueBasic[RandomIndex]) AttackQueueBasic[RandomIndex]->BeginAttack();
-	AttackQueueBasic.RemoveAt(RandomIndex);
+	if((*AttackQueue)[RandomIndex]) (*AttackQueue)[RandomIndex]->BeginAttack();
+	AttackQueue->RemoveAt(RandomIndex);
 }
 
 void AEncounterVolume::StartSpawn()
@@ -183,7 +184,9 @@ void AEncounterVolume::Setup()
 	WorldTimerManager = &GetWorldTimerManager();
 	bIsEncounterActive = false;
 	bIsEncounterComplete = false;
-	LastAttacker = nullptr;
+	LastAttackerBasic = LastAttackerHeavy = nullptr;
+	BasicQueueDelegate.BindUFunction(this, FName("BeginAttack"));
+	HeavyQueueDelegate.BindUFunction(this, FName("BeginAttack"), false);
 	EncounterTarget = nullptr;
 	CurrentWaveParams = nullptr;
 	InitialUnits = ContainedUnits.Num();
@@ -286,11 +289,16 @@ void AEncounterVolume::TryCacheTimerManager() const
 	WorldTimerManager = &GetWorldTimerManager();
 }
 
-// Start cooldown and pop attacker after timer
-void AEncounterVolume::StartBasicQueueTimer()
+void AEncounterVolume::StartQueueTimer(bool bIsBasic)
 {
 	TryCacheTimerManager();
-	WorldTimerManager->SetTimer(BasicQueueTimer, this, &AEncounterVolume::BeginAttackBasic, AttackStartDelay, false, AttackStartDelay);
+	bIsBasic ? WorldTimerManager->SetTimer(BasicQueueTimer, BasicQueueDelegate, AttackStartDelayBasic, false, AttackStartDelayBasic)
+	: WorldTimerManager->SetTimer(HeavyQueueTimer, HeavyQueueDelegate, AttackStartDelayHeavy, false, AttackStartDelayHeavy);
+}
+
+TArray<AEnemyBaseController*>* AEncounterVolume::GetAttackQueue(bool bIsBasic)
+{
+	return bIsBasic ? &AttackQueueBasic : &AttackQueueHeavy;
 }
 
 void AEncounterVolume::TriggerNextWave()

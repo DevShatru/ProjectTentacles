@@ -44,6 +44,7 @@ public:
 	void OnDeath(bool bForceDespawn = false);
 
 	void HealEncounterTarget(float HealAmount);
+	bool IsBasic();
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -72,7 +73,7 @@ private:
 	void ClearBlackboard();
 	void TryCacheBlackboardComp();
 
-	unsigned int bIsAttacking:1;
+	unsigned int bIsAttacking:1, bIsBasic:1;
 	UBlackboardComponent* Blackboard;
 	AEnemyBase* OwnPawn;
 	AEncounterVolume* OwningEncounter;

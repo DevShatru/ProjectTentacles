@@ -6,6 +6,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Encounter/EncounterVolume.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "Characters/Enemies/EnemyBrute.h"
 #include "Characters/Player/PlayerCharacter.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
@@ -61,7 +62,7 @@ TArray<AEnemyBase*> AEnemyBaseController::GetAllies() const
 void AEnemyBaseController::RegisterOnAttackQueue()
 {
 	if(!OwningEncounter) return;
-	OwningEncounter->RegisterOnBasicAttackQueue(this);
+	OwningEncounter->RegisterOnAttackQueue(this);
 }
 
 // Trigger attack state
@@ -89,7 +90,7 @@ void AEnemyBaseController::RegisterCompletedAttack()
 {
 	if(!OwningEncounter || !bIsAttacking) return;
 	bIsAttacking = false;
-	OwningEncounter->RegisterCompletedBasicAttack(this);
+	OwningEncounter->RegisterCompletedAttack(this);
 }
 
 AEnemyBase* AEnemyBaseController::GetOwnPawn() const
@@ -108,6 +109,7 @@ void AEnemyBaseController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	OwnPawn = Cast<AEnemyBase>(InPawn);
+	bIsBasic = Cast<AEnemyBrute>(OwnPawn) == nullptr;
 	if(!BehaviorTree) return;
 
 	// Init blackboard and run master behaviour
@@ -141,6 +143,11 @@ void AEnemyBaseController::HealEncounterTarget(float HealAmount)
 {
 	if(!EncounterTarget) return;
 	Cast<APlayerCharacter>(EncounterTarget)->Heal(HealAmount);
+}
+
+bool AEnemyBaseController::IsBasic()
+{
+	return bIsBasic;
 }
 
 void AEnemyBaseController::ClearBlackboard()
