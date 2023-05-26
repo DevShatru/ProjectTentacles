@@ -17,6 +17,35 @@
 FGenericTeamId APlayerCharacter::TeamId = FGenericTeamId(1);
 // ==================================================== Constructor =========================================
 
+void APlayerCharacter::StartSwampDamageTick(float Damage, float TickInterval)
+{
+	// If taking damage already, ignore
+	if(bTakingSwampDamage) return;
+
+	bTakingSwampDamage = true;
+	// Start timer on damage method
+	SwampDamageDelegate.BindUFunction(this, FName("DealSwampDamage"), Damage, TickInterval);
+	FTimerHandle SwampDamageTimer;
+	GetWorldTimerManager().SetTimer(SwampDamageTimer, SwampDamageDelegate, TickInterval, false);
+}
+
+void APlayerCharacter::DealSwampDamage(float Damage, float TickTime)
+{
+	HealthReduction(Damage);
+	
+	if(!bTakingSwampDamage) return;
+	FTimerHandle SwampDamageTimer;
+	GetWorldTimerManager().SetTimer(SwampDamageTimer, SwampDamageDelegate, TickTime, false);
+}
+
+void APlayerCharacter::StopSwampDamageTick()
+{
+	// If not taking damage ignore
+	if(!bTakingSwampDamage) return;
+	
+	bTakingSwampDamage = false;
+}
+
 void APlayerCharacter::ShowHitIndicator(const float CounterTime, const FVector HitLocation) const
 {
 	HUDRef->PopIndicator(CounterTime, HitLocation);
