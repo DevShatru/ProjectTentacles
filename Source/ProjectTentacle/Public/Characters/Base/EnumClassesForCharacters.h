@@ -6,6 +6,9 @@
 UENUM(BlueprintType)
 enum class EPlayerAttackType: uint8
 {
+	// LongMeleeAttack = 0 UMETA(DisplayName = "LongMeleeAttack"),
+	// ShortMeleeAttack = 1 UMETA(DisplayName = "ShortMeleeAttack"),
+	
 	ShortFlipKick = 0 UMETA(DisplayName = "ShortFlipKick"),
 	FlyingKick = 1 UMETA(DisplayName = "FlyingKick"),
 	FlyingPunch = 2 UMETA(DisplayName = "FlyingPunch"),
@@ -16,6 +19,15 @@ enum class EPlayerAttackType: uint8
 	FastPunch = 7 UMETA(DisplayName = "FastPunch"),
 	None = 8 UMETA(DisplaName = "None")
 };
+
+UENUM(BlueprintType)
+enum class EPlayerAttackAnimations: uint8
+{
+	TwoHandWidePush = 0 UMETA(DisplayName = "TwoHandWidePush"),
+	TwoHandPush = 1 UMETA(DisplayName = "TwoHandPush"),
+	TwoHandClap = 2 UMETA(DisplayName = "TwoHandClap"),
+};
+
 
 UENUM(BlueprintType)
 enum class EPlayerCameraType: uint8

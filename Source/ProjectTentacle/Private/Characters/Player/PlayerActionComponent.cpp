@@ -342,7 +342,7 @@ void UPlayerActionComponent::SetAttackMovementPositions(FVector TargetPos)
 	const FVector DirFromTargetToPlayer = UKismetMathLibrary::Normal(OffsetWithoutZ);
 
 	// Get lerp end position
-	MovingEndPos = TargetPos + (DirFromTargetToPlayer * 80);
+	MovingEndPos = TargetPos + (DirFromTargetToPlayer * 150);
 }
 
 

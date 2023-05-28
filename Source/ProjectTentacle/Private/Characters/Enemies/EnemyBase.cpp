@@ -45,10 +45,13 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 	if(OnInterruptStrafe.IsBound()) OnInterruptStrafe.Execute();
 	HealthReduction(DamageAmount);
-	
 	if(Health > 0)
 	{
-		if(UnitType != EEnemyType::Brute) PlayReceiveDamageAnimation(PlayerAttackType);
+		if(UnitType != EEnemyType::Brute)
+		{
+			PlayReceiveDamageAnimation(PlayerAttackType);
+			TryResumeMoving();
+		}
 		return;
 	}
 
@@ -299,31 +302,34 @@ void AEnemyBase::HealthReduction(float DamageAmount)
 
 void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType)
 {
-	// Switch case on player's attack type to play different damage receive animation
-	switch (ReceivedAttackType)
-	{
-	case EPlayerAttackType::ShortFlipKick:
-		PlayAnimMontage(ReceiveShortFlipKick,1,NAME_None);
-	case EPlayerAttackType::FlyingKick:
-		PlayAnimMontage(ReceiveFlyingKick,1,NAME_None);
-		break;
-	case EPlayerAttackType::FlyingPunch:
-		PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
-		break;
-	case EPlayerAttackType::SpinKick:
-		PlayAnimMontage(ReceiveSpinKick,1,NAME_None);
-		break;
-	case EPlayerAttackType::DashingDoubleKick:
-		PlayAnimMontage(ReceiveDashingDoubleKick,1,NAME_None);
-		break;
-	case EPlayerAttackType::FastKick:
-		PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
-		break;
-	case EPlayerAttackType::FastPunch:
-		PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
-		break;
-	default: break;
-	}
+	PlayAnimMontage(EnemyReceiveLargeDamageAnim,1,NAME_None);
+
+	
+	// // Switch case on player's attack type to play different damage receive animation
+	// switch (ReceivedAttackType)
+	// {
+	// case EPlayerAttackType::ShortFlipKick:
+	// 	PlayAnimMontage(ReceiveShortFlipKick,1,NAME_None);
+	// case EPlayerAttackType::FlyingKick:
+	// 	PlayAnimMontage(ReceiveFlyingKick,1,NAME_None);
+	// 	break;
+	// case EPlayerAttackType::FlyingPunch:
+	// 	PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
+	// 	break;
+	// case EPlayerAttackType::SpinKick:
+	// 	PlayAnimMontage(ReceiveSpinKick,1,NAME_None);
+	// 	break;
+	// case EPlayerAttackType::DashingDoubleKick:
+	// 	PlayAnimMontage(ReceiveDashingDoubleKick,1,NAME_None);
+	// 	break;
+	// case EPlayerAttackType::FastKick:
+	// 	PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
+	// 	break;
+	// case EPlayerAttackType::FastPunch:
+	// 	PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
+	// 	break;
+	// default: break;
+	// }
 }
 
 
