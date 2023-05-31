@@ -322,10 +322,12 @@ void AEnemyMelee::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAc
 	// if enemy is attack, stop montage, flip bool to false, unshow attack indicator, and execute onfinish attack delegate
 	if(CurrentEnemyState == EEnemyCurrentState::Attacking && PlayerAttackType != EPlayerAttackType::CounterAttack)
 	{
-		StopAnimMontage();
+		//StopAnimMontage();
 		
 		OnHideAttackIndicator();
 
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Code Goes Through Here!"));	
+		
 		// Stop attack movement
 		TryStopAttackMovement();
 		

@@ -233,25 +233,25 @@ void AAttackTargetTester::ReceiveDamageFromPlayer_Implementation(int32 DamageAmo
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 
-	switch (PlayerAttackType)
-	{
-	case EPlayerAttackType::ShortFlipKick:
-		PlayDamageReceiveAnimation(0);
-		break;
-	case EPlayerAttackType::FlyingKick:
-		PlayDamageReceiveAnimation(1);
-		break;
-	case EPlayerAttackType::FlyingPunch:
-		PlayDamageReceiveAnimation(2);
-		break;
-	case EPlayerAttackType::SpinKick:
-		PlayDamageReceiveAnimation(3);
-		break;
-	case EPlayerAttackType::DashingDoubleKick:
-		PlayDamageReceiveAnimation(4);
-		break;
-	default: ;
-	}
+	// switch (PlayerAttackType)
+	// {
+	// case EPlayerAttackType::ShortFlipKick:
+	// 	PlayDamageReceiveAnimation(0);
+	// 	break;
+	// case EPlayerAttackType::FlyingKick:
+	// 	PlayDamageReceiveAnimation(1);
+	// 	break;
+	// case EPlayerAttackType::FlyingPunch:
+	// 	PlayDamageReceiveAnimation(2);
+	// 	break;
+	// case EPlayerAttackType::SpinKick:
+	// 	PlayDamageReceiveAnimation(3);
+	// 	break;
+	// case EPlayerAttackType::DashingDoubleKick:
+	// 	PlayDamageReceiveAnimation(4);
+	// 	break;
+	// default: ;
+	// }
 
 }
 
