@@ -745,6 +745,7 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 	
 	UKismetSystemLibrary::SphereOverlapActors(World,SelfPos, DetectionRange, FilterType, FilteringClass, IgnoreActors,FoundActorList);
 
+	// if found enemies is not zero, there are enemy in range
 	if(FoundActorList.Num() != 0)
 	{
 		for (AActor* EachFoundActor : FoundActorList)
@@ -752,8 +753,8 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 			AEnemyBase* FoundCharacter = Cast<AEnemyBase>(EachFoundActor);
 			if(FoundCharacter != nullptr)
 			{
-				// Exclude enemy that are dead, alse exclude enemy that are countered but yet not getting up yet
-				if(!FoundCharacter->GetIsDead() && FoundCharacter->GetCurrentEnemyState() != EEnemyCurrentState::Countered)
+				const bool IsBlocked = IsObjectBlocking(FoundCharacter, SelfPos);
+				if(IsEnemyTargetable(FoundCharacter) && !IsBlocked)
 					ReturnActors.Add(FoundCharacter);
 			}
 		}
@@ -761,6 +762,36 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 
 	
 	return ReturnActors;
+}
+
+bool UPlayerActionComponent::IsEnemyTargetable(AEnemyBase* TargetEnemy)
+{
+	// first, check if enemy is dead, if dead, return false, player cannot target dead enemy
+	const bool IsEnemyDead = TargetEnemy->GetIsDead();
+	if(IsEnemyDead) return false;
+	
+	// check if enemy is brute, if enemy is brute, return true, no need to check if brute is stunned or not
+	const bool IsEnemyBrute = TargetEnemy->GetUnitType() != EEnemyType::Brute;
+	if(IsEnemyBrute) return true;
+	
+	// if enemy is not brute, then, enemy only will be melee and ranged, check if enemy is countered / stunned, if true, player cannot attack stunned enemy
+	const bool IsEnemyStun = TargetEnemy->GetCurrentEnemyState() == EEnemyCurrentState::Countered;
+	return !IsEnemyStun;
+}
+
+bool UPlayerActionComponent::IsObjectBlocking(AEnemyBase* TargetEnemy, FVector SelfPosition) const
+{
+	// Use linetrace to check if something is blocking enemy
+	FVector TargetPos = TargetEnemy->GetActorLocation();
+
+	FHitResult Hit;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(PlayerOwnerRef);
+	IgnoreActors.Add(TargetEnemy);
+	const bool bHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), SelfPosition, TargetPos, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+	if(bHit) return true;
+
+	return false;
 }
 
 void UPlayerActionComponent::InstantRotation(FVector RotatingVector)
