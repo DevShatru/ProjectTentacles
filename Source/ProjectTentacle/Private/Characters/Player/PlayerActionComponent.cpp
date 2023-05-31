@@ -18,32 +18,20 @@ UPlayerActionComponent::UPlayerActionComponent()
 	// ...
 }
 
-void UPlayerActionComponent::StopSpecificMovingTimeline(EPlayerAttackType CurrentPlayerAttack)
+void UPlayerActionComponent::StopSpecificMovingTimeline(EPlayerAttackAnimations CurrentAttackAnim)
 {
-	switch (CurrentPlayerAttack)
+	switch (CurrentAttackAnim)
 	{
-		case EPlayerAttackType::ShortFlipKick:
-			ShortFlipKickTimeLine.Stop();
+		case EPlayerAttackAnimations::TwoHandWidePush:
+			TwoHandWidePushTimeLine.Stop();
 			break;
-		case EPlayerAttackType::FlyingKick:
-			FlyingKickTimeLine.Stop();
+		case EPlayerAttackAnimations::TwoHandPush:
+			TwoHandPushTimeLine.Stop();
 			break;
-		case EPlayerAttackType::FlyingPunch:
-			FlyingPunchTimeLine.Stop();
+		case EPlayerAttackAnimations::TwoHandClap:
+			TwoHandClapTimeLine.Stop();
 			break;
-		case EPlayerAttackType::SpinKick:
-			SpinKickTimeLine.Stop();
-			break;
-		case EPlayerAttackType::DashingDoubleKick:
-			DashingDoubleKickTimeLine.Stop();
-			break;
-		case EPlayerAttackType::FastKick:
-			CloseToPerformFinisherTimeLine.Stop();
-			break;
-		case EPlayerAttackType::FastPunch:
-			CloseToPerformFinisherTimeLine.Stop();
-
-			break;
+		case EPlayerAttackAnimations::CloseRange: break;
 		default: ;
 	}
 }
@@ -112,11 +100,9 @@ void UPlayerActionComponent::InitializeTimelineComp()
 {
 	FOnTimelineFloat MovingAttackPosUpdate;
 	MovingAttackPosUpdate.BindDynamic(this, &UPlayerActionComponent::MovingAttackMovement);
-	ShortFlipKickTimeLine.AddInterpFloat(ShortFlipKickCurve, MovingAttackPosUpdate);
-	FlyingKickTimeLine.AddInterpFloat(FlyingKickCurve, MovingAttackPosUpdate);
-	FlyingPunchTimeLine.AddInterpFloat(FlyingPunchCurve, MovingAttackPosUpdate);
-	SpinKickTimeLine.AddInterpFloat(SpinKickCurve, MovingAttackPosUpdate);
-	DashingDoubleKickTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
+	TwoHandWidePushTimeLine.AddInterpFloat(TwoHandWidePushCurve, MovingAttackPosUpdate);
+	TwoHandPushTimeLine.AddInterpFloat(TwoHandPushCurve, MovingAttackPosUpdate);
+	TwoHandClapTimeLine.AddInterpFloat(TwoHandClapCurve, MovingAttackPosUpdate);
 	CloseToPerformFinisherTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
 	
 	FOnTimelineFloat DodgingPosUpdate;
@@ -148,11 +134,9 @@ void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	// delta time will change due to player's combo time
 	const float DeltaWithComboBonus = DeltaTime * (1 + (CurrentComboCount * ComboSpeedMultiplier));
-	ShortFlipKickTimeLine.TickTimeline(DeltaWithComboBonus);
-	FlyingKickTimeLine.TickTimeline(DeltaWithComboBonus);
-	FlyingPunchTimeLine.TickTimeline(DeltaWithComboBonus);
-	SpinKickTimeLine.TickTimeline(DeltaWithComboBonus);
-	DashingDoubleKickTimeLine.TickTimeline(DeltaWithComboBonus);
+	TwoHandWidePushTimeLine.TickTimeline(DeltaWithComboBonus);
+	TwoHandPushTimeLine.TickTimeline(DeltaWithComboBonus);
+	TwoHandClapTimeLine.TickTimeline(DeltaWithComboBonus);
 	CloseToPerformFinisherTimeLine.TickTimeline(DeltaWithComboBonus);
 	DodgeLerpingTimeLine.TickTimeline(DeltaTime);
 	TurnRotationTimeline.TickTimeline(DeltaTime);
@@ -180,110 +164,60 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	MakePlayerEnemyFaceEachOther(RegisteredTarget);
 	
 	const bool bIsClose = TargetDistanceCheck(RegisteredTarget);
+
+	TArray<UAnimMontage*> ListOfMeleeMontages;
 	
 	if(!bIsClose)
 	{
-		PerformLongRangeMelee(RegisteredTarget);
+		ListOfMeleeMontages = MeleeAttackMontages;
+		PerformMelee(RegisteredTarget, ListOfMeleeMontages, true);
 		return;
 	}
 
-	PerformCloseRangeMelee(RegisteredTarget);
+	ListOfMeleeMontages = CloseMeleeAttackMontages;
+	PerformMelee(RegisteredTarget, ListOfMeleeMontages, true);
 }
 
-void UPlayerActionComponent::PerformLongRangeMelee(AEnemyBase* RegisteredTarget)
+void UPlayerActionComponent::PerformMelee(AEnemyBase* RegisteredTarget, TArray<UAnimMontage*> ListOfMeleeMontages, bool IsLongRange)
 {
-	const int32 DecidedIndex = GetDifferentCloseMeleeMontage(MeleeAttackMontages);
+	const int32 DecidedIndex = GetDifferentCloseMeleeMontage(ListOfMeleeMontages);
 
-	if(DecidedIndex < 0 || DecidedIndex >= MeleeAttackMontages.Num()) return;
+	if(DecidedIndex < 0 || DecidedIndex >= ListOfMeleeMontages.Num()) return;
 	
-	UAnimMontage* DecidedMontage = MeleeAttackMontages[DecidedIndex];
+	UAnimMontage* DecidedMontage = ListOfMeleeMontages[DecidedIndex];
 	
-	const EPlayerAttackType SelectedAttackType = GetAttackTypeByRndNum(DecidedIndex);
+	EPlayerAttackType SelectedAttackType = EPlayerAttackType::LongMeleeAttack;
+	if(!IsLongRange)
+		SelectedAttackType = EPlayerAttackType::ShortMeleeAttack;
+
+	
 
 	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
+
+	const EPlayerAttackAnimations SelectedAttackAnimations = GetAttackAnimationByRndNum(DecidedIndex, IsLongRange);
+	PlayerOwnerRef->SetCurrentAttackAnim(SelectedAttackAnimations);
 	
 	// change current action state enum
 	PlayerOwnerRef->SetCurrentActionState(EActionState::BeforeAttack);
 
 	
-	// Check if Enemy is dying or now, if is, finish him
-	int32 EnemyCurrentHealth = RegisteredTarget->GetEnemyHealth();
+	// // Check if Enemy is dying or now, if is, finish him
+	// int32 EnemyCurrentHealth = RegisteredTarget->GetEnemyHealth();
 	
-	// Set damaging actor
+	// Set damaging actor and stop damage actor's movement
 	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
-
 	RegisteredTarget->TryStopMoving();
 
 	ClearComboResetTimer();
-
-	// if(EnemyCurrentHealth <= 1)
-	// {
-	// 	FinishEnemy();
-	// 	return;
-	// }
-	
-
 	
 	// Play attack montage
 	CurrentPlayingMontage = DecidedMontage;
-
 	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
-	
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
 
-	// Start attack movement timeline depends on the result of playering montage
-	StartAttackMovementTimeline(SelectedAttackType);
-	
-	// combo count increment
-	ComboCountIncrement();
-}
-
-void UPlayerActionComponent::PerformCloseRangeMelee(AEnemyBase* RegisteredTarget)
-{
-	const int32 DecidedIndex = GetDifferentCloseMeleeMontage(CloseMeleeAttackMontages);
-
-	if(DecidedIndex < 0 || DecidedIndex >= CloseMeleeAttackMontages.Num()) return;
-
-	UAnimMontage* DecidedMontage = CloseMeleeAttackMontages[DecidedIndex];
-
-	EPlayerAttackType SelectedAttackType;
-
-	if(DecidedIndex >= 3)
-		SelectedAttackType = GetAttackTypeByRndNum(5);
-	else
-		SelectedAttackType = GetAttackTypeByRndNum(6);
-	
-		
-	
-	PlayerOwnerRef->SetCurrentAttackType(SelectedAttackType);
-	
-	// change current action state enum
-	PlayerOwnerRef->SetCurrentActionState(EActionState::BeforeAttack);
-
-	
-	// Check if Enemy is dying or now, if is, finish him
-	int32 EnemyCurrentHealth = RegisteredTarget->GetEnemyHealth();
-	
-	// Set damaging actor
-	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
-
-	ClearComboResetTimer();
-
-	// if(EnemyCurrentHealth <= 1)
-	// {
-	// 	FinishEnemy();
-	// 	return;
-	// }
-	
-
-	RegisteredTarget->TryStopMoving();
-	
-	// Play attack montage
-	CurrentPlayingMontage = DecidedMontage;
-
-	const float CurrentComboSpeed = CalculateCurrentComboSpeed();
-	
-	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, CurrentComboSpeed, "Default");
+	// if it is long range attack, play long range animation moving timeline
+	// Start attack movement timeline depends on the result of playing montage
+	if(IsLongRange) StartAttackMovementTimeline(SelectedAttackAnimations);
 	
 	// combo count increment
 	ComboCountIncrement();
@@ -346,32 +280,28 @@ void UPlayerActionComponent::SetAttackMovementPositions(FVector TargetPos)
 }
 
 
-EPlayerAttackType UPlayerActionComponent::GetAttackTypeByRndNum(int32 RndNum)
+EPlayerAttackAnimations UPlayerActionComponent::GetAttackAnimationByRndNum(int32 RndNum, bool IsLongRange)
 {
-	return static_cast<EPlayerAttackType>(RndNum);
+	if(!IsLongRange) return EPlayerAttackAnimations::CloseRange;
+	
+	return static_cast<EPlayerAttackAnimations>(RndNum);
 }
 
-void UPlayerActionComponent::StartAttackMovementTimeline(EPlayerAttackType AttackType)
+void UPlayerActionComponent::StartAttackMovementTimeline(EPlayerAttackAnimations CurrentAttackAnim)
 {
-	switch (AttackType)
+	switch (CurrentAttackAnim)
 	{
-		case EPlayerAttackType::ShortFlipKick:
-			ShortFlipKickTimeLine.PlayFromStart();
+		case EPlayerAttackAnimations::TwoHandWidePush:
+			TwoHandWidePushTimeLine.PlayFromStart();
 			break;
-		case EPlayerAttackType::FlyingKick:
-			FlyingKickTimeLine.PlayFromStart();
+		case EPlayerAttackAnimations::TwoHandPush:
+			TwoHandPushTimeLine.PlayFromStart();
 			break;
-		case EPlayerAttackType::FlyingPunch:
-			FlyingPunchTimeLine.PlayFromStart();
+		case EPlayerAttackAnimations::TwoHandClap:
+			TwoHandClapTimeLine.PlayFromStart();
 			break;
-		case EPlayerAttackType::SpinKick:
-			SpinKickTimeLine.PlayFromStart();
-			break;
-		case EPlayerAttackType::DashingDoubleKick:
-			DashingDoubleKickTimeLine.PlayFromStart();
-			break;
-		default:
-			break;
+		case EPlayerAttackAnimations::CloseRange: break;
+		default: ;
 	}
 }
 
@@ -418,8 +348,8 @@ void UPlayerActionComponent::BeginEvade()
 	// Make previous targeted enemy able to move if player is attacking
 	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::Attack)
 	{
-		const EPlayerAttackType CurrentRegisteredAttackType = PlayerOwnerRef->GetCurrentAttackType();
-		StopSpecificMovingTimeline(CurrentRegisteredAttackType);
+		const EPlayerAttackAnimations CurrentRegisteredAttackAnim = PlayerOwnerRef->GetCurrentAttackAnim();
+		StopSpecificMovingTimeline(CurrentRegisteredAttackAnim);
 
 		// Make damaging actor resume moving
 		AEnemyBase* ResumeMovementDamagingActor = PlayerOwnerRef->GetDamagingActor();
@@ -589,7 +519,7 @@ void UPlayerActionComponent::BeginDodge()
 	if(PlayerOwnerRef->GetCurrentActionState() == EActionState::BeforeAttack)
 	{
 		// Stop timeline movement
-		StopSpecificMovingTimeline(PlayerOwnerRef->GetCurrentAttackType());
+		StopSpecificMovingTimeline(PlayerOwnerRef->GetCurrentAttackAnim());
 
 		// Reset target's movement mode to walking
 		AEnemyBase* AllocatedDamageActor = PlayerOwnerRef->GetDamagingActor();
@@ -1001,8 +931,8 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 			PlayerOwnerRef->StopAnimMontage();
 
 			// stop player's attack movement
-			const EPlayerAttackType CurrentRegisteredAttackType = PlayerOwnerRef->GetCurrentAttackType();
-			StopSpecificMovingTimeline(CurrentRegisteredAttackType);
+			const EPlayerAttackAnimations CurrentRegisteredAttackAnim = PlayerOwnerRef->GetCurrentAttackAnim();
+			StopSpecificMovingTimeline(CurrentRegisteredAttackAnim);
 
 			// make damaging enemy resume moving
 			AEnemyBase* ResumeMovementDamagingActor = PlayerOwnerRef->GetDamagingActor();

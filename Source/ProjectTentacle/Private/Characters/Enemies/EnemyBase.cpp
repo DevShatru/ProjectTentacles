@@ -44,7 +44,9 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
 	if(OnInterruptStrafe.IsBound()) OnInterruptStrafe.Execute();
+	
 	HealthReduction(DamageAmount);
+	
 	if(Health > 0)
 	{
 		if(UnitType != EEnemyType::Brute)
