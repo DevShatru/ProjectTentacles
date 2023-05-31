@@ -771,7 +771,7 @@ bool UPlayerActionComponent::IsEnemyTargetable(AEnemyBase* TargetEnemy)
 	if(IsEnemyDead) return false;
 	
 	// check if enemy is brute, if enemy is brute, return true, no need to check if brute is stunned or not
-	const bool IsEnemyBrute = TargetEnemy->GetUnitType() != EEnemyType::Brute;
+	const bool IsEnemyBrute = TargetEnemy->GetUnitType() == EEnemyType::Brute;
 	if(IsEnemyBrute) return true;
 	
 	// if enemy is not brute, then, enemy only will be melee and ranged, check if enemy is countered / stunned, if true, player cannot attack stunned enemy
