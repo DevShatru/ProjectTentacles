@@ -103,7 +103,7 @@ void UPlayerActionComponent::InitializeTimelineComp()
 	TwoHandWidePushTimeLine.AddInterpFloat(TwoHandWidePushCurve, MovingAttackPosUpdate);
 	TwoHandPushTimeLine.AddInterpFloat(TwoHandPushCurve, MovingAttackPosUpdate);
 	TwoHandClapTimeLine.AddInterpFloat(TwoHandClapCurve, MovingAttackPosUpdate);
-	CloseToPerformFinisherTimeLine.AddInterpFloat(DashingDoubleKickCurve, MovingAttackPosUpdate);
+	CloseToPerformFinisherTimeLine.AddInterpFloat(CloseToPerformFinisherCurve, MovingAttackPosUpdate);
 	
 	FOnTimelineFloat DodgingPosUpdate;
 	DodgingPosUpdate.BindDynamic(this, &UPlayerActionComponent::DodgeMovement);

@@ -72,13 +72,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* TwoHandClapCurve;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
-	UCurveFloat* SpinKickCurve;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
-	UCurveFloat* DashingDoubleKickCurve;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* CloseToPerformFinisherCurve;
 	
