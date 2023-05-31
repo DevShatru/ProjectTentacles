@@ -22,7 +22,7 @@ public:
 
 private:
 
-	void StopSpecificMovingTimeline(EPlayerAttackType CurrentPlayerAttack);
+	void StopSpecificMovingTimeline(EPlayerAttackAnimations CurrentAttackAnim);
 
 	void PauseComboResetTimer();
 	void ResumeComboResetTimer();
@@ -32,11 +32,11 @@ private:
 	
 	// Attack Animation Timeline
 	// Timeline
-	FTimeline ShortFlipKickTimeLine;
-	FTimeline FlyingKickTimeLine;
-	FTimeline FlyingPunchTimeLine;
-	FTimeline SpinKickTimeLine;
-	FTimeline DashingDoubleKickTimeLine;
+	FTimeline TwoHandWidePushTimeLine;
+	FTimeline TwoHandPushTimeLine;
+	FTimeline TwoHandClapTimeLine;
+	// FTimeline SpinKickTimeLine;
+	// FTimeline DashingDoubleKickTimeLine;
 	FTimeline CloseToPerformFinisherTimeLine;
 	FTimeline DodgeLerpingTimeLine;
 	FTimeline TurnRotationTimeline;
@@ -65,20 +65,14 @@ protected:
 
 	// ================================================= Attack Variable Setting ================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
-	UCurveFloat* ShortFlipKickCurve;
+	UCurveFloat* TwoHandWidePushCurve;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
-	UCurveFloat* FlyingKickCurve;
+	UCurveFloat* TwoHandPushCurve;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
-	UCurveFloat* FlyingPunchCurve;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
-	UCurveFloat* SpinKickCurve;
+	UCurveFloat* TwoHandClapCurve;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
-	UCurveFloat* DashingDoubleKickCurve;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attack_MovingCurve)
 	UCurveFloat* CloseToPerformFinisherCurve;
 	
@@ -201,10 +195,8 @@ protected:
 	// ================================================== Melee Attack ================================================
 	void BeginMeleeAttack();
 	
-	void PerformLongRangeMelee(AEnemyBase* RegisteredTarget);
-
-	void PerformCloseRangeMelee(AEnemyBase* RegisteredTarget);
-
+	void PerformMelee(AEnemyBase* RegisteredTarget, TArray<UAnimMontage*> ListOfMeleeMontages, bool IsLongRange);
+	
 	int32 GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages);
 	
 	bool TargetDistanceCheck(AEnemyBase* Target);
@@ -223,9 +215,9 @@ protected:
 	UFUNCTION()
 	void DodgeMovement(float Alpha);
 	
-	EPlayerAttackType GetAttackTypeByRndNum(int32 RndNum);
+	EPlayerAttackAnimations GetAttackAnimationByRndNum(int32 RndNum, bool IsLongRange);
 	
-	void StartAttackMovementTimeline(EPlayerAttackType CurrentAttackType);
+	void StartAttackMovementTimeline(EPlayerAttackAnimations CurrentAttackAnim);
 
 	float CalculateCurrentComboSpeed();
 

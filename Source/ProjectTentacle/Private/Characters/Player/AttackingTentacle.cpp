@@ -47,7 +47,7 @@ void AAttackingTentacle::DamageInRange(FVector ClosestEnemyPos)
 		if(IterateEnemy->GetClass()->ImplementsInterface(UDamageInterface::StaticClass()))
 		{
 			// Try Stop Movement and pull enemy over here
-			IDamageInterface::Execute_ReceiveDamageFromPlayer(IterateEnemy, DamageAmount, this, EPlayerAttackType::SpinKick);
+			IDamageInterface::Execute_ReceiveDamageFromPlayer(IterateEnemy, DamageAmount, this, EPlayerAttackType::LongMeleeAttack);
 		}
 	}
 	

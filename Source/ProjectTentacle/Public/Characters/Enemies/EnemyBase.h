@@ -112,19 +112,22 @@ protected:
 	
 	// Receiving Damage Animations
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
-	UAnimMontage* ReceiveShortFlipKick;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
-	UAnimMontage* ReceiveFlyingKick;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
-	UAnimMontage* ReceiveFlyingPunch;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
-	UAnimMontage* ReceiveSpinKick;
+	UAnimMontage* EnemyReceiveLargeDamageAnim;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
-	UAnimMontage* ReceiveDashingDoubleKick;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
+	// UAnimMontage* ReceiveShortFlipKick;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
+	// UAnimMontage* ReceiveFlyingKick;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
+	// UAnimMontage* ReceiveFlyingPunch;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
+	// UAnimMontage* ReceiveSpinKick;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
+	// UAnimMontage* ReceiveDashingDoubleKick;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
 	UAnimMontage* FinishedAnimation;
