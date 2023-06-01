@@ -6,16 +6,31 @@
 UENUM(BlueprintType)
 enum class EPlayerAttackType: uint8
 {
-	ShortFlipKick = 0 UMETA(DisplayName = "ShortFlipKick"),
-	FlyingKick = 1 UMETA(DisplayName = "FlyingKick"),
-	FlyingPunch = 2 UMETA(DisplayName = "FlyingPunch"),
-	SpinKick = 3 UMETA(DisplayName = "SpinKick"),
-	DashingDoubleKick = 4 UMETA(DisplayName = "FlyingKick"),
-	CounterAttack = 5 UMETA(DisplayName = "CounterAttack"),
-	FastKick = 6 UMETA(DisplayName = "FastKick"),
-	FastPunch = 7 UMETA(DisplayName = "FastPunch"),
-	None = 8 UMETA(DisplaName = "None")
+	LongMeleeAttack = 0 UMETA(DisplayName = "LongMeleeAttack"),
+	ShortMeleeAttack = 1 UMETA(DisplayName = "ShortMeleeAttack"),
+	CounterAttack = 2 UMETA(DisplayName = "CounterAttack"),
+	
+	
+	// ShortFlipKick = 0 UMETA(DisplayName = "ShortFlipKick"),
+	// FlyingKick = 1 UMETA(DisplayName = "FlyingKick"),
+	// FlyingPunch = 2 UMETA(DisplayName = "FlyingPunch"),
+	// SpinKick = 3 UMETA(DisplayName = "SpinKick"),
+	// DashingDoubleKick = 4 UMETA(DisplayName = "FlyingKick"),
+	// CounterAttack = 5 UMETA(DisplayName = "CounterAttack"),
+	// FastKick = 6 UMETA(DisplayName = "FastKick"),
+	// FastPunch = 7 UMETA(DisplayName = "FastPunch"),
+	// None = 8 UMETA(DisplaName = "None")
 };
+
+UENUM(BlueprintType)
+enum class EPlayerAttackAnimations: uint8
+{
+	TwoHandWidePush = 0 UMETA(DisplayName = "TwoHandWidePush"),
+	TwoHandPush = 1 UMETA(DisplayName = "TwoHandPush"),
+	TwoHandClap = 2 UMETA(DisplayName = "TwoHandClap"),
+	CloseRange = 3 UMETA(DisplayName = "CloseRange")
+};
+
 
 UENUM(BlueprintType)
 enum class EPlayerCameraType: uint8

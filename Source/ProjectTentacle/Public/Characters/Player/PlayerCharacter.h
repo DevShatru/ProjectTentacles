@@ -158,9 +158,11 @@ protected:
 	EPlayerCameraType CurrentCameraType = EPlayerCameraType::InCombat;
 	
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	EPlayerAttackType CurrentAttackType;
 	
+	UPROPERTY()
+	EPlayerAttackAnimations CurrentAttackingAnim;
 	
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
 	// bool CameraMoveEaseOut = true;
@@ -344,6 +346,10 @@ public:
 	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
 	void SetCurrentAttackType(EPlayerAttackType NewAttackType) {CurrentAttackType = NewAttackType;}
 
+	EPlayerAttackAnimations GetCurrentAttackAnim() const {return CurrentAttackingAnim;}
+	void SetCurrentAttackAnim(EPlayerAttackAnimations NewAttackAnim) {CurrentAttackingAnim = NewAttackAnim;}
+
+	
 	int32 GetCurrentCharacterHealth() const {return CharacterCurrentHealth;}
 	void SetCurrentCharacterHealth(float CurrentHealth) {CharacterCurrentHealth = FMath::Clamp(CurrentHealth, 0.f, CharacterMaxHealth);}
 	void HealthReduction(int32 ReducingAmount); 
