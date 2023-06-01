@@ -238,9 +238,6 @@ void AEnemyBase::TrySwitchEnemyState(EEnemyCurrentState NewState)
 // Finish attack task and switch to requested task
 void AEnemyBase::TryFinishAttackTask(EEnemyCurrentState SwitchingState)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Finish Attack Task!"));	
-
-	
 	// if BT component is valid and if current enemy state is attacking
 	if(BTComponent && (CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered))
 	{
@@ -419,6 +416,25 @@ void AEnemyBase::TimeoutAttack()
 	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 }
 
+void AEnemyBase::OnStunned()
+{
+	TryFinishAttackTask(EEnemyCurrentState::Stunned);
+
+	TrySwitchEnemyState(EEnemyCurrentState::Stunned);
+
+	TryStopMoving();
+	
+	StopAnimMontage();
+	PlayAnimMontage(OnGettingStunnedAnimation, 1, "Default");
+}
+
+void AEnemyBase::RecoverFromStunState()
+{
+	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);	
+	
+	TryResumeMoving();
+}
+
 void AEnemyBase::StartAttackTimeout()
 {
 	GetWorldTimerManager().SetTimer(AttackTimeoutHandle, this, &AEnemyBase::TimeoutAttack, AttackTimeoutDuration);
@@ -455,6 +471,19 @@ void AEnemyBase::UnShowPlayerTargetIndicator_Implementation()
 		EnemyTargetWidgetRef->UnShowIndicator();
 }
 
+void AEnemyBase::OnBeginStun_Implementation()
+{
+	ICharacterActionInterface::OnBeginStun_Implementation();
+
+	OnStunned();
+}
+
+void AEnemyBase::OnResumeFromStunTimerCountDown_Implementation()
+{
+	ICharacterActionInterface::OnResumeFromStunTimerCountDown_Implementation();
+
+	GetWorld()->GetTimerManager().SetTimer(StunningTimerHandle, this, &AEnemyBase::RecoverFromStunState, TotalStunDuration, false, -1);
+}
 
 
 void AEnemyBase::InstantRotation(FVector RotatingVector)

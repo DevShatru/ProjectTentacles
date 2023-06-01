@@ -62,7 +62,7 @@ void AStunTentacle::StunEnemy()
 		if(EachFoundEnemyActor->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
 		{
 			// TODO: Delegate to Stun Enemies
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Stun Enemy!"));
+			ICharacterActionInterface::Execute_OnBeginStun(EachFoundEnemyActor);
 			
 		}
 	}

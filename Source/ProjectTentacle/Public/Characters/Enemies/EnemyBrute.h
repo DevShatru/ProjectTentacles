@@ -29,9 +29,7 @@ private:
 
 	void PlaySpecificAttackMovingTimeline(EEnemyAttackType EnemyAttack);
 	void UpdateAttackingVariables();
-
-	FTimerHandle StunningTimerHandle;
-
+	
 	void ChargeKnock(AActor* KnockingActor);
 	
 	void SetCapsuleCompCollision(ECollisionChannel ResponseChannel, ECollisionResponse RequestResponse);
@@ -132,17 +130,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Charge)
 	float ChargeTrackingAngle = 5.0f;
-
 	
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = StunSetting)
-	float TotalStunDuration = 4.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = StunSetting)
-	UAnimMontage* StunAnimation;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = StunSetting)
-	UAnimMontage* RecoverFromStun;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DamageReceiveSetting)
 	UAnimMontage* DamageReceiveAnimation;
@@ -192,8 +181,8 @@ protected:
 	
 	void OnContinueSecondAttackMontage_Implementation() override;
 
-	UFUNCTION()
-	void RecoverFromStunState();
+	// UFUNCTION()
+	// void RecoverFromStunState();
 	
 	TArray<AActor*> GetActorsInFrontOfEnemy(bool IsDamaging);
 	TArray<AActor*> GetActorsAroundEnemy();

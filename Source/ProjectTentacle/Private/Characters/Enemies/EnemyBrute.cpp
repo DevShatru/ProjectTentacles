@@ -113,15 +113,17 @@ void AEnemyBrute::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAc
 			return;
 		}
 
-		TryFinishAttackTask(EEnemyCurrentState::Countered);
-
-		TrySwitchEnemyState(EEnemyCurrentState::Countered);
+		OnStunned();
 		
-		StopAnimMontage();
-		PlayAnimMontage(StunAnimation, 1, "Default");
-		
-		GetWorld()->GetTimerManager().SetTimer(StunningTimerHandle, this, &AEnemyBrute::RecoverFromStunState, TotalStunDuration, false, -1);
-		
+		// TryFinishAttackTask(EEnemyCurrentState::Stunned);
+		//
+		// TrySwitchEnemyState(EEnemyCurrentState::Stunned);
+		//
+		// StopAnimMontage();
+		// PlayAnimMontage(StunAnimation, 1, "Default");
+		//
+		// GetWorld()->GetTimerManager().SetTimer(StunningTimerHandle, this, &AEnemyBrute::RecoverFromStunState, TotalStunDuration, false, -1);
+		//
 		SetIsCountered(false);
 		return;
 	}
@@ -494,14 +496,12 @@ void AEnemyBrute::OnContinueSecondAttackMontage_Implementation()
 
 }
 
-void AEnemyBrute::RecoverFromStunState()
-{
-	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);	
-
-	IsStunned = false;
-
-	TryResumeMoving();
-}
+// void AEnemyBrute::RecoverFromStunState()
+// {
+// 	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);	
+// 	
+// 	TryResumeMoving();
+// }
 
 TArray<AActor*> AEnemyBrute::GetActorsInFrontOfEnemy(bool IsDamaging)
 {
