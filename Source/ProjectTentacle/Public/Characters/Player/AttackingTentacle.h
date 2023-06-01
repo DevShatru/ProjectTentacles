@@ -25,16 +25,16 @@ protected:
 
 	FTimerHandle AttackEnemyTimerHandle;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AttackSetting")
 	float AttackingGap = 2.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AttackSetting")
 	float SearchingRadius = 250.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AttackSetting")
 	float AttackingRadius = 100.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AttackSetting")
 	int32 DamageAmount = 5;
 	
 	UFUNCTION(BlueprintImplementableEvent)

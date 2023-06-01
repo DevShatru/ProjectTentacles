@@ -100,6 +100,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void DamagingTarget();
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnBeginStun();
+
 	// Brute
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnContinueSecondAttackMontage();

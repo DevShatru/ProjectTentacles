@@ -304,8 +304,17 @@ void AEnemyBase::HealthReduction(float DamageAmount)
 
 void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType)
 {
-	PlayAnimMontage(EnemyReceiveLargeDamageAnim,1,NAME_None);
-
+	if(ReceivedAttackType == EPlayerAttackType::LongMeleeAttack)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Receive Long Melee Attack!"));	
+		PlayAnimMontage(EnemyReceiveLargeDamageAnim,1,NAME_None);
+	}
+	else if (ReceivedAttackType == EPlayerAttackType::ShortMeleeAttack)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Receive Short Melee Attack!"));	
+		PlayAnimMontage(EnemyReceiveSmallDamageAnim,1,NAME_None);
+	}
+	
 	
 	// // Switch case on player's attack type to play different damage receive animation
 	// switch (ReceivedAttackType)

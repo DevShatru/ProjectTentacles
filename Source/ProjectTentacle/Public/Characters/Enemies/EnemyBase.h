@@ -114,6 +114,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
 	UAnimMontage* EnemyReceiveLargeDamageAnim;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
+	UAnimMontage* EnemyReceiveSmallDamageAnim;
+	
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
 	// UAnimMontage* ReceiveShortFlipKick;
 	//

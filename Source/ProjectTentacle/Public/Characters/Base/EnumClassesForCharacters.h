@@ -71,7 +71,8 @@ enum class EEnemyCurrentState: uint8
 	Countered = 2 UMETA(DisplayName = "Countered"),
 	GettingUp = 3 UMETA(DisplayName = "GettingUp"),
 	Damaged = 4 UMETA(DisplayName = "Damaged"),
-	Dead = 5 UMETA(DisplayName = "Dead")
+	Dead = 5 UMETA(DisplayName = "Dead"),
+	Stunned = 6 UMETA(DisplayName = "Stunned")
 };
 
 UENUM(BlueprintType)

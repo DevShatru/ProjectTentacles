@@ -175,7 +175,7 @@ void UPlayerActionComponent::BeginMeleeAttack()
 	}
 
 	ListOfMeleeMontages = CloseMeleeAttackMontages;
-	PerformMelee(RegisteredTarget, ListOfMeleeMontages, true);
+	PerformMelee(RegisteredTarget, ListOfMeleeMontages, false);
 }
 
 void UPlayerActionComponent::PerformMelee(AEnemyBase* RegisteredTarget, TArray<UAnimMontage*> ListOfMeleeMontages, bool IsLongRange)

@@ -11,8 +11,11 @@ void AStunTentacle::LifeCycleBegin()
 {
 	Super::LifeCycleBegin();
 
-	// Set timer to stun enemy
-	WorldRef->GetTimerManager().SetTimer(StunEnemyTimerHandle, this, &AStunTentacle::StunEnemy, TimeToExecuteStun, false, -1);
+
+	StunEnemy();
+	
+	// // Set timer to stun enemy
+	// WorldRef->GetTimerManager().SetTimer(StunEnemyTimerHandle, this, &AStunTentacle::StunEnemy, TimeToExecuteStun, false, -1);
 
 }
 
