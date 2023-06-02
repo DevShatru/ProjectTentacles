@@ -21,12 +21,15 @@ void AFallToggleVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	ContainedMoveableActors.Empty();
+
+	// Bind UFunctions to begin/end overlap
 	TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &AFallToggleVolume::OnEnter);
 	TriggerVolume->OnComponentEndOverlap.AddDynamic(this, &AFallToggleVolume::OnExit);
 }
 
 void AFallToggleVolume::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	// Unbind overlap methods
 	TriggerVolume->OnComponentBeginOverlap.RemoveDynamic(this, &AFallToggleVolume::OnEnter);
 	TriggerVolume->OnComponentEndOverlap.RemoveDynamic(this, &AFallToggleVolume::OnExit);
 	
@@ -36,9 +39,11 @@ void AFallToggleVolume::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AFallToggleVolume::OnEnter(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	// Check that actor has char movement comp
 	UCharacterMovementComponent* ActorMovement = GetCharMovementComp(OtherActor);
 	if(!ActorMovement) return;
 
+	// Save reference and initial value of bCanWalkOffLedges
 	ContainedMoveableActors.Add(OtherActor, ActorMovement->bCanWalkOffLedges);
 	ActorMovement->bCanWalkOffLedges = bShouldAllowFall;
 }
@@ -50,7 +55,8 @@ void AFallToggleVolume::OnExit(UPrimitiveComponent* OverlappedComponent, AActor*
 	
 	UCharacterMovementComponent* ActorMovement = GetCharMovementComp(OtherActor);
 	if(!ActorMovement) return;
-	
+
+	// Pop actor from TMap and reassign initial value of bCanWalkOffLedges 
 	ActorMovement->bCanWalkOffLedges = ContainedMoveableActors.FindAndRemoveChecked(OtherActor);
 }
 
