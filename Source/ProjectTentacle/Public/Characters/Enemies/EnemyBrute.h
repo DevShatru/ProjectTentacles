@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "Characters/Player/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/TimelineComponent.h"
 #include "EnemyBrute.generated.h"
@@ -39,6 +40,7 @@ private:
 
 	FVector GetChargeDirection(FVector DirToPlayer, FVector ActorCurrentPos);
 	FVector GetJumpSlamPosition(FVector DirFromPlayerToSelf, FVector PlayerPos);
+	bool CheckIfPlayerDodge();
 
 	EBruteAttackType BruteAttack = EBruteAttackType::Swipe;
 	
@@ -58,9 +60,13 @@ private:
 	float MaxTravelDistance = 0;
 	float TravelDistancePerTick = 0;
 
+	bool DoesPlayerDodge = false;
 	FVector StartJumpingLocation = FVector(0,0,0);
+	FVector EndJumpingLocation = FVector(0,0,0);
 	
 	FVector AttackMovingDir = FVector(0,0,0);
+
+	APlayerCharacter* PlayerRef;
 	
 protected:
 	
@@ -164,10 +170,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Animation)
 	UAnimMontage* UnableCounterAttackSecond;
 
-	
-	
-	
-	
+
+	void TryGetPlayerRef();
 	virtual void ExecuteAttack() override;
 
 	FVector CalculateDestinationForAttackMoving(FVector PlayerCurrentPos, float CurrentTimelineAlpha);
@@ -227,7 +231,7 @@ public:
 
 	virtual void OnStartCounteredAnimation_Implementation() override;
 
-	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
+	virtual void ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 
 	virtual void OnDealAoeDamage_Implementation() override;
 

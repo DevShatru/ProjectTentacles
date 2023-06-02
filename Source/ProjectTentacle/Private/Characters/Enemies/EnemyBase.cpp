@@ -39,7 +39,7 @@ void AEnemyBase::EngageTarget(AActor* Target)
 	OwnController->EngageTarget(Target);
 }
 
-void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
+void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser,
 	EPlayerAttackType PlayerAttackType)
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
@@ -47,20 +47,21 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	
 	HealthReduction(DamageAmount);
 	
-	if(Health > 0)
+	if(UnitType != EEnemyType::Brute)
 	{
-		if(UnitType != EEnemyType::Brute)
+		if((CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered))
 		{
-			PlayReceiveDamageAnimation(PlayerAttackType);
-			TryResumeMoving();
+			TryGetOwnController();
+			OwnController->RegisterCompletedAttack();
 		}
-		return;
+
 	}
 
-	if((CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered) && UnitType != EEnemyType::Brute)
+	if(Health > 0)
 	{
-		TryGetOwnController();
-		OwnController->RegisterCompletedAttack();
+		PlayReceiveDamageAnimation(PlayerAttackType);
+		TryResumeMoving();
+		return;
 	}
 	
 	OnDeath();
@@ -295,8 +296,21 @@ void AEnemyBase::OnPullingEnemy_Implementation(FVector PullingDest, float Pullin
 
 void AEnemyBase::HealthReduction(float DamageAmount)
 {
-	// clamp health that is deducted 
-	Health = UKismetMathLibrary::Clamp((Health - DamageAmount),0,MaxHealth);
+	float ReducingDamage = DamageAmount;
+
+	// if enemy is brute and he is not stunned, his receiving damage will be reduced
+	if(UnitType == EEnemyType::Brute)
+	{
+		if(CurrentEnemyState != EEnemyCurrentState::Stunned)
+		{
+			ReducingDamage = DamageAmount - ((DamageAmount / 100 ) * DamageReductionPercentage);
+		}
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reducing Damage %f"), ReducingDamage));
+	
+	// clamp health that is deducted
+	Health = UKismetMathLibrary::Clamp((Health - ReducingDamage),0,MaxHealth);
 }
 
 void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType)

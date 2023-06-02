@@ -97,7 +97,7 @@ void AEnemyBrute::OnStartCounteredAnimation_Implementation()
 	PlayReceiveCounterAnimation();
 }
 
-void AEnemyBrute::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
+void AEnemyBrute::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser,
 	EPlayerAttackType PlayerAttackType)
 {
 	Super::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
@@ -239,6 +239,17 @@ void AEnemyBrute::TestFunction()
 	PlayAnimMontage(DamageReceiveAnimation, 1, "Default");
 }
 
+void AEnemyBrute::TryGetPlayerRef()
+{
+	if(!PlayerRef)
+	{
+		ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		APlayerCharacter* CastedPlayer = Cast<APlayerCharacter>(PlayerCha);
+		if(CastedPlayer)
+			PlayerRef = CastedPlayer;
+	}
+}
+
 void AEnemyBrute::ExecuteAttack()
 {
 	Super::ExecuteAttack();
@@ -267,6 +278,11 @@ void AEnemyBrute::ExecuteAttack()
 	// 	SetActorLocation(PlayerPos + (DirFromPlayer * TestDistance));
 	// 	
 	// }
+
+	// Allocate player reference if player reference variable is not valid
+	TryGetPlayerRef();
+	
+	
 	
 	if(AttackIndicatorRef)
 		AttackIndicatorRef->OnReceivingNewAttackType(CurrentAttackType);
@@ -290,6 +306,7 @@ void AEnemyBrute::ExecuteAttack()
 			if(JumpSlamAttack != nullptr)
 				PlayAnimMontage(JumpSlamAttack, 1, "Default");
 			PlaySpecificAttackMovingTimeline(CurrentAttackType);
+			DoesPlayerDodge = false;
 
 			break;
 		default: break;
@@ -409,13 +426,19 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 	}
 
 
+	// if Brute is performing jumpslam
+	
 	RemainAttackDistance -= TravelDistancePerTick;
 
-	const FVector SupposedDestination = GetJumpSlamPosition((DirFromSelfToPlayer * -1), PlayerPos);
 	const float GroundPlayBackPos = JumpSlamMovingTimeline.GetPlaybackPosition();
 	const float GroundAlpha = JumpSlamDistanceCurve->GetFloatValue(GroundPlayBackPos);
 	
-	FVector SupposedMovingPos = UKismetMathLibrary::VLerp(StartJumpingLocation, SupposedDestination, GroundAlpha);
+	// Check if player does dodge, if not, update JumpSlamPosition
+	if(!DoesPlayerDodge && CheckIfPlayerDodge()) DoesPlayerDodge = true;
+	if(!DoesPlayerDodge && GroundPlayBackPos < 1.9) EndJumpingLocation = GetJumpSlamPosition((DirFromSelfToPlayer * -1), PlayerPos);
+
+	
+	FVector SupposedMovingPos = UKismetMathLibrary::VLerp(StartJumpingLocation, EndJumpingLocation, GroundAlpha);
 	
 	float SupposedHeight = UKismetMathLibrary::Lerp(StartJumpingLocation.Z, StartJumpingLocation.Z + JumpSlamHeight, Alpha);
 
@@ -427,6 +450,15 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 	SetActorLocation(SupposedMovingPos);
 	
 }
+
+bool AEnemyBrute::CheckIfPlayerDodge()
+{
+	if(!PlayerRef) return false;
+
+	
+	return PlayerRef->GetCurrentActionState() == EActionState::Dodge;
+}
+
 
 FVector AEnemyBrute::GetChargeDirection(FVector DirToPlayer, FVector ActorCurrentPos)
 {

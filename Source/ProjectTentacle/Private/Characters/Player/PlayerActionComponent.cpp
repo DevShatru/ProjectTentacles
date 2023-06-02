@@ -208,6 +208,7 @@ void UPlayerActionComponent::PerformMelee(AEnemyBase* RegisteredTarget, TArray<U
 	PlayerOwnerRef->SetDamagingActor(RegisteredTarget);
 	RegisteredTarget->TryStopMoving();
 
+	PlayerOwnerRef->SetCurrentDamage(CurrentComboCount);
 	ClearComboResetTimer();
 	
 	// Play attack montage
