@@ -39,7 +39,7 @@ void AEnemyBase::EngageTarget(AActor* Target)
 	OwnController->EngageTarget(Target);
 }
 
-void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
+void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser,
 	EPlayerAttackType PlayerAttackType)
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);
@@ -47,20 +47,21 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AAct
 	
 	HealthReduction(DamageAmount);
 	
-	if(Health > 0)
+	if(UnitType != EEnemyType::Brute)
 	{
-		if(UnitType != EEnemyType::Brute)
+		if((CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered))
 		{
-			PlayReceiveDamageAnimation(PlayerAttackType);
-			TryResumeMoving();
+			TryGetOwnController();
+			OwnController->RegisterCompletedAttack();
 		}
-		return;
+
 	}
 
-	if((CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered) && UnitType != EEnemyType::Brute)
+	if(Health > 0)
 	{
-		TryGetOwnController();
-		OwnController->RegisterCompletedAttack();
+		PlayReceiveDamageAnimation(PlayerAttackType);
+		TryResumeMoving();
+		return;
 	}
 	
 	OnDeath();
@@ -238,9 +239,6 @@ void AEnemyBase::TrySwitchEnemyState(EEnemyCurrentState NewState)
 // Finish attack task and switch to requested task
 void AEnemyBase::TryFinishAttackTask(EEnemyCurrentState SwitchingState)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Finish Attack Task!"));	
-
-	
 	// if BT component is valid and if current enemy state is attacking
 	if(BTComponent && (CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered))
 	{
@@ -298,14 +296,36 @@ void AEnemyBase::OnPullingEnemy_Implementation(FVector PullingDest, float Pullin
 
 void AEnemyBase::HealthReduction(float DamageAmount)
 {
-	// clamp health that is deducted 
-	Health = UKismetMathLibrary::Clamp((Health - DamageAmount),0,MaxHealth);
+	float ReducingDamage = DamageAmount;
+
+	// if enemy is brute and he is not stunned, his receiving damage will be reduced
+	if(UnitType == EEnemyType::Brute)
+	{
+		if(CurrentEnemyState != EEnemyCurrentState::Stunned)
+		{
+			ReducingDamage = DamageAmount - ((DamageAmount / 100 ) * DamageReductionPercentage);
+		}
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reducing Damage %f"), ReducingDamage));
+	
+	// clamp health that is deducted
+	Health = UKismetMathLibrary::Clamp((Health - ReducingDamage),0,MaxHealth);
 }
 
 void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType)
 {
-	PlayAnimMontage(EnemyReceiveLargeDamageAnim,1,NAME_None);
-
+	if(ReceivedAttackType == EPlayerAttackType::LongMeleeAttack)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Receive Long Melee Attack!"));	
+		PlayAnimMontage(EnemyReceiveLargeDamageAnim,1,NAME_None);
+	}
+	else if (ReceivedAttackType == EPlayerAttackType::ShortMeleeAttack)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Receive Short Melee Attack!"));	
+		PlayAnimMontage(EnemyReceiveSmallDamageAnim,1,NAME_None);
+	}
+	
 	
 	// // Switch case on player's attack type to play different damage receive animation
 	// switch (ReceivedAttackType)
@@ -410,6 +430,25 @@ void AEnemyBase::TimeoutAttack()
 	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 }
 
+void AEnemyBase::OnStunned()
+{
+	TryFinishAttackTask(EEnemyCurrentState::Stunned);
+
+	TrySwitchEnemyState(EEnemyCurrentState::Stunned);
+
+	TryStopMoving();
+	
+	StopAnimMontage();
+	PlayAnimMontage(OnGettingStunnedAnimation, 1, "Default");
+}
+
+void AEnemyBase::RecoverFromStunState()
+{
+	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);	
+	
+	TryResumeMoving();
+}
+
 void AEnemyBase::StartAttackTimeout()
 {
 	GetWorldTimerManager().SetTimer(AttackTimeoutHandle, this, &AEnemyBase::TimeoutAttack, AttackTimeoutDuration);
@@ -446,6 +485,19 @@ void AEnemyBase::UnShowPlayerTargetIndicator_Implementation()
 		EnemyTargetWidgetRef->UnShowIndicator();
 }
 
+void AEnemyBase::OnBeginStun_Implementation()
+{
+	ICharacterActionInterface::OnBeginStun_Implementation();
+
+	OnStunned();
+}
+
+void AEnemyBase::OnResumeFromStunTimerCountDown_Implementation()
+{
+	ICharacterActionInterface::OnResumeFromStunTimerCountDown_Implementation();
+
+	GetWorld()->GetTimerManager().SetTimer(StunningTimerHandle, this, &AEnemyBase::RecoverFromStunState, TotalStunDuration, false, -1);
+}
 
 
 void AEnemyBase::InstantRotation(FVector RotatingVector)

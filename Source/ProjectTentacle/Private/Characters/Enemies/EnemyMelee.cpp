@@ -312,7 +312,7 @@ void AEnemyMelee::OnStartCounteredAnimation_Implementation()
 	StartCounteredAnimation();
 }
 
-void AEnemyMelee::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
+void AEnemyMelee::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser,
                                                          EPlayerAttackType PlayerAttackType)
 {
 	Super::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);

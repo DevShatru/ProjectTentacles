@@ -60,6 +60,7 @@ DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAm
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggeringCounter, AActor*, DamageCauser);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEnteringPreCounterState, AActor*, CounterTarget);
 
+
 DECLARE_DYNAMIC_DELEGATE(FOnEnableComboResetTimer);
 
 
@@ -183,8 +184,17 @@ protected:
 	FRotator CurrentCameraRotation = FRotator(0,0,0);
 	FRotator ExecutionCameraRotation = FRotator(0,0,0);
 		
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DamageSetting)
+	float BaseDamage = 3;
 
+	float CurrentDamage = 3;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DamageSetting)
+	float DamageMultiplier = 0.5;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DamageSetting)
+	float MaxDamage =  10;
+	
 	// Animation montages
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
 	UAnimMontage* EvadeAnimMontage;
@@ -324,7 +334,10 @@ public:
 
 	void SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime);
 	void TryClearStoredRange(AEnemyBase* ClearingEnemy) {if(RangeAimingEnemy == ClearingEnemy) RangeAimingEnemy = nullptr;}
-	
+
+
+	float GetCurrentDamage() const {return CurrentDamage;}
+	void SetCurrentDamage(int32 CurrentComboCount) {CurrentDamage = UKismetMathLibrary::FClamp((BaseDamage * (1 + (CurrentComboCount * DamageMultiplier))), BaseDamage, MaxDamage);}
 	
 	float GetCurrentStamina() const {return CurrentStamina;}
 	void SetStamina(float NewStamina) {CurrentStamina = NewStamina;}

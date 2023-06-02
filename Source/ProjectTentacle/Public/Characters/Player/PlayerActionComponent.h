@@ -272,6 +272,8 @@ protected:
 	void TryToUpdateTarget();
 	
 	TArray<AEnemyBase*> GetAllOpponentAroundSelf();
+	bool IsObjectBlocking(AEnemyBase* TargetEnemy, FVector SelfPosition) const;
+	bool IsEnemyTargetable(AEnemyBase* TargetEnemy);
 	
 	void InstantRotation(FVector RotatingVector);
 

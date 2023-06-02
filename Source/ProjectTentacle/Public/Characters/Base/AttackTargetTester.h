@@ -146,7 +146,7 @@ public:
 	// ================================================== Interface Functions ============================================
 	virtual void TryToDamagePlayer_Implementation() override;
 
-	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
+	virtual void ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 
 	virtual void ShowEnemyAttackIndicator_Implementation() override;
 

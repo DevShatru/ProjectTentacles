@@ -25,5 +25,5 @@ class PROJECTTENTACLE_API IDamageInterface
 public:
 
 	UFUNCTION(BlueprintNativeEvent)
-	void ReceiveDamageFromPlayer(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType);
+	void ReceiveDamageFromPlayer(float DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType);
 };

@@ -119,7 +119,7 @@ public:
 	virtual void RepeatLyingOnTheGround_Implementation() override;
 
 	
-	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
+	virtual void ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 	
 private:
 	void InitializeTimelineComp();

@@ -11,8 +11,11 @@ void AStunTentacle::LifeCycleBegin()
 {
 	Super::LifeCycleBegin();
 
-	// Set timer to stun enemy
-	WorldRef->GetTimerManager().SetTimer(StunEnemyTimerHandle, this, &AStunTentacle::StunEnemy, TimeToExecuteStun, false, -1);
+
+	StunEnemy();
+	
+	// // Set timer to stun enemy
+	// WorldRef->GetTimerManager().SetTimer(StunEnemyTimerHandle, this, &AStunTentacle::StunEnemy, TimeToExecuteStun, false, -1);
 
 }
 
@@ -59,7 +62,7 @@ void AStunTentacle::StunEnemy()
 		if(EachFoundEnemyActor->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
 		{
 			// TODO: Delegate to Stun Enemies
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Stun Enemy!"));
+			ICharacterActionInterface::Execute_OnBeginStun(EachFoundEnemyActor);
 			
 		}
 	}
