@@ -41,5 +41,5 @@ protected:
 	void ExitSwamp(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 private:
-	TArray<AActor*> ContainedActors;
+	TMap<AActor*, TArray<UPrimitiveComponent*>> ContainedActors;
 };

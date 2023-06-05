@@ -47,22 +47,39 @@ void ASwampWater::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASwampWater::EnterSwamp(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(ContainedActors.Contains(OtherActor)) return;
+	// Check that actor is PC and return early if not
 	APlayerCharacter* AsPC = Cast<APlayerCharacter>(OtherActor);
 	if(!AsPC) return;
 
-	ContainedActors.Add(AsPC);
+	// Check if actor is a key in map, and create key with empty array if not
+	if(!ContainedActors.Contains(AsPC))
+	{
+		ContainedActors.Add(OtherActor, TArray<UPrimitiveComponent*>());
+	}
+
+	// Get a reference to mapped array, if it already contained the overlapped component do nothing (this shouldn't ever happen)
+	TArray<UPrimitiveComponent*>* ContainedComponents = ContainedActors.Find(OtherActor);
+	if(ContainedComponents->Contains(OtherComp)) return;
+
+	// Otherwise, add the new overlapped component to the map and start damage tick
+	ContainedComponents->Add(OtherComp);
+	
 	AsPC->StartSwampDamageTick(DamagePerTick, TickInterval);
 }
 
 void ASwampWater::ExitSwamp(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	// If the exiting actor isn't a key in our map or isn't PC, do nothing
 	if(!ContainedActors.Contains(OtherActor)) return;
 	APlayerCharacter* AsPC = Cast<APlayerCharacter>(OtherActor);
 	if(!AsPC) return;
 
-	AsPC->StopSwampDamageTick();
-	ContainedActors.Remove(AsPC);
+	// Get array reference and remove overlapped component if it exists
+	TArray<UPrimitiveComponent*>* ContainedComponents = ContainedActors.Find(OtherActor);
+	if(ContainedComponents->Contains(OtherComp)) ContainedComponents->Remove(OtherComp);
+
+	// If no mapped components, we're fully outside the water so stop damage
+	if(ContainedComponents->Num() == 0) AsPC->StopSwampDamageTick();
 }
 

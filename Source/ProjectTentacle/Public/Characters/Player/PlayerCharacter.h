@@ -58,6 +58,8 @@ public:
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnExecutingPlayerAction, EActionState, ExecutingAction);
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FOnReceivingIncomingDamage, int32, DamageAmount, AActor*, DamageCauser, EEnemyAttackType, ReceivingAttackType);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggeringCounter, AActor*, DamageCauser);
+DECLARE_DYNAMIC_DELEGATE(FCounterStart);
+DECLARE_DYNAMIC_DELEGATE(FCounterStop);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEnteringPreCounterState, AActor*, CounterTarget);
 
 
@@ -263,6 +265,8 @@ public:
 	FOnExecutingPlayerAction OnExecutePlayerAction;
 	FOnReceivingIncomingDamage OnReceivingIncomingDamage;
 	FOnTriggeringCounter OnTriggeringCounter;
+	FCounterStart OnCounterStart;
+	FCounterStop OnCounterStop;
 	FOnEnteringPreCounterState OnEnteringPreCounterState;
 	FOnEnableComboResetTimer OnEnableComboResetTimer;
 
