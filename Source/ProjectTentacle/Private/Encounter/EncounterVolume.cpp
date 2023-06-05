@@ -153,10 +153,11 @@ void AEncounterVolume::BeginAttack(bool bIsBasic)
 	TArray<AEnemyBaseController*>* AttackQueue = GetAttackQueue(bIsBasic);
 	const int8 QueueSize = AttackQueue->Num();
 	if (QueueSize == 0) return;
+	if (QueueSize == 1 && Cast<AEnemyBase>((*AttackQueue)[0]->GetPawn())->GetCurrentEnemyState() == EEnemyCurrentState::Stunned) StartQueueTimer(bIsBasic);
 	
 	int8 RandomIndex = FMath::RandRange(0, QueueSize - 1);
 
-	while(QueueSize > 1 && (bIsBasic ? LastAttackerBasic : LastAttackerHeavy) == (*AttackQueue)[RandomIndex])
+	while(QueueSize > 1 && ((bIsBasic ? LastAttackerBasic : LastAttackerHeavy) == (*AttackQueue)[RandomIndex] || Cast<AEnemyBase>((*AttackQueue)[RandomIndex]->GetPawn())->GetCurrentEnemyState() == EEnemyCurrentState::Stunned))
 	{
 		RandomIndex = FMath::RandRange(0, QueueSize - 1);
 	}
