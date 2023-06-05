@@ -51,6 +51,8 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAct
 	{
 		if((CurrentEnemyState == EEnemyCurrentState::Attacking || CurrentEnemyState == EEnemyCurrentState::Countered))
 		{
+			OnCancelCounterableAttack();
+			
 			TryGetOwnController();
 			OwnController->RegisterCompletedAttack();
 		}
@@ -306,8 +308,6 @@ void AEnemyBase::HealthReduction(float DamageAmount)
 			ReducingDamage = DamageAmount - ((DamageAmount / 100 ) * DamageReductionPercentage);
 		}
 	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reducing Damage %f"), ReducingDamage));
 	
 	// clamp health that is deducted
 	Health = UKismetMathLibrary::Clamp((Health - ReducingDamage),0,MaxHealth);
@@ -317,41 +317,12 @@ void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType
 {
 	if(ReceivedAttackType == EPlayerAttackType::LongMeleeAttack)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Receive Long Melee Attack!"));	
 		PlayAnimMontage(EnemyReceiveLargeDamageAnim,1,NAME_None);
 	}
 	else if (ReceivedAttackType == EPlayerAttackType::ShortMeleeAttack)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Receive Short Melee Attack!"));	
 		PlayAnimMontage(EnemyReceiveSmallDamageAnim,1,NAME_None);
 	}
-	
-	
-	// // Switch case on player's attack type to play different damage receive animation
-	// switch (ReceivedAttackType)
-	// {
-	// case EPlayerAttackType::ShortFlipKick:
-	// 	PlayAnimMontage(ReceiveShortFlipKick,1,NAME_None);
-	// case EPlayerAttackType::FlyingKick:
-	// 	PlayAnimMontage(ReceiveFlyingKick,1,NAME_None);
-	// 	break;
-	// case EPlayerAttackType::FlyingPunch:
-	// 	PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
-	// 	break;
-	// case EPlayerAttackType::SpinKick:
-	// 	PlayAnimMontage(ReceiveSpinKick,1,NAME_None);
-	// 	break;
-	// case EPlayerAttackType::DashingDoubleKick:
-	// 	PlayAnimMontage(ReceiveDashingDoubleKick,1,NAME_None);
-	// 	break;
-	// case EPlayerAttackType::FastKick:
-	// 	PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
-	// 	break;
-	// case EPlayerAttackType::FastPunch:
-	// 	PlayAnimMontage(ReceiveFlyingPunch,1,NAME_None);
-	// 	break;
-	// default: break;
-	// }
 }
 
 
@@ -447,6 +418,17 @@ void AEnemyBase::RecoverFromStunState()
 	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);	
 	
 	TryResumeMoving();
+}
+
+void AEnemyBase::OnCancelCounterableAttack()
+{
+	ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	
+	// Try to clear player's counter target when this performing counterable attack enemy get damaged and interrupted
+	if(CurrentAttackType == EEnemyAttackType::AbleToCounter && PlayerCha->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+	{
+		ICharacterActionInterface::Execute_TryRemoveCounterTarget(PlayerCha, this);
+	}
 }
 
 void AEnemyBase::StartAttackTimeout()
