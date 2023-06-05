@@ -9,6 +9,7 @@
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBaseController.h"
 #include "Characters/Enemies/UnitPool.h"
+#include "Characters/Player/PlayerCharacter.h"
 #include "Encounter/SpawnPoint.h"
 
 FTimerManager* AEncounterVolume::WorldTimerManager = nullptr;
@@ -133,15 +134,30 @@ void AEncounterVolume::BeginPlay()
 	Setup();
 }
 
+void AEncounterVolume::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if(EncounterTarget)
+	{
+		EncounterTarget->OnCounterStart.Unbind();
+		EncounterTarget->OnCounterStart.Unbind();
+	}
+	Super::EndPlay(EndPlayReason);
+}
+
 void AEncounterVolume::BeginAttack(bool bIsBasic)
 {
+	if(bIsPCCountering) {
+		StartQueueTimer(bIsBasic);
+		return;
+	}
 	TArray<AEnemyBaseController*>* AttackQueue = GetAttackQueue(bIsBasic);
 	const int8 QueueSize = AttackQueue->Num();
 	if (QueueSize == 0) return;
+	if (QueueSize == 1 && Cast<AEnemyBase>((*AttackQueue)[0]->GetPawn())->GetCurrentEnemyState() == EEnemyCurrentState::Stunned) StartQueueTimer(bIsBasic);
 	
 	int8 RandomIndex = FMath::RandRange(0, QueueSize - 1);
 
-	while(QueueSize > 1 && (bIsBasic ? LastAttackerBasic : LastAttackerHeavy) == (*AttackQueue)[RandomIndex])
+	while(QueueSize > 1 && ((bIsBasic ? LastAttackerBasic : LastAttackerHeavy) == (*AttackQueue)[RandomIndex] || Cast<AEnemyBase>((*AttackQueue)[RandomIndex]->GetPawn())->GetCurrentEnemyState() == EEnemyCurrentState::Stunned))
 	{
 		RandomIndex = FMath::RandRange(0, QueueSize - 1);
 	}
@@ -179,8 +195,19 @@ void AEncounterVolume::DespawnUnit(AEnemyBaseController* Unit)
 	UnitPool->AddUnitToPool(Unit->GetOwnPawn());
 }
 
+void AEncounterVolume::PCCounterStart()
+{
+	bIsPCCountering = true;
+}
+
+void AEncounterVolume::PCCounterStop()
+{
+	bIsPCCountering = false;
+}
+
 void AEncounterVolume::Setup()
 {
+	bIsPCCountering = false;
 	WorldTimerManager = &GetWorldTimerManager();
 	bIsEncounterActive = false;
 	bIsEncounterComplete = false;
@@ -260,7 +287,13 @@ void AEncounterVolume::RegisterEncounterForSpawnPoints()
 // Trigger for contained units to engage the target
 void AEncounterVolume::EngageContainedUnits(AActor* Target)
 {
-	EncounterTarget = Target;
+	EncounterTarget = Cast<APlayerCharacter>(Target);
+	if(EncounterTarget)
+	{
+		EncounterTarget->OnCounterStart.BindDynamic(this, &AEncounterVolume::PCCounterStart);
+		EncounterTarget->OnCounterStop.BindDynamic(this, &AEncounterVolume::PCCounterStop);
+	}
+	
 	for(AEnemyBase* ContainedUnit : ContainedUnits)
 	{
 		ContainedUnit->EngageTarget(Target);

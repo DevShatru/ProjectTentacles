@@ -462,6 +462,7 @@ void UPlayerActionComponent::BeginCounterAttack()
 
 		
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1, "Start");
+	PlayerOwnerRef->OnCounterStart.ExecuteIfBound();
 		
 	ComboCountIncrement();
 
@@ -938,7 +939,6 @@ void UPlayerActionComponent::ExecutePlayerAction(EActionState ExecutingAction)
 			break;
 		case EActionState::SpecialAbility2:
 			ExecuteSpecialAbility(2);
-			break;
 			break;
 		default: break;
 	}

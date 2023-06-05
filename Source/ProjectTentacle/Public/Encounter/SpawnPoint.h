@@ -96,7 +96,9 @@ protected:
 	UFUNCTION()
 	void TryOpenDoor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	UFUNCTION()
-	void TryCloseDoor();
+	void TryCloseDoor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION()
+	void CloseDoor();
 
 	UFUNCTION()
 	void DoorOpenTransition();
