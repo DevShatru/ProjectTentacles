@@ -79,10 +79,6 @@ protected:
 
 	// Wave system setup
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
-	float SpawnStartTime = 75.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
-	float SpawnStartEncounterCompletionPercent = 75.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	float DespawnTimer = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Spawn)
 	TArray<FWaveParams> WaveParameters;

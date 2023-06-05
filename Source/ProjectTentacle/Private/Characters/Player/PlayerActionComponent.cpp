@@ -940,7 +940,6 @@ void UPlayerActionComponent::ExecutePlayerAction(EActionState ExecutingAction)
 		case EActionState::SpecialAbility2:
 			ExecuteSpecialAbility(2);
 			break;
-			break;
 		default: break;
 	}
 }
