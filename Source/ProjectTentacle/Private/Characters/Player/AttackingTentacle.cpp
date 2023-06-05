@@ -57,34 +57,41 @@ void AAttackingTentacle::AttackEnemy()
 {
 	const FVector CurrentTentaclePos = GetActorLocation();
 
-	const TArray<AActor*> FoundEnemies = GetEnemyInRadius(SearchingRadius, CurrentTentaclePos);
-
-	if(FoundEnemies.Num() < 1) return;
-
-	const AActor* ClosestEnemy = FindClosestEnemyInRange(FoundEnemies);
-
-	if(!ClosestEnemy) return;
-
-	FVector ClosestEnemyPos = ClosestEnemy->GetActorLocation();
-	ClosestEnemyPos.Z = CurrentTentaclePos.Z;
+	DrawDebugAttackRange(CurrentTentaclePos, AttackingRadius);
 	
-	DrawDebugAttackRange(ClosestEnemyPos, AttackingRadius);
-	
-	DamageInRange(ClosestEnemyPos);
+	DamageInRange(CurrentTentaclePos);
+
+	// const TArray<AActor*> FoundEnemies = GetEnemyInRadius(SearchingRadius, CurrentTentaclePos);
+	//
+	//
+	// if(FoundEnemies.Num() < 1) return;
+	//
+	// const AActor* ClosestEnemy = FindClosestEnemyInRange(FoundEnemies);
+	//
+	// if(!ClosestEnemy) return;
+	//
+	// FVector ClosestEnemyPos = ClosestEnemy->GetActorLocation();
+	// ClosestEnemyPos.Z = CurrentTentaclePos.Z;
+	//
+	// DrawDebugAttackRange(ClosestEnemyPos, AttackingRadius);
+	//
+	// DamageInRange(ClosestEnemyPos);
 }
 
 void AAttackingTentacle::LifeCycleBegin()
 {
 	Super::LifeCycleBegin();
 
-	// Set timer to attack enemy
-	WorldRef->GetTimerManager().SetTimer(AttackEnemyTimerHandle, this, &AAttackingTentacle::AttackEnemy, AttackingGap, true, -1);
+	AttackEnemy();
+
+	// // Set timer to attack enemy
+	// WorldRef->GetTimerManager().SetTimer(AttackEnemyTimerHandle, this, &AAttackingTentacle::AttackEnemy, AttackingGap, true, -1);
 }
 
 void AAttackingTentacle::LifeSpanExpired()
 {
 	Super::LifeSpanExpired();
 
-	StopAttacking();
+	// StopAttacking();
 
 }

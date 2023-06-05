@@ -8,7 +8,6 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "ProjectTentacle/ProjectTentacleGameModeBase.h"
@@ -459,7 +458,7 @@ void APlayerCharacter::DamagingTarget_Implementation()
 
 	if(DamagingActor == nullptr) return;
 	
-	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, 1, this, CurrentAttackType);
+	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, CurrentDamage, this, CurrentAttackType);
 
 	if(CurrentAttackType == EPlayerAttackType::CounterAttack) UnsetCurrentTarget();
 }

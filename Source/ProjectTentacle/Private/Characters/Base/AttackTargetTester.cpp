@@ -228,7 +228,7 @@ void AAttackTargetTester::TryToDamagePlayer_Implementation()
 
 }
 
-void AAttackTargetTester::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
+void AAttackTargetTester::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser,
 	EPlayerAttackType PlayerAttackType)
 {
 	IDamageInterface::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);

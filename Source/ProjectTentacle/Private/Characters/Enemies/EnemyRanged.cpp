@@ -154,7 +154,7 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 		IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(SupposeDamageActor, BaseDamageAmount, this, EEnemyAttackType::UnableToCounter);
 }
 
-void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser,
+void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser,
 	EPlayerAttackType PlayerAttackType)
 {
 	Super::ReceiveDamageFromPlayer_Implementation(DamageAmount, DamageCauser, PlayerAttackType);

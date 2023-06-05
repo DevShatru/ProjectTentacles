@@ -25,7 +25,7 @@ class PROJECTTENTACLE_API AEnemyBase : public ACharacter, public ICharacterActio
 	GENERATED_BODY()
 
 protected:
-	virtual void ReceiveDamageFromPlayer_Implementation(int32 DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
+	virtual void ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -52,6 +52,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	EEnemyType UnitType = EEnemyType::Melee;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Combat, meta=(ClampMin=0, ClampMax=100))
+	float DamageReductionPercentage = 0;
+	
 	UPROPERTY(EditDefaultsOnly, Category=Combat)
 	float AttackCompletionTime = 2.0f;
 	
@@ -97,10 +100,10 @@ protected:
 	// Enemy Property variable
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
-	int32 Health = 10;
+	float Health = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
-	int32 MaxHealth = 10;
+	float MaxHealth = 10;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::WaitToAttack;
@@ -111,8 +114,20 @@ protected:
 	bool AttackTaskOn = false;
 	
 	// Receiving Damage Animations
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CombatSetting_Animation)
 	UAnimMontage* EnemyReceiveLargeDamageAnim;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CombatSetting_Animation)
+	UAnimMontage* EnemyReceiveSmallDamageAnim;
+
+
+	FTimerHandle StunningTimerHandle;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = StunSetting)
+	UAnimMontage* OnGettingStunnedAnimation;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = StunSetting)
+	float TotalStunDuration = 4.0f;
 	
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ReceiveDamageAnimations)
 	// UAnimMontage* ReceiveShortFlipKick;
@@ -176,11 +191,20 @@ protected:
 
 	UFUNCTION()
 	void TimeoutAttack();
+
+	// ===================================================== Stun =======================================================
+
+	
+	UFUNCTION()
+	void RecoverFromStunState();
+	
 	
 public:
 	// ===================================================== On Death =======================================================
 	virtual void OnDeath();
 	
+	void OnStunned();
+
 	void StartAttackTimeout();
 	void EnableStrafe(bool bStrafe = true) const;
 	void ExecuteRangedAttack(AActor* Target);
@@ -267,6 +291,10 @@ public:
 	virtual void ShowPlayerTargetIndicator_Implementation() override;
 	
 	virtual void UnShowPlayerTargetIndicator_Implementation() override;
+
+	virtual void OnBeginStun_Implementation() override;
+
+	virtual void OnResumeFromStunTimerCountDown_Implementation() override;
 	
 	void TryGetOwnController();
 	
