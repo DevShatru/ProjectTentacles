@@ -108,6 +108,7 @@ void ASpawnPoint::BeginPlay()
 void ASpawnPoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	DoorOpeningVolume->OnComponentBeginOverlap.RemoveDynamic(this, &ASpawnPoint::TryOpenDoor);
+	DoorOpeningVolume->OnComponentEndOverlap.RemoveDynamic(this, &ASpawnPoint::TryCloseDoor);
 	if(SpawnParams)
 	{
 		delete SpawnParams;
@@ -123,13 +124,18 @@ void ASpawnPoint::TryOpenDoor(UPrimitiveComponent* OverlappedComponent, AActor* 
 	if(bIsDoorOpen)
 	{
 		TimerManager->ClearTimer(DoorTimerHandle);
-		TimerManager->SetTimer(DoorTimerHandle, this, &ASpawnPoint::TryCloseDoor, DoorHeldOpenTime, false);
 		return;
 	}	
 	// If closed or partly open, start opening timer
 	CalculateDoorOpenness();
 	DoorTransitionStartTime = World->GetTimeSeconds();
 	TimerManager->SetTimerForNextTick(this, &ASpawnPoint::DoorOpenTransition);
+}
+
+void ASpawnPoint::TryCloseDoor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+		TimerManager->SetTimer(DoorTimerHandle, this, &ASpawnPoint::CloseDoor, DoorHeldOpenTime, false);
 }
 
 void ASpawnPoint::DoorOpenTransition()
@@ -142,13 +148,12 @@ void ASpawnPoint::DoorOpenTransition()
 	if(Alpha >= 1.f)
 	{
 		bIsDoorOpen = true;
-		TimerManager->SetTimer(DoorTimerHandle, this, &ASpawnPoint::TryCloseDoor, DoorHeldOpenTime, false);
 		return;	
 	}
 	TimerManager->SetTimerForNextTick(this, &ASpawnPoint::DoorOpenTransition);
 }
 
-void ASpawnPoint::TryCloseDoor()
+void ASpawnPoint::CloseDoor()
 {
 	bIsDoorOpen = false;
 	DoorTransitionStartTime = World->GetTimeSeconds();
@@ -169,6 +174,7 @@ void ASpawnPoint::DoorCloseTransition()
 void ASpawnPoint::Setup()
 {
 	DoorOpeningVolume->OnComponentBeginOverlap.AddDynamic(this, &ASpawnPoint::TryOpenDoor);
+	DoorOpeningVolume->OnComponentEndOverlap.AddDynamic(this, &ASpawnPoint::TryCloseDoor);
 	bIsDoorOpen = false;
 	World = GetWorld();
 	SpawnedUnits.Empty();
