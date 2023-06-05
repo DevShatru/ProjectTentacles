@@ -55,7 +55,7 @@ protected:
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	// Area around the encounter to generate navigation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UNavigationInvokerComponent* NavInvoker;
@@ -98,6 +98,11 @@ protected:
 
 	UFUNCTION()
 	void DespawnUnit(AEnemyBaseController* Unit);
+
+	UFUNCTION()
+	void PCCounterStart();
+	UFUNCTION()
+	void PCCounterStop();
 	
 private:
 	// Called on begin play and reset
@@ -133,7 +138,8 @@ private:
 	void ResetSpawnPoints() const;
 
 	int8 InitialUnits, DefeatedUnits, CurrentWave;
+	unsigned int bIsPCCountering:1;
 	AEnemyBaseController* LastAttackerBasic, *LastAttackerHeavy;
-	AActor* EncounterTarget;
+	class APlayerCharacter* EncounterTarget;
 	FWaveParams* CurrentWaveParams;
 };
