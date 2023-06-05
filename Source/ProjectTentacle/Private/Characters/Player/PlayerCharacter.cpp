@@ -546,6 +546,11 @@ void APlayerCharacter::OnSwitchingBackToDefaultCamera_Implementation()
 
 void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
 {
+	if(CurrentActionState == EActionState::Evade)
+	{
+		OnCounterStop.ExecuteIfBound();
+	}
+		
 	Super::ActionEnd_Implementation(BufferingCheck);
 }
 
