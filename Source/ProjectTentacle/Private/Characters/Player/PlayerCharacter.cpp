@@ -539,6 +539,11 @@ void APlayerCharacter::OnSwitchingBackToDefaultCamera_Implementation()
 
 	if(!PlayerCurrentController) TryCachePlayerController();
 	
+	if(CurrentActionState == EActionState::SpecialAttack)
+	{
+		OnCounterStop.ExecuteIfBound();
+	}
+	
 	CurrentCameraType = EPlayerCameraType::InCombat;
 	PlayerCurrentController->SetViewTargetWithBlend(CombatCameraChild->GetChildActor(), CameraMoveTime, EViewTargetBlendFunction::VTBlend_EaseInOut, 1.0, false);
 	CameraSwitchingTimeline.ReverseFromEnd();
@@ -546,11 +551,6 @@ void APlayerCharacter::OnSwitchingBackToDefaultCamera_Implementation()
 
 void APlayerCharacter::ActionEnd_Implementation(bool BufferingCheck)
 {
-	if(CurrentActionState == EActionState::Evade)
-	{
-		OnCounterStop.ExecuteIfBound();
-	}
-		
 	Super::ActionEnd_Implementation(BufferingCheck);
 }
 
