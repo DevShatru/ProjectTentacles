@@ -358,6 +358,7 @@ public:
 	
 	AEnemyBase* GetCounteringTarget() const {return CounteringVictim;}
 	void SetCounteringTarget(AEnemyBase* NewCounterTarget) {if(CounteringVictim != NewCounterTarget) CounteringVictim = NewCounterTarget;}
+	void ClearCounteringTarget() {if(CounteringVictim) CounteringVictim = nullptr;}
 	void ClearCounteringTarget(AEnemyBase* RemovingCounterTarget) {if(CounteringVictim == RemovingCounterTarget) CounteringVictim = nullptr;}
 
 	EPlayerAttackType GetCurrentAttackType() const {return CurrentAttackType;}
