@@ -403,9 +403,19 @@ void AEnemyBase::TimeoutAttack()
 
 void AEnemyBase::OnStunned()
 {
+	if(CurrentEnemyState == EEnemyCurrentState::Attacking)
+	{
+		OnHideAttackIndicator();
+
+		OnCancelCounterableAttack();
+		
+	}
+		
 	TryFinishAttackTask(EEnemyCurrentState::Stunned);
 
 	TrySwitchEnemyState(EEnemyCurrentState::Stunned);
+
+	
 
 	TryStopMoving();
 	
