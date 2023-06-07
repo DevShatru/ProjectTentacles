@@ -94,7 +94,7 @@ void AEnemyBase::Reset()
 
 void AEnemyBase::ResetMeshTransform()
 {
-	GetMesh()->SetWorldTransform(StartingTransform * GetTransform(), false, nullptr, GetMesh()->IsSimulatingPhysics() ? ETeleportType::TeleportPhysics : ETeleportType::None);
+	GetMesh()->SetRelativeTransform(StartingTransform, false, nullptr, GetMesh()->IsSimulatingPhysics() ? ETeleportType::TeleportPhysics : ETeleportType::None);
 }
 
 void AEnemyBase::InitializeWidgetComponents()
@@ -416,6 +416,7 @@ void AEnemyBase::RagDollPhysicsOnDead()
 void AEnemyBase::DisableRagDoll()
 {
 	GetMesh()->SetSimulatePhysics(false);
+	GetMesh()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	ResetMeshTransform();
 }
 
