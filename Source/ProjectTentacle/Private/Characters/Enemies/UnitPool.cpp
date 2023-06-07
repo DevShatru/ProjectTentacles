@@ -31,6 +31,7 @@ AEnemyBase* AUnitPool::GetUnitFromPool(const EEnemyType Type, const FActorSpawnP
 			{
 				Unit->GetController()->Reset();
 			}
+			PooledUnits.Remove(Unit);
 			return Unit;
 		}
 	}
