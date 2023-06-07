@@ -73,7 +73,7 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAct
 void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
-
+	StartingTransform = GetMesh()->GetRelativeTransform();
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	InitializeWidgetComponents();
 
@@ -89,7 +89,12 @@ void AEnemyBase::Reset()
 	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);
 	
 	TurnCollisionOffOrOn(false);
-	DisableRagDoll();
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+}
+
+void AEnemyBase::ResetMeshTransform()
+{
+	GetMesh()->SetWorldTransform(StartingTransform * GetTransform(), false, nullptr, GetMesh()->IsSimulatingPhysics() ? ETeleportType::TeleportPhysics : ETeleportType::None);
 }
 
 void AEnemyBase::InitializeWidgetComponents()
@@ -411,8 +416,7 @@ void AEnemyBase::RagDollPhysicsOnDead()
 void AEnemyBase::DisableRagDoll()
 {
 	GetMesh()->SetSimulatePhysics(false);
-	GetMesh()->ResetRelativeTransform();
-	GetCharacterMovement()->DisableMovement();
+	ResetMeshTransform();
 }
 
 void AEnemyBase::TimeoutAttack()

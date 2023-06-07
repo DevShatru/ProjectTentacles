@@ -188,7 +188,6 @@ protected:
 	void HealthReduction(float DamageAmount);
 	
 	void RagDollPhysicsOnDead();
-	void DisableRagDoll();
 	
 	UFUNCTION()
 	void TimeoutAttack();
@@ -206,6 +205,8 @@ protected:
 	
 public:
 	virtual void Reset() override;
+	void DisableRagDoll();
+	void ResetMeshTransform();
 	// ===================================================== On Death =======================================================
 	virtual void OnDeath();
 	
@@ -305,6 +306,7 @@ public:
 	void TryGetOwnController();
 	
 private:
+	FTransform StartingTransform;
 	void TryClearFromPlayerTarget();
 
 	void TurnCollisionOffOrOn(bool TurnCollisionOff);
