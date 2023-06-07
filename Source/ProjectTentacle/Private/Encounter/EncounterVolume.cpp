@@ -336,12 +336,16 @@ TArray<AEnemyBaseController*>* AEncounterVolume::GetAttackQueue(bool bIsBasic)
 
 void AEncounterVolume::TriggerNextWave()
 {
-	bWaveStartedSpawning = false;
 	// Increment wave number
 	++CurrentWave;
-	if(CurrentWave >= WaveParameters.Num()) return;
+	if(CurrentWave >= WaveParameters.Num())
+	{
+		CurrentWaveParams == nullptr;
+		return;
+	}
 	CurrentWaveParams = &WaveParameters[CurrentWave];
 	if(!CurrentWaveParams) return;
+	bWaveStartedSpawning = false;
 	// Register Spawn Points
 	RegisterEncounterForSpawnPoints();
 	// Start timer
