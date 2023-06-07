@@ -73,11 +73,28 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAct
 void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
-
+	StartingTransform = GetMesh()->GetRelativeTransform();
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	InitializeWidgetComponents();
 
 	InitializeEnemyControllerRef();
+}
+
+void AEnemyBase::Reset()
+{
+	Super::Reset();
+	Health = MaxHealth;
+
+	// Reset state, re-enable collision, and turn off ragdoll
+	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);
+	
+	TurnCollisionOffOrOn(false);
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+}
+
+void AEnemyBase::ResetMeshTransform()
+{
+	GetMesh()->SetRelativeTransform(StartingTransform, false, nullptr, GetMesh()->IsSimulatingPhysics() ? ETeleportType::TeleportPhysics : ETeleportType::None);
 }
 
 void AEnemyBase::InitializeWidgetComponents()
@@ -394,6 +411,13 @@ void AEnemyBase::RagDollPhysicsOnDead()
 	
 	UCharacterMovementComponent* SelfCharacterMovement = GetCharacterMovement();
 	SelfCharacterMovement->DisableMovement();
+}
+
+void AEnemyBase::DisableRagDoll()
+{
+	GetMesh()->SetSimulatePhysics(false);
+	GetMesh()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	ResetMeshTransform();
 }
 
 void AEnemyBase::TimeoutAttack()

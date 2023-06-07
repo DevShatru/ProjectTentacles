@@ -134,7 +134,6 @@ void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 
 void AEnemyBaseController::OnDeath(bool bForceDespawn)
 {
-	Reset();
 	if(!OwningEncounter) return;
 	OwningEncounter->RegisterUnitDestroyed(this, bForceDespawn);
 }

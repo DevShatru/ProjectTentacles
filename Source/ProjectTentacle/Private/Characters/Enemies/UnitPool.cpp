@@ -13,11 +13,8 @@ AUnitPool::AUnitPool()
 
 void AUnitPool::AddUnitToPool(AEnemyBase* Unit)
 {
-	if(Unit->GetController())
-	{
-		Unit->GetController()->Reset();
-	}
 	Unit->SetActorLocation(GetActorLocation());
+	Unit->DisableRagDoll();
 	PooledUnits.Add(Unit);
 }
 
@@ -31,6 +28,7 @@ AEnemyBase* AUnitPool::GetUnitFromPool(const EEnemyType Type, const FActorSpawnP
 			{
 				Unit->GetController()->Reset();
 			}
+			PooledUnits.Remove(Unit);
 			return Unit;
 		}
 	}
