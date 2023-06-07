@@ -325,8 +325,6 @@ void AEnemyMelee::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAc
 		//StopAnimMontage();
 		
 		OnHideAttackIndicator();
-
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Code Goes Through Here!"));	
 		
 		// Stop attack movement
 		TryStopAttackMovement();

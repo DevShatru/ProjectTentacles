@@ -304,12 +304,15 @@ void AEncounterVolume::EngageContainedUnits(AActor* Target)
 bool AEncounterVolume::AllSpawnsComplete() const
 {
 	bool bAllComplete = true;
-	if (!CurrentWaveParams) return bAllComplete;
 
-	for(const ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)
+	for(int8 i = 0; i < WaveParameters.Num(); ++i)
 	{
-		if(!SpawnPoint) continue;
-		bAllComplete = bAllComplete && SpawnPoint->IsSpawningComplete();
+		const FWaveParams* WaveParams = &WaveParameters[i];
+		for(const ASpawnPoint* SpawnPoint : WaveParams->ContainedSpawnPoints)
+		{
+			if(!SpawnPoint) continue;
+			bAllComplete = bAllComplete && SpawnPoint->IsSpawningComplete();
+		}
 	}
 
 	return bAllComplete;
@@ -336,12 +339,16 @@ TArray<AEnemyBaseController*>* AEncounterVolume::GetAttackQueue(bool bIsBasic)
 
 void AEncounterVolume::TriggerNextWave()
 {
-	bWaveStartedSpawning = false;
 	// Increment wave number
 	++CurrentWave;
-	if(CurrentWave >= WaveParameters.Num()) return;
+	if(CurrentWave >= WaveParameters.Num())
+	{
+		CurrentWaveParams = nullptr;
+		return;
+	}
 	CurrentWaveParams = &WaveParameters[CurrentWave];
 	if(!CurrentWaveParams) return;
+	bWaveStartedSpawning = false;
 	// Register Spawn Points
 	RegisterEncounterForSpawnPoints();
 	// Start timer

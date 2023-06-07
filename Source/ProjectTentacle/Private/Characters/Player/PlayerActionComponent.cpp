@@ -1038,7 +1038,7 @@ bool UPlayerActionComponent::IsPlayerCanBeDamaged(EActionState PlayerCurrentActi
 	EEnemyAttackType ReceivingAttackType)
 {
 	// return true if player is standing or attacking or player is countering but incoming attack is not counterable
-	return PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack || PlayerCurrentAction == EActionState::PreAction || (PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::UnableToCounter);
+	return PlayerCurrentAction == EActionState::Idle || PlayerCurrentAction == EActionState::Attack || PlayerCurrentAction == EActionState::BeforeAttack || PlayerCurrentAction == EActionState::PreAction || (PlayerCurrentAction == EActionState::Evade && ReceivingAttackType == EEnemyAttackType::UnableToCounter);
 }
 
 void UPlayerActionComponent::MakePlayerEnemyFaceEachOther(AEnemyBase* TargetEnemyRef)
