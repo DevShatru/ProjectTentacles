@@ -55,6 +55,11 @@ void ASpawnPoint::SpawnUnit()
 {
 	// Do nothing if not part of an encounter
 	if(!OwningEncounterVolume) return;
+
+	if (bSpawnComplete) {
+		StopSpawningUnits();
+		return;
+	}
 	
 	// Determine what unit to spawn based on weight
 	const float MeleeSpawnWeight = bShouldSpawnMelee ? MeleeUnitsSpawnWeight : 0.f,
@@ -62,11 +67,6 @@ void ASpawnPoint::SpawnUnit()
 				BruteSpawnWeight = bShouldSpawnBrute ? BruteUnitsSpawnWeight : 0.f,
 				HealerSpawnWeight = bShouldSpawnHealer ? HealerUnitsSpawnWeight : 0.f;
 	const float SpawnWeightSum = MeleeSpawnWeight + RangedSpawnWeight + BruteSpawnWeight + HealerSpawnWeight;
-
-	if (SpawnWeightSum <= 0.f) {
-		StopSpawningUnits();
-		return;
-	}
 
 	const float WeightedRandom = FMath::FRandRange(0.f, SpawnWeightSum);
 
@@ -206,6 +206,6 @@ void ASpawnPoint::CheckUnitsToSpawn()
 	bShouldSpawnRanged = UnitsSpawned[EEnemyType::Ranged] < NumRangedUnitsSpawned;
 	bShouldSpawnBrute = UnitsSpawned[EEnemyType::Brute] < NumBruteUnitsSpawned;
 	bShouldSpawnHealer = UnitsSpawned[EEnemyType::Healer] < NumHealerUnitsSpawned;
-	bSpawnComplete = !(bShouldSpawnMelee || bShouldSpawnBrute || bShouldSpawnRanged);
+	bSpawnComplete = !(bShouldSpawnMelee || bShouldSpawnBrute || bShouldSpawnRanged || bShouldSpawnHealer);
 }
 
