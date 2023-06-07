@@ -80,6 +80,18 @@ void AEnemyBase::BeginPlay()
 	InitializeEnemyControllerRef();
 }
 
+void AEnemyBase::Reset()
+{
+	Super::Reset();
+	Health = MaxHealth;
+
+	// Reset state, re-enable collision, and turn off ragdoll
+	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);
+	
+	TurnCollisionOffOrOn(false);
+	DisableRagDoll();
+}
+
 void AEnemyBase::InitializeWidgetComponents()
 {
 	// Get attack indicator widget reference
@@ -394,6 +406,13 @@ void AEnemyBase::RagDollPhysicsOnDead()
 	
 	UCharacterMovementComponent* SelfCharacterMovement = GetCharacterMovement();
 	SelfCharacterMovement->DisableMovement();
+}
+
+void AEnemyBase::DisableRagDoll()
+{
+	GetMesh()->SetSimulatePhysics(false);
+	GetMesh()->ResetRelativeTransform();
+	GetCharacterMovement()->DisableMovement();
 }
 
 void AEnemyBase::TimeoutAttack()

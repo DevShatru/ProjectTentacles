@@ -188,7 +188,8 @@ protected:
 	void HealthReduction(float DamageAmount);
 	
 	void RagDollPhysicsOnDead();
-
+	void DisableRagDoll();
+	
 	UFUNCTION()
 	void TimeoutAttack();
 
@@ -204,6 +205,7 @@ protected:
 
 	
 public:
+	virtual void Reset() override;
 	// ===================================================== On Death =======================================================
 	virtual void OnDeath();
 	
