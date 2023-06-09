@@ -62,7 +62,10 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAct
 	if(Health > 0)
 	{
 		PlayReceiveDamageAnimation(PlayerAttackType);
-		TryResumeMoving();
+		if(PlayerAttackType != EPlayerAttackType::CounterAttack)
+		{
+			TryResumeMoving();
+		}
 		return;
 	}
 	
