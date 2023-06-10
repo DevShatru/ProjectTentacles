@@ -468,6 +468,38 @@ void AEnemyBase::OnCancelCounterableAttack()
 	}
 }
 
+void AEnemyBase::OnStopFocusing()
+{
+	AAIController* CurrentAIOwner = BTComponent->GetAIOwner();
+	if(!CurrentAIOwner) return;
+
+	const APawn* Pawn = CurrentAIOwner->GetPawn();
+	if(!Pawn) return;
+
+	UBlackboardComponent* Blackboard = BTComponent->GetBlackboardComponent();
+
+	AActor* AsActor = Cast<AActor>(Blackboard->GetValueAsObject("Target"));
+	if(!AsActor) return;
+
+	CurrentAIOwner->ClearFocus(EAIFocusPriority::Gameplay);
+}
+
+void AEnemyBase::OnSetFocus()
+{
+	AAIController* CurrentAIOwner = BTComponent->GetAIOwner();
+	if(!CurrentAIOwner) return;
+
+	const APawn* Pawn = CurrentAIOwner->GetPawn();
+	if(!Pawn) return;
+
+	UBlackboardComponent* Blackboard = BTComponent->GetBlackboardComponent();
+
+	AActor* AsActor = Cast<AActor>(Blackboard->GetValueAsObject("Target"));
+	if(!AsActor) return;
+
+	CurrentAIOwner->SetFocus(AsActor);
+}
+
 void AEnemyBase::StartAttackTimeout()
 {
 	GetWorldTimerManager().SetTimer(AttackTimeoutHandle, this, &AEnemyBase::TimeoutAttack, AttackTimeoutDuration);

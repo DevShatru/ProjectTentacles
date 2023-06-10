@@ -202,6 +202,10 @@ protected:
 
 	void OnCancelCounterableAttack();
 
+	void OnStopFocusing();
+
+	void OnSetFocus();
+
 	
 public:
 	virtual void Reset() override;
