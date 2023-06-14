@@ -62,7 +62,10 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAct
 	if(Health > 0)
 	{
 		PlayReceiveDamageAnimation(PlayerAttackType);
-		TryResumeMoving();
+		if(PlayerAttackType != EPlayerAttackType::CounterAttack)
+		{
+			TryResumeMoving();
+		}
 		return;
 	}
 	
@@ -87,6 +90,8 @@ void AEnemyBase::Reset()
 
 	// Reset state, re-enable collision, and turn off ragdoll
 	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);
+
+	IsDead = false;
 	
 	TurnCollisionOffOrOn(false);
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
@@ -376,6 +381,20 @@ void AEnemyBase::OnDeath()
 	// TODO: Dissolve after few seconds
 }
 
+void AEnemyBase::OnSpawn()
+{
+	Super::Reset();
+	Health = MaxHealth;
+
+	// Reset state, re-enable collision, and turn off ragdoll
+	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);
+
+	IsDead = false;
+	
+	TurnCollisionOffOrOn(false);
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+}
+
 
 void AEnemyBase::TurnCollisionOffOrOn(bool TurnCollisionOff)
 {
@@ -463,6 +482,38 @@ void AEnemyBase::OnCancelCounterableAttack()
 	{
 		ICharacterActionInterface::Execute_TryRemoveCounterTarget(PlayerCha, this);
 	}
+}
+
+void AEnemyBase::OnStopFocusing()
+{
+	AAIController* CurrentAIOwner = BTComponent->GetAIOwner();
+	if(!CurrentAIOwner) return;
+
+	const APawn* Pawn = CurrentAIOwner->GetPawn();
+	if(!Pawn) return;
+
+	UBlackboardComponent* Blackboard = BTComponent->GetBlackboardComponent();
+
+	AActor* AsActor = Cast<AActor>(Blackboard->GetValueAsObject("Target"));
+	if(!AsActor) return;
+
+	CurrentAIOwner->ClearFocus(EAIFocusPriority::Gameplay);
+}
+
+void AEnemyBase::OnSetFocus()
+{
+	AAIController* CurrentAIOwner = BTComponent->GetAIOwner();
+	if(!CurrentAIOwner) return;
+
+	const APawn* Pawn = CurrentAIOwner->GetPawn();
+	if(!Pawn) return;
+
+	UBlackboardComponent* Blackboard = BTComponent->GetBlackboardComponent();
+
+	AActor* AsActor = Cast<AActor>(Blackboard->GetValueAsObject("Target"));
+	if(!AsActor) return;
+
+	CurrentAIOwner->SetFocus(AsActor);
 }
 
 void AEnemyBase::StartAttackTimeout()

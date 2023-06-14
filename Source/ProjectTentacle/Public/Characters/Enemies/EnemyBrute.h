@@ -56,8 +56,8 @@ private:
 	FTimeline JumpSlamMovingTimeline;
 	FTimeline CounterableMovingTimeline;
 
-	float RemainAttackDistance = 0;
 	float MaxTravelDistance = 0;
+	float RemainAttackDistance = 0;
 	float TravelDistancePerTick = 0;
 
 	bool DoesPlayerDodge = false;
@@ -199,6 +199,11 @@ public:
 	// ================================== Get And Set =================================
 	void SetIsCountered(bool NewIsCountered) {IsCountered = NewIsCountered;}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetRemainAttackDistance() const {return RemainAttackDistance;}
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetTravelDistancePerTick() const {return TravelDistancePerTick;}
 	
 	EBruteAttackType FindExecutingAttackType();
 	
