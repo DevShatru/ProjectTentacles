@@ -301,6 +301,8 @@ void AEnemyBrute::ExecuteAttack()
 		case EBruteAttackType::Charging:
 			if(NotCounterableAttackMontage != nullptr)
 				PlayAnimMontage(NotCounterableAttackMontage, 1, "Default");
+			DoesPlayerDodge = false;
+		
 			break;
 		case EBruteAttackType::JumpSlam:
 			if(JumpSlamAttack != nullptr)
@@ -390,6 +392,9 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 		
 		return;
 	}
+
+
+	if(!DoesPlayerDodge && CheckIfPlayerDodge()) DoesPlayerDodge = true;
 	
 	// if brute's attack is charging
 	if(BruteAttack == EBruteAttackType::Charging)
@@ -400,6 +405,7 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 			StopAnimMontage();
 			ChargeMovingTimeline.Stop();
 			SetCapsuleCompCollision(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
+			OnSetFocus();
 			TryResumeMoving();
 			TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 			return;
@@ -410,7 +416,11 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 
 
 		
-		const FVector ChargingDirection = GetChargeDirection(DirFromSelfToPlayer, CurrentLocation);
+		FVector ChargingDirection = GetActorForwardVector();
+		if(!DoesPlayerDodge) ChargingDirection = DirFromSelfToPlayer;
+		//if(!DoesPlayerDodge) ChargingDirection = GetChargeDirection(DirFromSelfToPlayer, CurrentLocation);
+
+		
 		const FVector SupposedMovingPos = CurrentLocation + (ChargingDirection * TravelDistancePerTick);
 		
 		SetActorLocation(SupposedMovingPos);
@@ -434,7 +444,6 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 	const float GroundAlpha = JumpSlamDistanceCurve->GetFloatValue(GroundPlayBackPos);
 	
 	// Check if player does dodge, if not, update JumpSlamPosition
-	if(!DoesPlayerDodge && CheckIfPlayerDodge()) DoesPlayerDodge = true;
 	if(!DoesPlayerDodge && GroundPlayBackPos < 1.9) EndJumpingLocation = GetJumpSlamPosition((DirFromSelfToPlayer * -1), PlayerPos);
 
 	
@@ -520,6 +529,7 @@ void AEnemyBrute::OnContinueSecondAttackMontage_Implementation()
 		return;
 	}
 
+	OnStopFocusing();
 	StopAnimMontage();
 	PlayAnimMontage(UnableCounterAttackSecond, 1, "Default");
 	SetCapsuleCompCollision(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
@@ -651,19 +661,19 @@ void AEnemyBrute::UpdateAttackingVariables()
 bool AEnemyBrute::ShouldKeepCharging(FVector DirToPlayer)
 {
 	// if brute charge through player, or finish traveling, end task and timeline
-	if(RemainAttackDistance < TravelDistancePerTick)
+	if(RemainAttackDistance < TravelDistancePerTick * 3)
 	{
 		return false;
 	}
 
-	if(AttackMovingDir != FVector(0,0,0))
-	{
-		const float DotResult = UKismetMathLibrary::Dot_VectorVector(AttackMovingDir, DirToPlayer);
-		if(DotResult < 0.2)
-		{
-			return false;
-		}
-	}
+	// if(AttackMovingDir != FVector(0,0,0))
+	// {
+	// 	const float DotResult = UKismetMathLibrary::Dot_VectorVector(AttackMovingDir, DirToPlayer);
+	// 	if(DotResult < 0.2)
+	// 	{
+	// 		return false;
+	// 	}
+	// }
 
 	return true;
 }

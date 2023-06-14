@@ -30,6 +30,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	
+
 	void InitializeWidgetComponents();
 	
 	void InitializeEnemyControllerRef();
@@ -82,10 +84,11 @@ protected:
 	UWidget_EnemyTargetIconWidget* EnemyTargetWidgetRef;
 
 
-	// Enemy Controller, BT, and BB Component reference 
+	// TODO: Remove it later
 	UPROPERTY()
 	AEnemyBaseController* CurrentEnemyBaseController;
 
+	// Enemy Controller, BT, and BB Component reference 
 	UPROPERTY()
 	UBehaviorTreeComponent* BTComponent;
 	
@@ -202,6 +205,10 @@ protected:
 
 	void OnCancelCounterableAttack();
 
+	void OnStopFocusing();
+
+	void OnSetFocus();
+
 	
 public:
 	virtual void Reset() override;
@@ -209,6 +216,8 @@ public:
 	void ResetMeshTransform();
 	// ===================================================== On Death =======================================================
 	virtual void OnDeath();
+
+	void OnSpawn();
 	
 	void OnStunned();
 
@@ -227,7 +236,7 @@ public:
 	// Register encounters and targets with owning controller
 	void RegisterOwningEncounter(class AEncounterVolume* NewOwningEncounter);
 	void EngageTarget(AActor* Target);
-
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -250,7 +259,8 @@ public:
 
 	void TryStopMoving();
 	void TryResumeMoving();
-	
+
+	// ============================================= AI Variables and Functions ==========================================
 
 
 	// ============================================= Utility Functions ====================================================
@@ -266,6 +276,7 @@ public:
 
 	EEnemyType GetUnitType() const {return UnitType;}
 
+	AEnemyBaseController* GetEnemyController() const {return OwnController;}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UBlackboardComponent* GetBBComponent() const {return BBComponent;}

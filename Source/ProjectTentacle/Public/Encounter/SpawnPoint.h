@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyType.h"
 #include "GameFramework/Actor.h"
 #include "SpawnPoint.generated.h"
@@ -42,6 +43,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	USceneComponent* SpawnLocation;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USceneComponent* MovingOutLocation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
 	float DoorClosedYaw = 0.f;
@@ -109,6 +113,7 @@ private:
 	void Setup();
 	void ResetSpawnPoint();
 	void CalculateDoorOpenness();
+	void OnBeginMovingOut(AEnemyBase* SpawningUnit);
 	UWorld* World;
 	FTimerManager* TimerManager;
 	FTimerHandle DoorTimerHandle;

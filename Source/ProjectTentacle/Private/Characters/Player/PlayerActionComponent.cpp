@@ -761,7 +761,6 @@ TArray<AEnemyBase*> UPlayerActionComponent::GetAllOpponentAroundSelf()
 			}
 		}
 	}
-
 	
 	return ReturnActors;
 }
@@ -770,6 +769,7 @@ bool UPlayerActionComponent::IsEnemyTargetable(AEnemyBase* TargetEnemy)
 {
 	// first, check if enemy is dead, if dead, return false, player cannot target dead enemy
 	const bool IsEnemyDead = TargetEnemy->GetIsDead();
+	
 	if(IsEnemyDead) return false;
 	
 	// check if enemy is brute, if enemy is brute, return true, no need to check if brute is stunned or not
@@ -778,6 +778,12 @@ bool UPlayerActionComponent::IsEnemyTargetable(AEnemyBase* TargetEnemy)
 	
 	// if enemy is not brute, then, enemy only will be melee and ranged, check if enemy is countered / stunned, if true, player cannot attack stunned enemy
 	const bool IsEnemyStun = TargetEnemy->GetCurrentEnemyState() == EEnemyCurrentState::Countered;
+
+	// // TODO: Delete
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("Is %s Stun: %s"), *TargetEnemy->GetName(), IsEnemyStun? TEXT("true") : TEXT("false")));
+	// }
+	
 	return !IsEnemyStun;
 }
 
