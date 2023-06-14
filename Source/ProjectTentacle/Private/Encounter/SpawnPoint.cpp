@@ -3,7 +3,7 @@
 
 #include "Encounter/SpawnPoint.h"
 
-#include "Characters/Enemies/EnemyBase.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/UnitPool.h"
 #include "Components/BoxComponent.h"
 #include "Encounter/EncounterVolume.h"
@@ -20,6 +20,7 @@ ASpawnPoint::ASpawnPoint()
 	PlaneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Black Pane"));
 	DoorOpeningVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("Door Opening Volume"));
 	SpawnLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Spawn Location"));
+	MovingOutLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Moving Out Location"));
 
 	DoorMesh->SetCanEverAffectNavigation(false);
 	PlaneMesh->SetCanEverAffectNavigation(false);
@@ -81,11 +82,13 @@ void ASpawnPoint::SpawnUnit()
 					   World->SpawnActor<AEnemyBase>(TypeToSpawn == EEnemyType::Melee ? MeleeUnitClass :
 														  TypeToSpawn == EEnemyType::Ranged ? RangedUnitClass :
 														  TypeToSpawn == EEnemyType::Brute ? BruteUnitClass : HealerUnitClass, *SpawnParams);
+	Unit->OnSpawn();
 	SpawnedUnits.Add(Unit);
 	Unit->SetActorLocation(SpawnLocation->GetComponentLocation());
 	++UnitsSpawned[TypeToSpawn];
 	OwningEncounterVolume->AddSpawnedUnitToEncounter(Unit);
 	CheckUnitsToSpawn();
+	OnBeginMovingOut(Unit);
 }
 
 void ASpawnPoint::RegisterOwningEncounter(AEncounterVolume* EncounterVolume)
@@ -198,6 +201,26 @@ void ASpawnPoint::CalculateDoorOpenness()
 {
 	const float ClampedYaw = DoorClosedYaw > DoorOpenedYaw ? FMath::Clamp(DoorMesh->GetRelativeRotation().Yaw, DoorOpenedYaw,DoorClosedYaw) : FMath::Clamp(DoorMesh->GetRelativeRotation().Yaw, DoorClosedYaw, DoorOpenedYaw);
 	DoorOpenness = ClampedYaw / FMath::Abs(DoorOpenedYaw - DoorClosedYaw);
+}
+
+void ASpawnPoint::OnBeginMovingOut(AEnemyBase* SpawningUnit)
+{
+	
+	// Get enemy controller
+	AEnemyBaseController* SpawnUnitController = SpawningUnit->GetEnemyController();
+	if(!SpawnUnitController)
+	{
+		SpawningUnit->TryGetOwnController();
+		SpawnUnitController = SpawningUnit->GetEnemyController();
+	}
+
+	// Get Enemy Blackboard value
+	UBlackboardComponent* SpawnUnitBB = SpawnUnitController->GetBlackboardComponent();
+	if(!SpawnUnitBB) return;
+	
+	// Overwrite values in BB
+	SpawnUnitBB->SetValueAsVector("MovingOutPosition", MovingOutLocation->GetComponentLocation());
+	SpawnUnitBB->SetValueAsBool("bHasNotMovingOut", true);
 }
 
 void ASpawnPoint::CheckUnitsToSpawn()

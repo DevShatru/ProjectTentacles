@@ -90,6 +90,8 @@ void AEnemyBase::Reset()
 
 	// Reset state, re-enable collision, and turn off ragdoll
 	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);
+
+	IsDead = false;
 	
 	TurnCollisionOffOrOn(false);
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
@@ -377,6 +379,20 @@ void AEnemyBase::OnDeath()
 	RagDollPhysicsOnDead();
 
 	// TODO: Dissolve after few seconds
+}
+
+void AEnemyBase::OnSpawn()
+{
+	Super::Reset();
+	Health = MaxHealth;
+
+	// Reset state, re-enable collision, and turn off ragdoll
+	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);
+
+	IsDead = false;
+	
+	TurnCollisionOffOrOn(false);
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }
 
 
