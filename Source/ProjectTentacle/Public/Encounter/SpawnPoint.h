@@ -27,6 +27,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -57,8 +58,6 @@ protected:
 	float DoorOpeningTime = 1.f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
 	float DoorHeldOpenTime = 1.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
-	float DoorClosingTime = 1.f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Door")
 	UCurveFloat* DoorOpenCurve;
 	
@@ -103,17 +102,12 @@ protected:
 	void TryCloseDoor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION()
 	void CloseDoor();
-
-	UFUNCTION()
-	void DoorOpenTransition();
-	UFUNCTION()
-	void DoorCloseTransition();
 	
 private:
 	void Setup();
 	void ResetSpawnPoint();
-	void CalculateDoorOpenness();
 	void OnBeginMovingOut(AEnemyBase* SpawningUnit);
+	void OpenDoor();
 	UWorld* World;
 	FTimerManager* TimerManager;
 	FTimerHandle DoorTimerHandle;
@@ -121,7 +115,8 @@ private:
 	FTimerHandle SpawnTimerHandle;
 	TMap<EEnemyType, int8> UnitsSpawned;
 	unsigned int bShouldSpawnMelee:1, bShouldSpawnHealer:1, bShouldSpawnRanged:1, bShouldSpawnBrute:1, bSpawnComplete:1, bIsDoorOpen:1;
-	float DoorOpenness, DoorTransitionStartTime;
+	float DoorOpenness, DoorTransitionStartTime, Alpha;
 	void CheckUnitsToSpawn();
 	TSet<AEnemyBase*> SpawnedUnits;
+	TSet<AActor*> Occupants;
 };
