@@ -94,6 +94,14 @@ bool UProjectTentacleGameInstance::ShouldSaveAtPCSpawn() const
 	return !bCompletedFirstSave;
 }
 
+void UProjectTentacleGameInstance::KillActiveUnits()
+{
+	for(AEncounterVolume* Volume: AllEncounterVolumes)
+	{
+		if(Volume->IsActive()) Volume->KillUnits();
+	}
+}
+
 void UProjectTentacleGameInstance::ReloadLastSave()
 {
 	FAsyncLoadGameFromSlotDelegate LoadDelegate;
