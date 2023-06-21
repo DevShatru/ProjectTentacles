@@ -265,6 +265,21 @@ bool AEncounterVolume::IsComplete() const
 	return bIsEncounterComplete;
 }
 
+bool AEncounterVolume::IsActive() const
+{
+	return bIsEncounterActive;
+}
+
+void AEncounterVolume::KillUnits()
+{
+	ResetSpawnPoints();
+	for(AEnemyBase* ContainedUnit : ContainedUnits)
+	{
+		if(!ContainedUnit) continue;
+		ContainedUnit->OnDeath();
+	}
+}
+
 // Register this encounter with contained units
 void AEncounterVolume::RegisterEncounterForUnits()
 {
@@ -359,6 +374,7 @@ void AEncounterVolume::TriggerNextWave()
 
 void AEncounterVolume::ResetSpawnPoints() const
 {
+	if (!CurrentWaveParams) return;
 	for(ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)
 	{
 		if(!SpawnPoint) continue;

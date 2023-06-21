@@ -48,6 +48,8 @@ public:
 
 	void MarkComplete();
 	bool IsComplete() const;
+	bool IsActive() const;
+	void KillUnits();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
