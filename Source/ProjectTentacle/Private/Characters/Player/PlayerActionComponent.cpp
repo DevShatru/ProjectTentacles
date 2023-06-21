@@ -5,6 +5,7 @@
 
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Player/PlayerCharacter.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -106,9 +107,11 @@ void UPlayerActionComponent::InitializeTimelineComp()
 	CloseToPerformFinisherTimeLine.AddInterpFloat(CloseToPerformFinisherCurve, MovingAttackPosUpdate);
 	
 	FOnTimelineFloat DodgingPosUpdate;
+	FOnTimelineEventStatic onDodgeFinishedCallback;
 	DodgingPosUpdate.BindDynamic(this, &UPlayerActionComponent::DodgeMovement);
+	onDodgeFinishedCallback.BindUFunction(this, FName{ TEXT("SetCollisionBlockToEnemy") });
 	DodgeLerpingTimeLine.AddInterpFloat(DodgeLerpingCurve, DodgingPosUpdate);
-
+	DodgeLerpingTimeLine.SetTimelineFinishedFunc(onDodgeFinishedCallback);
 	
 	FOnTimelineFloat TurnRotatorUpdate;
 	TurnRotatorUpdate.BindDynamic(this, &UPlayerActionComponent::TurnRotationUpdate);
@@ -554,6 +557,7 @@ void UPlayerActionComponent::BeginDodge()
 
 	// Play both lerping timeline and montage
 	PlayerOwnerRef->PlayAnimMontage(CurrentPlayingMontage, 1 , NAME_None);
+	SetCollisionIgnoreToEnemy();
 	DodgeLerpingTimeLine.PlayFromStart();
 }
 
@@ -912,6 +916,20 @@ void UPlayerActionComponent::DodgeMovement(float Alpha)
 
 	PlayerOwnerRef->SetActorLocation(LaunchingPos, true);
 }
+
+void UPlayerActionComponent::SetCollisionIgnoreToEnemy()
+{
+	PlayerOwnerRef->GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	PlayerOwnerRef->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECollisionResponse::ECR_Overlap);
+}
+
+void UPlayerActionComponent::SetCollisionBlockToEnemy()
+{
+	PlayerOwnerRef->GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	PlayerOwnerRef->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+}
+
+
 
 void UPlayerActionComponent::UpdateTargetPosition()
 {
