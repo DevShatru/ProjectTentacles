@@ -100,7 +100,7 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bF
 	// Check if should start
 	if(!CurrentWaveParams) return;
 	
-	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits / InitialUnits);
+	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits) / static_cast<float>(InitialUnits);
 	if(CompletionPercentage >= CurrentWaveParams->SpawnStartEncounterCompletionPercent / 100.f)
 	{
 		TryCacheTimerManager();
