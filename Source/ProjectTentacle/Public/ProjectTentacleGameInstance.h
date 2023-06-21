@@ -24,6 +24,9 @@ public:
 	bool ShouldSaveAtPCSpawn() const;
 
 protected:
+	UFUNCTION(BlueprintCallable)
+	void KillActiveUnits();
+	
 	virtual void Init() override;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UCheckpointSave> SaveObjectClass = UCheckpointSave::StaticClass();
