@@ -123,7 +123,12 @@ void ASpawnPoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASpawnPoint::TryOpenDoor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// If open, extend open time
+	// Check if the unit is moving out of the shack
+	const ACharacter* AsCharacter = Cast<ACharacter>(OtherActor);
+	if(!AsCharacter) return;
+	AAIController* Controller = Cast<AAIController>(AsCharacter->GetController());
+	if(!Controller || !Controller->GetBlackboardComponent()->GetValueAsBool("bHasNotMovingOut")) return;
+	
 	if(bIsDoorOpen)
 	{
 		TimerManager->ClearTimer(DoorTimerHandle);
