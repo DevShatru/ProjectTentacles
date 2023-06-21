@@ -101,7 +101,7 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bF
 	if(!CurrentWaveParams) return;
 	
 	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits / InitialUnits);
-	if(CompletionPercentage > CurrentWaveParams->SpawnStartEncounterCompletionPercent / 100.f)
+	if(CompletionPercentage >= CurrentWaveParams->SpawnStartEncounterCompletionPercent / 100.f)
 	{
 		TryCacheTimerManager();
 		WorldTimerManager->ClearTimer(SpawnStartTimer);
