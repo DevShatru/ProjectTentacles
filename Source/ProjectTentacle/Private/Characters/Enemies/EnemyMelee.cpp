@@ -4,6 +4,7 @@
 #include "Characters/Enemies/EnemyMelee.h"
 
 #include "Characters/Player/PlayerDamageInterface.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -131,6 +132,9 @@ void AEnemyMelee::RecoverFromLying()
 
 	TrySwitchEnemyState(EEnemyCurrentState::WaitToAttack);	
 
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	
 	StopAnimMontage();
 	PlayAnimMontage(GetUpMontage,2,"Default");
 }
@@ -357,8 +361,8 @@ void AEnemyMelee::StartLyingOnTheGround_Implementation()
 	ICharacterActionInterface::StartLyingOnTheGround_Implementation();
 
 
-	// TODO: Maybe don't need
-	//CurrentEnemyState = EEnemyCurrentState::Countered;
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	
 	BeginLyingCountDown();
 }

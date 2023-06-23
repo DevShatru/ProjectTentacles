@@ -422,6 +422,28 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 
 		
 		const FVector SupposedMovingPos = CurrentLocation + (ChargingDirection * TravelDistancePerTick);
+		const FVector TraceCheckingPos = CurrentLocation + (ChargingDirection * (TravelDistancePerTick * 10));
+
+		// Hit result
+		FHitResult Hit;
+		// Empty array of ignoring actor, maybe add Enemies classes to be ignored
+		TArray<AActor*> IgnoreActors;
+		IgnoreActors.Add(this);
+		
+		// Capsule trace by channel
+		const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, CurrentLocation, TraceCheckingPos,
+			UEngineTypes::ConvertToTraceType(ECC_Camera),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
+		
+		if(bHit)
+		{
+			StopAnimMontage();
+			ChargeMovingTimeline.Stop();
+			SetCapsuleCompCollision(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
+			OnSetFocus();
+			TryResumeMoving();
+			OnStunned();
+			return;
+		}
 		
 		SetActorLocation(SupposedMovingPos);
 		

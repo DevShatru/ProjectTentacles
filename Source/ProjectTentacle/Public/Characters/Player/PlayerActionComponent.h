@@ -145,6 +145,7 @@ protected:
 	UAnimMontage* RotateAnimationRight;
 	
 	// ================================================= Dodge Variable Setting ================================================
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge_Setting)
 	float DodgeDistance = 250.0f;
 	
@@ -214,6 +215,11 @@ protected:
 
 	UFUNCTION()
 	void DodgeMovement(float Alpha);
+
+	void SetCollisionIgnoreToEnemy();
+	
+	UFUNCTION()
+	void SetCollisionBlockToEnemy();
 	
 	EPlayerAttackAnimations GetAttackAnimationByRndNum(int32 RndNum, bool IsLongRange);
 	
@@ -297,6 +303,7 @@ protected:
 	
 public:
 
+	
 	
 
 	// ================================================= Delegate Functions =================================================
