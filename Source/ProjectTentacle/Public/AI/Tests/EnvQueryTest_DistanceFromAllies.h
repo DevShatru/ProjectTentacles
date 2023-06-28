@@ -7,7 +7,9 @@
 #include "EnvQueryTest_DistanceFromAllies.generated.h"
 
 /**
- * 
+ * UNUSED & UNFUNCTIONAL
+ * Tried to create an EQS test to determine a unit's distance from it's nearest allies
+ * Abandoned because this was more straightforward to do, if less performant, with an overlap sphere
  */
 UCLASS()
 class PROJECTTENTACLE_API UEnvQueryTest_DistanceFromAllies : public UEnvQueryTest

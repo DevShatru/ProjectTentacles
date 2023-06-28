@@ -17,7 +17,8 @@ class PROJECTTENTACLE_API UBTTask_GetStrafeStrafeLocation : public UBTTaskNode
 public:
 	UBTTask_GetStrafeStrafeLocation();
 	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
-
+	
+	// Determine point to strafe to based on circle direction and target location
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 protected:

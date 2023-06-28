@@ -9,6 +9,7 @@
 #include "Engine/LevelStreaming.h"
 #include "Kismet/GameplayStatics.h"
 
+// Create a blank save object instance and setup for first save flag
 void UProjectTentacleGameInstance::Init()
 {
 	Super::Init();
@@ -16,8 +17,10 @@ void UProjectTentacleGameInstance::Init()
 	SaveObject = Cast<UCheckpointSave>(UGameplayStatics::CreateSaveGameObject(SaveObjectClass));
 }
 
+// Sets up environment after save object gets loaded into memory
 void UProjectTentacleGameInstance::OnSaveLoad(const FString& SlotName, const int32 SlotID, USaveGame* Save)
 {
+	// Don't load if save object doesn't exist or isn't of right type
 	if(!Save) return;
 
 	UCheckpointSave* AsCheckpointSave = Cast<UCheckpointSave>(Save);
@@ -25,25 +28,32 @@ void UProjectTentacleGameInstance::OnSaveLoad(const FString& SlotName, const int
 
 	SaveObject = AsCheckpointSave;
 
+	// Clear all encounters and reload the map
 	AllEncounterVolumes.Empty();
 	const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
 	UGameplayStatics::OpenLevel(GetWorld(), FName(*CurrentLevelName));
 
+	// Set a timer for next tick to update map from save data (Doesn't work if done in sync so it needs a timer)
 	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UProjectTentacleGameInstance::WaitForLevelLoad);
 }
 
+// Set up world from save data
 void UProjectTentacleGameInstance::OnLevelLoad()
 {
+	// Get PC reference and update location/rotation/health
 	TryCachePC();
 	PC->SetActorLocation(SaveObject->PlayerLocation);
 	PC->SetActorRotation(SaveObject->PlayerRotation);
 	PC->SetCurrentCharacterHealth(SaveObject->PlayerHealth);
+
+	// Mark any completed encounters to stop them reactivating
 	for(AEncounterVolume* Volume: AllEncounterVolumes)
 	{
 		if(SaveObject->CompletedEncounters.Contains(Volume->GetName())) Volume->MarkComplete();
 	}
 }
 
+// Checks if the map has successfully reloaded, loops on a timer if not
 void UProjectTentacleGameInstance::WaitForLevelLoad()
 {
 	APlayerCharacter* InitialRef = PC;
@@ -56,6 +66,7 @@ void UProjectTentacleGameInstance::WaitForLevelLoad()
 	OnLevelLoad();
 }
 
+// Cache reference to PC
 void UProjectTentacleGameInstance::TryCachePC(bool bForce)
 {
 	if(PC && !bForce) return;
@@ -67,6 +78,7 @@ void UProjectTentacleGameInstance::TryCachePC(bool bForce)
 	}
 }
 
+// Write data into SaveObject and save to file
 void UProjectTentacleGameInstance::SaveGame()
 {
 	TryCachePC();

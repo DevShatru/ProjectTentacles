@@ -11,6 +11,7 @@ UBTDecorator_IsOnNavMesh::UBTDecorator_IsOnNavMesh()
 	NodeName = "IsOnNavMesh?";
 }
 
+// Check if owning pawn's current location can be projected onto the nav mesh
 bool UBTDecorator_IsOnNavMesh::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
 	UNavigationSystemV1* NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());

@@ -17,6 +17,7 @@ class PROJECTTENTACLE_API UBTDecorator_TargetInRange : public UBTDecorator
 public:
 	UBTDecorator_TargetInRange();
 
+	// Check if attack target is in range
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 	
 protected:

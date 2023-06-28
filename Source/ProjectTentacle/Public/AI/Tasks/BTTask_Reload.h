@@ -7,7 +7,7 @@
 #include "BTTask_Reload.generated.h"
 
 /**
- * 
+ * Wait task for the Ranged unit's reload
  */
 UCLASS()
 class PROJECTTENTACLE_API UBTTask_Reload : public UBTTask_Wait

@@ -5,6 +5,7 @@
 
 #include "BehaviorTree/BlackboardComponent.h"
 
+// Checks the old EQS result vs the new one, and decides whether to move or not based on the distance between them
 bool UBTDecorator_ShouldReposition::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp,
                                                                uint8* NodeMemory) const
 {

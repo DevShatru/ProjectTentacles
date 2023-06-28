@@ -34,6 +34,7 @@ void UBTTask_GetStrafeStrafeLocation::InitializeFromAsset(UBehaviorTree& Asset)
 	}
 }
 
+// Determine point to strafe to based on circle direction and target location
 EBTNodeResult::Type UBTTask_GetStrafeStrafeLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	// Resolve Target

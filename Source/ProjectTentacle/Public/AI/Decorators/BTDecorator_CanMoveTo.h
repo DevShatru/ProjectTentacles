@@ -16,6 +16,7 @@ class PROJECTTENTACLE_API UBTDecorator_CanMoveTo : public UBTDecorator
 public:
 	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
 	UBTDecorator_CanMoveTo();
+	// Check if the location key passed can be projected to the navigation mesh
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 	
 protected:

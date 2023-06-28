@@ -15,6 +15,7 @@ class PROJECTTENTACLE_API UBTDecorator_ShouldReposition : public UBTDecorator
 	GENERATED_BODY()
 
 public:
+	// Checks the old EQS result vs the new one, and decides whether to move or not based on the distance between them
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 
 protected:

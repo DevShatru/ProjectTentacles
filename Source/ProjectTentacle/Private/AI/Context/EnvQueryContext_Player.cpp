@@ -11,6 +11,7 @@ AActor* UEnvQueryContext_Player::Player = nullptr;
 
 void UEnvQueryContext_Player::ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const
 {
+	// Iterator caches ref, so it doesn't need to re-run every time
 	if(!Player)
 	{
 		for (TActorIterator<APlayerCharacter> It(GetWorld(), APlayerCharacter::StaticClass()); It; ++It)

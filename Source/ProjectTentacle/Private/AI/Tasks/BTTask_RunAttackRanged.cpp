@@ -15,7 +15,6 @@ UBTTask_RunAttackRanged::UBTTask_RunAttackRanged()
 
 EBTNodeResult::Type UBTTask_RunAttackRanged::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// TODO Pop up indicator
 	TryCacheRefs(OwnerComp);
 	if(!bHasCachedRefs) return EBTNodeResult::Failed;
 
@@ -24,6 +23,7 @@ EBTNodeResult::Type UBTTask_RunAttackRanged::ExecuteTask(UBehaviorTreeComponent&
 	return Super::ExecuteTask(OwnerComp, NodeMemory);
 }
 
+// Timeout the attack if it's taking too long
 void UBTTask_RunAttackRanged::AttackCounterTimeLimit()
 {
 	Super::AttackCounterTimeLimit();
