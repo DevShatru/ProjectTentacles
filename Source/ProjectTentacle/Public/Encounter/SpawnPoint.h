@@ -22,6 +22,7 @@ public:
 	void SpawnUnit();
 	void RegisterOwningEncounter(class AEncounterVolume* EncounterVolume);
 	bool IsSpawningComplete() const;
+	int8 GetNumToSpawn();
 	static FActorSpawnParameters* SpawnParams;
 
 protected:

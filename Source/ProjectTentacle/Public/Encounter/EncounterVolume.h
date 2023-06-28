@@ -148,7 +148,7 @@ private:
 	void TriggerNextWave();
 	void ResetSpawnPoints() const;
 
-	int8 InitialUnits, DefeatedUnits, CurrentWave;
+	int8 TotalUnits, DefeatedUnits, CurrentWave;
 	unsigned int bIsPCCountering:1;
 	AEnemyBaseController* LastAttackerBasic, *LastAttackerHeavy;
 	class APlayerCharacter* EncounterTarget;
