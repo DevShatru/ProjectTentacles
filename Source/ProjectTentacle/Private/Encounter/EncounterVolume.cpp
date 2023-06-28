@@ -36,6 +36,7 @@ void AEncounterVolume::TryTriggerEncounter(AActor* Target)
 	TriggerNextWave();
 }
 
+// Gets a list of units in the encounter apart from the specified pawn
 TArray<AEnemyBase*> AEncounterVolume::GetAlliesForPawn(APawn* Pawn)
 {
 	TArray<AEnemyBase*> AlliesForPawn;
@@ -48,6 +49,7 @@ TArray<AEnemyBase*> AEncounterVolume::GetAlliesForPawn(APawn* Pawn)
 	return AlliesForPawn;
 }
 
+// Adds the next unit to the attack queue
 void AEncounterVolume::RegisterOnAttackQueue(AEnemyBaseController* RegisteringController)
 {
 	TArray<AEnemyBaseController*>* AttackQueue = GetAttackQueue(RegisteringController->IsBasic());
@@ -61,12 +63,14 @@ void AEncounterVolume::RegisterOnAttackQueue(AEnemyBaseController* RegisteringCo
 	AttackQueue->Add(RegisteringController);
 }
 
+// Tracks when the last unit finishes it's attack, and starts a queue timer for the next attacker
 void AEncounterVolume::RegisterCompletedAttack(AEnemyBaseController* RegisteringController)
 {
 	(RegisteringController->IsBasic() ? LastAttackerBasic : LastAttackerHeavy) = RegisteringController;
 	StartQueueTimer(RegisteringController->IsBasic());
 }
 
+// Removes references to a defeated unit and sets a timer to despawn the body
 void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bForceDespawn)
 {
 	// Remove units from queues and set
@@ -109,6 +113,7 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bF
 	}
 }
 
+// Register newly spawned units on the encounter and update their target
 void AEncounterVolume::AddSpawnedUnitToEncounter(AEnemyBase* Unit)
 {
 	ContainedUnits.Add(Unit);
@@ -144,15 +149,20 @@ void AEncounterVolume::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+// Determine which unit gets an attack ticket and triggers the next attack
 void AEncounterVolume::BeginAttack(bool bIsBasic)
 {
+	// Skip if the PC is countering
 	if(bIsPCCountering) {
 		StartQueueTimer(bIsBasic);
 		return;
 	}
+	// Try to make sure the same unit doesn't keep attacking if there is more than one unit
 	TArray<AEnemyBaseController*>* AttackQueue = GetAttackQueue(bIsBasic);
 	const int8 QueueSize = AttackQueue->Num();
 	if (QueueSize == 0) return;
+
+	// Check if unit is stunned
 	if (QueueSize == 1 && Cast<AEnemyBase>((*AttackQueue)[0]->GetPawn())->GetCurrentEnemyState() == EEnemyCurrentState::Stunned) StartQueueTimer(bIsBasic);
 	
 	int8 RandomIndex = FMath::RandRange(0, QueueSize - 1);
@@ -166,6 +176,7 @@ void AEncounterVolume::BeginAttack(bool bIsBasic)
 	AttackQueue->RemoveAt(RandomIndex);
 }
 
+// Start spawning from spawn points associated with the current wave, then update the wave count
 void AEncounterVolume::StartSpawn()
 {
 	if(bWaveStartedSpawning) return;
@@ -250,6 +261,7 @@ void AEncounterVolume::AssignQueueEnemyToReposition_Implementation(bool DoesIncl
 	SendAllEnemyToReposition(DoesIncludeHeavy);
 }
 
+// Marks the encounter as completed (Used after reloading from a save)
 void AEncounterVolume::MarkComplete()
 {
 	bIsEncounterComplete = true;
@@ -270,6 +282,7 @@ bool AEncounterVolume::IsActive() const
 	return bIsEncounterActive;
 }
 
+// Debug to kill active units
 void AEncounterVolume::KillUnits()
 {
 	ResetSpawnPoints();
@@ -290,6 +303,7 @@ void AEncounterVolume::RegisterEncounterForUnits()
 	}
 }
 
+// Register the encounter object with each contained spawn point
 void AEncounterVolume::RegisterEncounterForSpawnPoints()
 {
 	for(ASpawnPoint* SpawnPoint : CurrentWaveParams->ContainedSpawnPoints)

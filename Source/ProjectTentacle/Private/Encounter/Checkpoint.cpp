@@ -24,11 +24,7 @@ void ACheckpoint::BeginPlay()
 	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
 }
 
-FVector ACheckpoint::GetOffsetLocation() const
-{
-	return GetActorLocation() + HeightOffset;
-}
-
+// Triggers save on the game instance if valid
 void ACheckpoint::OnTrigger(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {

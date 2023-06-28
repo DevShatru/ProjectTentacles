@@ -14,6 +14,7 @@ UBTTask_DetermineShouldCircle::UBTTask_DetermineShouldCircle()
 	ShouldCircleRightKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_DetermineShouldCircle, ShouldCircleRightKey));
 }
 
+// Determine whether to hold position or circle (and in which direction) based on a given weight
 EBTNodeResult::Type UBTTask_DetermineShouldCircle::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	const float Percentage = FMath::FRandRange(0.f, 100.0f);

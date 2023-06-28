@@ -41,6 +41,8 @@ EBTNodeResult::Type UBTTask_PerformStrafe::ExecuteTask(UBehaviorTreeComponent& O
 	OwnPawn = Cast<AEnemyBase>(OwnController->GetPawn());
 	if(!OwnPawn) return EBTNodeResult::Failed;
 	OwningComponent = &OwnerComp;
+
+	// Bind delegate to handle interruptions
 	OwnPawn->OnInterruptStrafe.BindDynamic(this, &UBTTask_PerformStrafe::Interrupt);
 	const UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
 	bStrafeRight = Blackboard->GetValueAsBool(CircleDirectionKey.SelectedKeyName);
@@ -82,6 +84,7 @@ void UBTTask_PerformStrafe::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, ui
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 }
 
+// Change directions every x units to create a circular motion
 void UBTTask_PerformStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	if(!IsValid(OwnPawn)) FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
@@ -89,6 +92,7 @@ void UBTTask_PerformStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* N
 	// Check distance from starting points
 	if(FVector::DistSquared(OwnPawn->GetActorLocation(), StrafeLoopStartLocation) >= LoopDistSqr)
 	{
+		// Change direction if we've reached the end
 		++LoopIterationsComplete;
 		if(LoopIterationsComplete >= StrafeLoopsAttempted)
 		{
@@ -96,7 +100,8 @@ void UBTTask_PerformStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* N
 			return;
 		}
 		StrafeLoopStartLocation = OwnPawn->GetActorLocation();
-		
+
+		// Complete once we've changed direction a certain number of times
 		if(bIsTargetActor && (!StrafeActorTarget || !IsValid(StrafeActorTarget)))
 		{
 			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);

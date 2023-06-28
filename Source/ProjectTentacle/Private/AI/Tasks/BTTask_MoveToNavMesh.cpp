@@ -22,6 +22,7 @@ EBTNodeResult::Type UBTTask_MoveToNavMesh::ExecuteTask(UBehaviorTreeComponent& O
 	return EBTNodeResult::InProgress;
 }
 
+// Use Simple movement to get a unit back onto the nav mesh if it moves off
 void UBTTask_MoveToNavMesh::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	const FVector CurrentLocation = Character->GetActorLocation();

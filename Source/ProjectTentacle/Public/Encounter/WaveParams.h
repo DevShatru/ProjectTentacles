@@ -11,8 +11,10 @@ struct PROJECTTENTACLE_API FWaveParams
 	// Set of all contained spawn points
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSet<class ASpawnPoint*> ContainedSpawnPoints;
+	// Time before the next wave starts spawning
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SpawnStartTime = 75.0f;
+	// Percentage of enemies defeated to start spawning the next wave early (Only checks if SpawnStartTime has not already passed)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SpawnStartEncounterCompletionPercent = 75.0f;
 };

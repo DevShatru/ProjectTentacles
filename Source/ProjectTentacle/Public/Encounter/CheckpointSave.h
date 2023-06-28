@@ -7,7 +7,7 @@
 #include "CheckpointSave.generated.h"
 
 /**
- * 
+ * Save game object that tracks player health, location, rotation, and completed encounters
  */
 UCLASS()
 class PROJECTTENTACLE_API UCheckpointSave : public USaveGame

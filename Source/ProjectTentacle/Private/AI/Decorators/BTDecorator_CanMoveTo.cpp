@@ -31,6 +31,7 @@ UBTDecorator_CanMoveTo::UBTDecorator_CanMoveTo()
 	LocationBlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTDecorator_CanMoveTo, LocationBlackboardKey));
 }
 
+// Check if the location key passed can be projected to the navigation mesh
 bool UBTDecorator_CanMoveTo::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
 	FVector MoveToLocation;

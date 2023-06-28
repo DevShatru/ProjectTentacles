@@ -111,7 +111,9 @@ void ASpawnPoint::BeginPlay()
 void ASpawnPoint::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
+
+	// Handle door orientation
+	// Tick starts disabled, only gets enabled when the door needs to open or close
 	if(!bIsDoorOpen)
 	{
 		Alpha -= DeltaSeconds / DoorOpeningTime;
@@ -153,6 +155,8 @@ void ASpawnPoint::TryOpenDoor(UPrimitiveComponent* OverlappedComponent, AActor* 
 	const ACharacter* AsCharacter = Cast<ACharacter>(OtherActor);
 	if(!AsCharacter) return;
 	AAIController* Controller = Cast<AAIController>(AsCharacter->GetController());
+
+	// Check against blackboard condition to exit shack (So it doesn't open for units trying to come in from outside)
 	if(!Controller || !Controller->GetBlackboardComponent()->GetValueAsBool("bHasNotMovingOut")) return;
 	
 	if(OtherActor != this && !Occupants.Contains(OtherActor)) Occupants.Add(OtherActor);

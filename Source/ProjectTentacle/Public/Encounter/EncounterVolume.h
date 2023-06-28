@@ -46,18 +46,23 @@ public:
 
 	virtual void AssignQueueEnemyToReposition_Implementation(bool DoesIncludeHeavy) override;
 
+	// Marks the encounter as completed (Used after reloading from a save)
 	void MarkComplete();
 	bool IsComplete() const;
 	bool IsActive() const;
+
+	// Debug to kill active units
 	void KillUnits();
 
 protected:
+	// Blueprint exposed delegate, fires when the encounter is complete (All spawns complete + all units defeated)
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
 	FEncounterComplete EncounterComplete;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 	// Area around the encounter to generate navigation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UNavigationInvokerComponent* NavInvoker;
@@ -70,6 +75,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	TSet<AEnemyBase*> ContainedUnits;
 
+	// Delay between tickets being issued to attackers on basic (melee, healer, and ranged) and heavy (brute) queues
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	float AttackStartDelayBasic = 3.0f;
 	
@@ -95,12 +101,15 @@ protected:
 	UFUNCTION()
 	void BeginAttack(bool bIsBasic = true);
 
+	// Wake all spawn points associated with the current wave
 	UFUNCTION()
 	void StartSpawn();
 
+	// Return unit to pool or destroy if pool is unavailable
 	UFUNCTION()
 	void DespawnUnit(AEnemyBaseController* Unit);
 
+	// Tracks when the PC is in their counter state
 	UFUNCTION()
 	void PCCounterStart();
 	UFUNCTION()

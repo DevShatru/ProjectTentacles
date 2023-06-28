@@ -30,6 +30,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FBlackboardKeySelector ShouldCircleRightKey;
 	
+	// Determine whether to hold position or circle based on a given weight
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
 };

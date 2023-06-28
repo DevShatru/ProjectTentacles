@@ -15,7 +15,8 @@ class PROJECTTENTACLE_API UProjectTentacleGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 
-public:
+public: 
+	// Write data into SaveObject and save to file
 	UFUNCTION(BlueprintCallable)
 	void SaveGame();
 	UFUNCTION(BlueprintCallable)
@@ -34,10 +35,15 @@ protected:
 	UPROPERTY()
 	UCheckpointSave* SaveObject;
 
+	// Sets up environment after save object gets loaded into memory
 	UFUNCTION()
 	void OnSaveLoad(const FString& SlotName, const int32 SlotID, USaveGame* Save);
+	
+	// Set up world from save data
 	UFUNCTION()
 	void OnLevelLoad();
+	
+	// Checks if the map has successfully reloaded, loops on a timer if not
 	UFUNCTION()
 	void WaitForLevelLoad();
 	

@@ -14,6 +14,7 @@ UBTTask_DetermineBruteAttackType::UBTTask_DetermineBruteAttackType()
 	// AttackTypeKey.AddEnumFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_DetermineBruteAttackType, AttackTypeKey), StaticEnum<EBruteAttackType>());
 }
 
+// Determine attack type from owning pawn
 EBTNodeResult::Type UBTTask_DetermineBruteAttackType::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	const AAIController* OwnController = OwnerComp.GetAIOwner();

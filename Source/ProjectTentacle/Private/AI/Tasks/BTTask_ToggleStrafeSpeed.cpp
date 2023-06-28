@@ -10,6 +10,7 @@ UBTTask_ToggleStrafeSpeed::UBTTask_ToggleStrafeSpeed()
 	NodeName = "Toggle Strafe Speed";
 }
 
+// Toggles unit to use walking vs strafing speed
 EBTNodeResult::Type UBTTask_ToggleStrafeSpeed::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	const AAIController* Controller = OwnerComp.GetAIOwner();
