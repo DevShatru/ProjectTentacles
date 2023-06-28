@@ -17,18 +17,15 @@ public:
 	// Sets default values for this actor's properties
 	ACheckpoint();
 	virtual void BeginPlay() override;
-	FVector GetOffsetLocation() const;
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FVector HeightOffset = FVector(0.f, 0.f, 88.f);
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UBoxComponent* CheckpointTrigger;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsActive = true;
-	
+
+	// Triggers save on the game instance if valid
 	UFUNCTION()
 	void OnTrigger(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	
