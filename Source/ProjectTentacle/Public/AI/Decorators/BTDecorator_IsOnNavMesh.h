@@ -17,6 +17,7 @@ public:
 	UBTDecorator_IsOnNavMesh();
 
 protected:
+	// Check if owning pawn's current location can be projected onto the nav mesh
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 	
 };

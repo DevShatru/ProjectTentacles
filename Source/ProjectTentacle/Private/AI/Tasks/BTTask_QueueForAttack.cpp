@@ -12,6 +12,7 @@ UBTTask_QueueForAttack::UBTTask_QueueForAttack()
 	BlackboardKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_QueueForAttack, BlackboardKey));
 }
 
+// Prepare attack action for the unit
 EBTNodeResult::Type UBTTask_QueueForAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AEnemyBaseController* OwnController = Cast<AEnemyBaseController>(OwnerComp.GetAIOwner());

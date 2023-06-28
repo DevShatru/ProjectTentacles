@@ -13,6 +13,7 @@ UBTDecorator_TargetInRange::UBTDecorator_TargetInRange()
 	TargetBlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTDecorator_TargetInRange, TargetBlackboardKey), AActor::StaticClass());
 }
 
+// Check if attack target is in range
 bool UBTDecorator_TargetInRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
 	const APawn* OwningPawn = OwnerComp.GetAIOwner()->GetPawn();
