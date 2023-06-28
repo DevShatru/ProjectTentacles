@@ -362,12 +362,20 @@ FVector AEnemyBrute::CalculateDestinationForAttackMoving(FVector PlayerCurrentPo
 
 void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 {
-	const ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+	ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
 	if(!PlayerCha) return;
-
+	
 	const FVector PlayerPos = PlayerCha->GetActorLocation();
 	const FVector CurrentLocation = GetActorLocation();
 
+	// Hit result
+	FHitResult Hit;
+	// Empty array of ignoring actor, maybe add Enemies classes to be ignored
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	IgnoreActors.Add(PlayerCha);
+
+	
 
 	// Get direction from self to player
 	FVector OffsetWithoutZ = PlayerPos - CurrentLocation;
@@ -424,11 +432,6 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 		const FVector SupposedMovingPos = CurrentLocation + (ChargingDirection * TravelDistancePerTick);
 		const FVector TraceCheckingPos = CurrentLocation + (ChargingDirection * (TravelDistancePerTick * 10));
 
-		// Hit result
-		FHitResult Hit;
-		// Empty array of ignoring actor, maybe add Enemies classes to be ignored
-		TArray<AActor*> IgnoreActors;
-		IgnoreActors.Add(this);
 		
 		// Capsule trace by channel
 		const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, CurrentLocation, TraceCheckingPos,
