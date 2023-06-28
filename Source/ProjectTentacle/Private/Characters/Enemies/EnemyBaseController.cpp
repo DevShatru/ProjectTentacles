@@ -112,7 +112,7 @@ void AEnemyBaseController::OnPossess(APawn* InPawn)
 	bIsBasic = Cast<AEnemyBrute>(OwnPawn) == nullptr;
 	if(!BehaviorTree) return;
 
-	// Init blackboard and run master behaviour
+	// Init blackboard and run main behaviour
 	Blackboard->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 	RunBehaviorTree(BehaviorTree);
 
@@ -138,6 +138,7 @@ void AEnemyBaseController::OnDeath(bool bForceDespawn)
 	OwningEncounter->RegisterUnitDestroyed(this, bForceDespawn);
 }
 
+// Heals the target (PC) when the unit dies
 void AEnemyBaseController::HealEncounterTarget(float HealAmount)
 {
 	if(!EncounterTarget) return;
@@ -149,6 +150,7 @@ bool AEnemyBaseController::IsBasic()
 	return bIsBasic;
 }
 
+// Iterate through the blackboard keys and clear all values, used on reset/death
 void AEnemyBaseController::ClearBlackboard()
 {
 	TryCacheBlackboardComp();
