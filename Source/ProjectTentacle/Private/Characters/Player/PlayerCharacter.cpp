@@ -37,6 +37,17 @@ void APlayerCharacter::DealSwampDamage(float Damage, float TickTime)
 	GetWorldTimerManager().SetTimer(SwampDamageTimer, SwampDamageDelegate, TickTime, false);
 }
 
+void APlayerCharacter::ToggleOHKO()
+{
+	if (CurrentDamage == OHKODamage) {
+		CurrentDamage = BaseDamage;
+	}
+	else {
+		CurrentDamage = OHKODamage;
+	}
+
+}
+
 void APlayerCharacter::StopSwampDamageTick()
 {
 	// If not taking damage ignore
