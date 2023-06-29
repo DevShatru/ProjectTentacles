@@ -100,6 +100,7 @@ private:
 	
 	unsigned int bTakingSwampDamage:1;
 	FTimerDelegate SwampDamageDelegate;
+	unsigned int bIsOHKOEnabled:1;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
