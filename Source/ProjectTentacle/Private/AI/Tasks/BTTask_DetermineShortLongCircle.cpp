@@ -1,8 +1,8 @@
 // Copyright (C) The Tentacle Zone 2023. All Rights Reserved.
 
 
-#include "BehaviorTree/BlackboardComponent.h"
 #include "AI/Tasks/BTTask_DetermineShortLongCircle.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 
