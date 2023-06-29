@@ -192,6 +192,7 @@ void AEncounterVolume::StartSpawn()
 		if(!SpawnPoint) continue;
 		SpawnPoint->SetUnitPool(UnitPool);
 		SpawnPoint->StartSpawningUnits();
+		TotalUnits += SpawnPoint->GetNumToSpawn();
 	}
 	TriggerNextWave();
 }
@@ -310,7 +311,6 @@ void AEncounterVolume::RegisterEncounterForSpawnPoints()
 	{
 		if(!SpawnPoint) continue;
 		SpawnPoint->RegisterOwningEncounter(this);
-		TotalUnits += SpawnPoint->GetNumToSpawn();
 	}
 }
 
