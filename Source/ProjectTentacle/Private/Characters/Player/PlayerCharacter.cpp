@@ -37,6 +37,11 @@ void APlayerCharacter::DealSwampDamage(float Damage, float TickTime)
 	GetWorldTimerManager().SetTimer(SwampDamageTimer, SwampDamageDelegate, TickTime, false);
 }
 
+void APlayerCharacter::ToggleOHKO()
+{
+	bIsOHKOEnabled = ~bIsOHKOEnabled;
+}
+
 void APlayerCharacter::StopSwampDamageTick()
 {
 	// If not taking damage ignore
@@ -131,6 +136,7 @@ void APlayerCharacter::BeginPlay()
 	CharacterCurrentHealth = CharacterMaxHealth;
 	GameModeRef = nullptr;
 	bIsDead = false;
+	bIsOHKOEnabled = false;
 
 	FOnTimelineFloat CameraRotationUpdate;
 	CameraRotationUpdate.BindDynamic(this, &APlayerCharacter::OnUpdatingCameraMovement);
@@ -458,7 +464,7 @@ void APlayerCharacter::DamagingTarget_Implementation()
 
 	if(DamagingActor == nullptr) return;
 	
-	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, CurrentDamage, this, CurrentAttackType);
+	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, bIsOHKOEnabled ? OHKODamage: CurrentDamage, this, CurrentAttackType);
 
 	if(CurrentAttackType == EPlayerAttackType::CounterAttack) UnsetCurrentTarget();
 }

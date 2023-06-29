@@ -104,7 +104,7 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bF
 	// Check if should start
 	if(!CurrentWaveParams) return;
 	
-	const float CompletionPercentage = InitialUnits == 0.f ? InitialUnits : static_cast<float>(DefeatedUnits) / static_cast<float>(InitialUnits);
+	const float CompletionPercentage = TotalUnits == 0.f ? TotalUnits : static_cast<float>(DefeatedUnits) / static_cast<float>(TotalUnits);
 	if(CompletionPercentage >= CurrentWaveParams->SpawnStartEncounterCompletionPercent / 100.f)
 	{
 		TryCacheTimerManager();
@@ -192,6 +192,7 @@ void AEncounterVolume::StartSpawn()
 		if(!SpawnPoint) continue;
 		SpawnPoint->SetUnitPool(UnitPool);
 		SpawnPoint->StartSpawningUnits();
+		TotalUnits += SpawnPoint->GetNumToSpawn();
 	}
 	TriggerNextWave();
 }
@@ -227,7 +228,7 @@ void AEncounterVolume::Setup()
 	HeavyQueueDelegate.BindUFunction(this, FName("BeginAttack"), false);
 	EncounterTarget = nullptr;
 	CurrentWaveParams = nullptr;
-	InitialUnits = ContainedUnits.Num();
+	TotalUnits = ContainedUnits.Num();
 	CurrentWave = -1;
 	RegisterEncounterForUnits();
 	Cast<UProjectTentacleGameInstance>(GetGameInstance())->RegisterEncounterVolume(this);
