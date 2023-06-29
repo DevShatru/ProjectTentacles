@@ -294,6 +294,11 @@ void AEncounterVolume::KillUnits()
 	}
 }
 
+float AEncounterVolume::GetEncounterStartDelay() const
+{
+	return EncounterStartDelay;
+}
+
 // Register this encounter with contained units
 void AEncounterVolume::RegisterEncounterForUnits()
 {
