@@ -355,7 +355,7 @@ public:
 	bool GetIsPlayerCounterable() const {return IsPlayerCounterable;}
 	void TryTurnCounterCapable(bool IsOn) {if(IsPlayerCounterable != IsOn) IsPlayerCounterable = IsOn;}
 
-	
+	UFUNCTION(BlueprintCallable)
 	AEnemyBase* GetCounteringTarget() const {return CounteringVictim;}
 	void SetCounteringTarget(AEnemyBase* NewCounterTarget) {if(CounteringVictim != NewCounterTarget) CounteringVictim = NewCounterTarget;}
 	void ClearCounteringTarget() {if(CounteringVictim) CounteringVictim = nullptr;}
@@ -412,5 +412,7 @@ public:
 
 	UFUNCTION()
 	virtual void OnApplyChargeKnockForce_Implementation(FVector ApplyingForce) override;
-	
+
+	UFUNCTION()
+	virtual void TryClearCounterVictim_Implementation(AEnemyBase* ClearingVictim) override;
 };

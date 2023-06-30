@@ -601,6 +601,14 @@ void APlayerCharacter::OnApplyChargeKnockForce_Implementation(FVector ApplyingFo
 
 }
 
+void APlayerCharacter::TryClearCounterVictim_Implementation(AEnemyBase* ClearingVictim)
+{
+	Super::TryClearCounterVictim_Implementation(ClearingVictim);
+
+	ClearCounteringTarget(ClearingVictim);
+
+}
+
 
 
 

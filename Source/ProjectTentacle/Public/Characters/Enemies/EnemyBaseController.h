@@ -43,6 +43,8 @@ public:
 
 	void OnDeath(bool bForceDespawn = false);
 
+	void OnSpawn();
+	
 	void HealEncounterTarget(float HealAmount);
 	bool IsBasic();
 	

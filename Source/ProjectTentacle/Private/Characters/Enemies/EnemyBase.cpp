@@ -181,7 +181,6 @@ void AEnemyBase::ExecuteAttack()
 	if(UnitType != EEnemyType::Brute)
 	{
 		SetAttackType();
-		
 	}
 
 	// Update attack type in indicator's reference
@@ -356,7 +355,10 @@ void AEnemyBase::TryClearFromPlayerTarget()
 {
 	ACharacter* PlayerCharacterClass = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if(PlayerCharacterClass->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+	{
 		ICharacterActionInterface::Execute_DetachEnemyTarget(PlayerCharacterClass);
+		ICharacterActionInterface::Execute_TryClearCounterVictim(PlayerCharacterClass, this);
+	}
 }
 
 // ===================================================== On Death ========================================================
@@ -393,6 +395,10 @@ void AEnemyBase::OnSpawn()
 	
 	TurnCollisionOffOrOn(false);
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+	if(!OwnController) return;
+
+	OwnController->OnSpawn();
 }
 
 
