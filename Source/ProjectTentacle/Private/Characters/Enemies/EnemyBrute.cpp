@@ -741,6 +741,9 @@ void AEnemyBrute::SetCapsuleCompCollision(ECollisionChannel ResponseChannel, ECo
 void AEnemyBrute::OnDealChargeDamage(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 											UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	TryGetPlayerRef();
+	if (!PlayerRef) return;
+
 	if(CheckIfPlayerDodge() || PlayerRef->GetCurrentActionState() == EActionState::SpecialAttack) return;
 
 	
