@@ -436,11 +436,11 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 
 		
 		const FVector SupposedMovingPos = CurrentLocation + (ChargingDirection * TravelDistancePerTick);
-		const FVector TraceCheckingPos = CurrentLocation + (ChargingDirection * (TravelDistancePerTick * 10));
+		const FVector TraceCheckingPos = CurrentLocation + (ChargingDirection * (TravelDistancePerTick * 5));
 
-		
+		const float CapHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight(); 
 		// Capsule trace by channel
-		const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, CurrentLocation, TraceCheckingPos,
+		const bool bHit = UKismetSystemLibrary::CapsuleTraceSingle(this, CurrentLocation, TraceCheckingPos, 15.0f, CapHalfHeight,
 			UEngineTypes::ConvertToTraceType(ECC_Camera),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
 		
 		if(bHit)
@@ -741,6 +741,9 @@ void AEnemyBrute::SetCapsuleCompCollision(ECollisionChannel ResponseChannel, ECo
 void AEnemyBrute::OnDealChargeDamage(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 											UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if(CheckIfPlayerDodge() || PlayerRef->GetCurrentActionState() == EActionState::SpecialAttack) return;
+
+	
 	// check if owner class has player damage interface
 	if(OtherActor->GetClass()->ImplementsInterface(UPlayerDamageInterface::StaticClass()))
 	{
