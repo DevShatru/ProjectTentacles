@@ -30,7 +30,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	
+	UFUNCTION()
+	void CheckForShackExit();
 
 	void InitializeWidgetComponents();
 	
@@ -176,6 +177,11 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category= Attack_Animations)
 	UAnimMontage* NotCounterableAttackMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Death")
+	float ShackExitTimeout = 30.f;
+
+	UPROPERTY(EditAnywhere, Category = "Death")
+	FName ShackExitKeyName = "bHasNotMovingOut";
 
 	
 	// ===================================================== Task ====================================================

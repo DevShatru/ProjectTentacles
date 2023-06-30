@@ -83,6 +83,17 @@ void AEnemyBase::BeginPlay()
 	InitializeEnemyControllerRef();
 }
 
+void AEnemyBase::CheckForShackExit()
+{
+	if (IsDead) return;
+
+	// If controller or BB is missing (so the unit is not functional) or it hasn't left the shack yet, kill the unit
+	TryGetOwnController();
+	if (!OwnController || !BBComponent || BBComponent->GetValueAsBool(ShackExitKeyName)) {
+		OnDeath();
+	}
+}
+
 void AEnemyBase::Reset()
 {
 	Super::Reset();
@@ -396,6 +407,8 @@ void AEnemyBase::OnSpawn()
 	TurnCollisionOffOrOn(false);
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
+	FTimerHandle ShackExitTimer;
+	GetWorldTimerManager().SetTimer(ShackExitTimer, this, &AEnemyBase::CheckForShackExit, ShackExitTimeout, false);
 	if(!OwnController) return;
 
 	OwnController->OnSpawn();
