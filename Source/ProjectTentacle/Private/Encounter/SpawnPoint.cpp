@@ -101,6 +101,11 @@ bool ASpawnPoint::IsSpawningComplete() const
 	return bSpawnComplete;
 }
 
+int8 ASpawnPoint::GetNumToSpawn()
+{
+	return NumMeleeUnitsSpawned + NumHealerUnitsSpawned + NumRangedUnitsSpawned + NumBruteUnitsSpawned;
+}
+
 // Called when the game starts or when spawned
 void ASpawnPoint::BeginPlay()
 {

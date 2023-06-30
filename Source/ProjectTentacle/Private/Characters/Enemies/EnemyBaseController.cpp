@@ -129,7 +129,10 @@ void AEnemyBaseController::UpdatePerception(AActor* Actor, FAIStimulus Stimulus)
 {
 	// GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, Actor->GetHumanReadableName());
 	if(!OwningEncounter) return;
-	OwningEncounter->TryTriggerEncounter(Actor);
+	FTimerHandle EncounterStartTimer;
+	FTimerDelegate EncounterStartDelegate;
+	EncounterStartDelegate.BindUFunction(OwningEncounter, FName("TryTriggerEncounter"), Actor);
+	GetWorldTimerManager().SetTimer(EncounterStartTimer, EncounterStartDelegate, OwningEncounter->GetEncounterStartDelay(), false);
 }
 
 void AEnemyBaseController::OnDeath(bool bForceDespawn)

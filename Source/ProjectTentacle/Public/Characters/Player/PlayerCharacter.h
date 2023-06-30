@@ -100,6 +100,7 @@ private:
 	
 	unsigned int bTakingSwampDamage:1;
 	FTimerDelegate SwampDamageDelegate;
+	unsigned int bIsOHKOEnabled:1;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
@@ -197,6 +198,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DamageSetting)
 	float MaxDamage =  10;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= DamageSetting)
+	float OHKODamage =  1000;
+	
 	// Animation montages
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
 	UAnimMontage* EvadeAnimMontage;
@@ -256,6 +260,9 @@ protected:
 	void DealSwampDamage(float Damage, float TickTime);
 
 public:
+	UFUNCTION(BlueprintCallable)
+	void ToggleOHKO();
+	
 	void StartSwampDamageTick(float Damage, float TickInterval);
 	void StopSwampDamageTick();
 	void ShowHitIndicator(float CounterTime, const FVector HitLocation) const;

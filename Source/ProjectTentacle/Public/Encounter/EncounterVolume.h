@@ -22,6 +22,7 @@ public:
 	AEncounterVolume();
 
 	// Try to start the encounter, if it hasn't already
+	UFUNCTION()
 	void TryTriggerEncounter(AActor* Target);
 
 	// Return list of contained units excluding passed pawn
@@ -54,6 +55,8 @@ public:
 	// Debug to kill active units
 	void KillUnits();
 
+	float GetEncounterStartDelay() const;
+
 protected:
 	// Blueprint exposed delegate, fires when the encounter is complete (All spawns complete + all units defeated)
 	UPROPERTY(EditDefaultsOnly, BlueprintAssignable)
@@ -75,6 +78,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	TSet<AEnemyBase*> ContainedUnits;
 
+	// Delay between being spotted and the encounter starting
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
+	float EncounterStartDelay = 1.f;
+	
 	// Delay between tickets being issued to attackers on basic (melee, healer, and ranged) and heavy (brute) queues
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	float AttackStartDelayBasic = 3.0f;
@@ -148,7 +155,7 @@ private:
 	void TriggerNextWave();
 	void ResetSpawnPoints() const;
 
-	int8 InitialUnits, DefeatedUnits, CurrentWave;
+	int8 TotalUnits, DefeatedUnits, CurrentWave;
 	unsigned int bIsPCCountering:1;
 	AEnemyBaseController* LastAttackerBasic, *LastAttackerHeavy;
 	class APlayerCharacter* EncounterTarget;
