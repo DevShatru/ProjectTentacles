@@ -461,6 +461,11 @@ void APlayerCharacter::DamagingTarget_Implementation()
 	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, CurrentDamage, this, CurrentAttackType);
 
 	if(CurrentAttackType == EPlayerAttackType::CounterAttack) UnsetCurrentTarget();
+
+	if(DamagingActor->GetUnitType() == EEnemyType::Brute && CurrentAttackType == EPlayerAttackType::CounterAttack)
+	{
+		OnCounterStop.ExecuteIfBound();
+	}
 }
 
 void APlayerCharacter::EnterUnableCancelAttack_Implementation()
