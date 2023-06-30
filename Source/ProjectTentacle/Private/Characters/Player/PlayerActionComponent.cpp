@@ -906,15 +906,15 @@ void UPlayerActionComponent::DodgeMovement(float Alpha)
 	const FVector MovingPos = UKismetMathLibrary::VLerp(MovingStartPos, MovingEndPos, Alpha);
 	const FVector LaunchingPos = FVector(MovingPos.X, MovingPos.Y, CharacterCurrentPos.Z);
 
-	// // Try To Get if building is blocking or not
-	// FHitResult Hit;
-	// TArray<AActor*> IgnoreActors;
-	// IgnoreActors.Add(PlayerOwnerRef);
-	// const bool IsHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), CharacterCurrentPos, LaunchingPos, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
-	//
-	// if(!IsHit)
-
-	PlayerOwnerRef->SetActorLocation(LaunchingPos, true);
+	const FVector LinetraceEnd = CharacterCurrentPos + (LaunchingPos - CharacterCurrentPos) * 10;
+	
+	// Try To Get if building is blocking or not
+	FHitResult Hit;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(PlayerOwnerRef);
+	const bool IsHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), CharacterCurrentPos, LinetraceEnd, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+	
+	if(!IsHit) PlayerOwnerRef->SetActorLocation(LaunchingPos, false);
 }
 
 void UPlayerActionComponent::SetCollisionIgnoreToEnemy()

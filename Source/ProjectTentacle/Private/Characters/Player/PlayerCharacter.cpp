@@ -467,6 +467,11 @@ void APlayerCharacter::DamagingTarget_Implementation()
 	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, bIsOHKOEnabled ? OHKODamage: CurrentDamage, this, CurrentAttackType);
 
 	if(CurrentAttackType == EPlayerAttackType::CounterAttack) UnsetCurrentTarget();
+
+	if(DamagingActor->GetUnitType() == EEnemyType::Brute && CurrentAttackType == EPlayerAttackType::CounterAttack)
+	{
+		OnCounterStop.ExecuteIfBound();
+	}
 }
 
 void APlayerCharacter::EnterUnableCancelAttack_Implementation()
@@ -604,6 +609,14 @@ void APlayerCharacter::OnApplyChargeKnockForce_Implementation(FVector ApplyingFo
 	Super::OnApplyChargeKnockForce_Implementation(ApplyingForce);
 
 	LaunchCharacter(ApplyingForce, true, true);
+
+}
+
+void APlayerCharacter::TryClearCounterVictim_Implementation(AEnemyBase* ClearingVictim)
+{
+	Super::TryClearCounterVictim_Implementation(ClearingVictim);
+
+	ClearCounteringTarget(ClearingVictim);
 
 }
 

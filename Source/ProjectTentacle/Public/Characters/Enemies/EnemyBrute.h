@@ -44,8 +44,6 @@ private:
 
 	EBruteAttackType BruteAttack = EBruteAttackType::Swipe;
 	
-	// bool to check if enemy is in counter state
-	bool IsCountered = false;
 
 	//
 	int32 CounteredTime = 0; 
@@ -70,6 +68,9 @@ private:
 	
 protected:
 	
+	// bool to check if enemy is in counter state
+	UPROPERTY(BlueprintReadOnly)
+	bool IsCountered = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_General)
 	EBruteAttackType DebugAttackType;

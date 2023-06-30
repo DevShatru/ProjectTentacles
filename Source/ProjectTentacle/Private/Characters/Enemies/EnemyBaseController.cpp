@@ -139,6 +139,15 @@ void AEnemyBaseController::OnDeath(bool bForceDespawn)
 {
 	if(!OwningEncounter) return;
 	OwningEncounter->RegisterUnitDestroyed(this, bForceDespawn);
+
+	if(!BrainComponent) return;
+	BrainComponent->StopLogic("Dead");
+}
+
+void AEnemyBaseController::OnSpawn()
+{
+	if(!BrainComponent) return;
+	BrainComponent->StartLogic();
 }
 
 // Heals the target (PC) when the unit dies

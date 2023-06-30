@@ -66,6 +66,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnApplyChargeKnockForce(FVector ApplyingForce);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void TryClearCounterVictim(AEnemyBase* ClearingVictim);
+	
+	
+	
 	// Enemy Delegate
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnCounterTimeEnd();

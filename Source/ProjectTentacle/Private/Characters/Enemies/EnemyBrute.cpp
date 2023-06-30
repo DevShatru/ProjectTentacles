@@ -115,6 +115,12 @@ void AEnemyBrute::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAc
 
 		OnStunned();
 		
+		SetIsCountered(false);
+
+
+		ICharacterActionInterface::Execute_TryClearCounterVictim(DamageCauser, this);
+		
+
 		// TryFinishAttackTask(EEnemyCurrentState::Stunned);
 		//
 		// TrySwitchEnemyState(EEnemyCurrentState::Stunned);
@@ -124,7 +130,6 @@ void AEnemyBrute::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAc
 		//
 		// GetWorld()->GetTimerManager().SetTimer(StunningTimerHandle, this, &AEnemyBrute::RecoverFromStunState, TotalStunDuration, false, -1);
 		//
-		SetIsCountered(false);
 		return;
 	}
 
@@ -286,7 +291,8 @@ void AEnemyBrute::ExecuteAttack()
 	
 	if(AttackIndicatorRef)
 		AttackIndicatorRef->OnReceivingNewAttackType(CurrentAttackType);
-	
+
+	CounteredTime = 0;
 	UpdateAttackingVariables();
 	
 	IsSecondAttack = false;
@@ -362,12 +368,20 @@ FVector AEnemyBrute::CalculateDestinationForAttackMoving(FVector PlayerCurrentPo
 
 void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 {
-	const ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+	ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
 	if(!PlayerCha) return;
-
+	
 	const FVector PlayerPos = PlayerCha->GetActorLocation();
 	const FVector CurrentLocation = GetActorLocation();
 
+	// Hit result
+	FHitResult Hit;
+	// Empty array of ignoring actor, maybe add Enemies classes to be ignored
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	IgnoreActors.Add(PlayerCha);
+
+	
 
 	// Get direction from self to player
 	FVector OffsetWithoutZ = PlayerPos - CurrentLocation;
@@ -422,16 +436,11 @@ void AEnemyBrute::UpdateAttackingPosition(float Alpha)
 
 		
 		const FVector SupposedMovingPos = CurrentLocation + (ChargingDirection * TravelDistancePerTick);
-		const FVector TraceCheckingPos = CurrentLocation + (ChargingDirection * (TravelDistancePerTick * 10));
+		const FVector TraceCheckingPos = CurrentLocation + (ChargingDirection * (TravelDistancePerTick * 5));
 
-		// Hit result
-		FHitResult Hit;
-		// Empty array of ignoring actor, maybe add Enemies classes to be ignored
-		TArray<AActor*> IgnoreActors;
-		IgnoreActors.Add(this);
-		
+		const float CapHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight(); 
 		// Capsule trace by channel
-		const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, CurrentLocation, TraceCheckingPos,
+		const bool bHit = UKismetSystemLibrary::CapsuleTraceSingle(this, CurrentLocation, TraceCheckingPos, 15.0f, CapHalfHeight,
 			UEngineTypes::ConvertToTraceType(ECC_Camera),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
 		
 		if(bHit)
@@ -732,6 +741,9 @@ void AEnemyBrute::SetCapsuleCompCollision(ECollisionChannel ResponseChannel, ECo
 void AEnemyBrute::OnDealChargeDamage(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 											UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if(CheckIfPlayerDodge() || PlayerRef->GetCurrentActionState() == EActionState::SpecialAttack) return;
+
+	
 	// check if owner class has player damage interface
 	if(OtherActor->GetClass()->ImplementsInterface(UPlayerDamageInterface::StaticClass()))
 	{
