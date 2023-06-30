@@ -115,6 +115,12 @@ void AEnemyBrute::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAc
 
 		OnStunned();
 		
+		SetIsCountered(false);
+
+
+		ICharacterActionInterface::Execute_TryClearCounterVictim(DamageCauser, this);
+		
+
 		// TryFinishAttackTask(EEnemyCurrentState::Stunned);
 		//
 		// TrySwitchEnemyState(EEnemyCurrentState::Stunned);
@@ -124,7 +130,6 @@ void AEnemyBrute::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAc
 		//
 		// GetWorld()->GetTimerManager().SetTimer(StunningTimerHandle, this, &AEnemyBrute::RecoverFromStunState, TotalStunDuration, false, -1);
 		//
-		SetIsCountered(false);
 		return;
 	}
 
@@ -286,7 +291,8 @@ void AEnemyBrute::ExecuteAttack()
 	
 	if(AttackIndicatorRef)
 		AttackIndicatorRef->OnReceivingNewAttackType(CurrentAttackType);
-	
+
+	CounteredTime = 0;
 	UpdateAttackingVariables();
 	
 	IsSecondAttack = false;
