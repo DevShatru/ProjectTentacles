@@ -64,11 +64,13 @@ public:
 	void OnChangePlayerIndicatorHUD_Visibility(bool IsVisible);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void OnApplyChargeKnockForce(FVector ApplyingForce);
+	void OnApplyChargeKnockForce(FVector ApplyingForce, FVector ForceDirection);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void TryClearCounterVictim(AEnemyBase* ClearingVictim);
 	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnMakingTentacleVisible(bool bShowTentacle);
 	
 	
 	// Enemy Delegate

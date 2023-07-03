@@ -12,6 +12,8 @@ void AEnemyRanged::ExecuteAttack()
 {
 	Super::ExecuteAttack();
 
+	if(!CheckCanSeePlayer()) TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+
 	PlayAnimMontage(KneelDownToAimAnim, 1, "Default");
 }
 
@@ -188,3 +190,25 @@ void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AA
 	if(!StateChanged) TrySwitchEnemyState(EEnemyCurrentState::Damaged);
 }
 
+
+bool AEnemyRanged::CheckCanSeePlayer()
+{
+	const UWorld* World = GetWorld();
+	if(!World) return false;
+	
+	const ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(World, 0);
+	if(PlayerCha) return false;
+	
+	const FVector EnemyLocation = GetActorLocation();
+	const FVector PlayerLocation = PlayerCha->GetActorLocation();
+	
+	FHitResult Hit;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	const bool IsHit = UKismetSystemLibrary::CapsuleTraceSingle(GetWorld(), EnemyLocation, PlayerLocation, 10.0f, 20.0f , UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+	
+	
+	if(IsHit) return false;
+
+	return true;
+}

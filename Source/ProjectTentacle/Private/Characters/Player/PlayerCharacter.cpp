@@ -123,6 +123,28 @@ void APlayerCharacter::TryCachePlayerController()
 }
 
 
+void APlayerCharacter::TentacleAttachment()
+{
+	if(UWorld* World = GetWorld())
+	{
+		// set spawn parameter
+		FActorSpawnParameters StunTentacleParams;
+		StunTentacleParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// Get ground location by using line trace
+		USkeletalMeshComponent* PlayerMesh = GetMesh();
+		FTransform TentacleSpawnTrans = GetMesh()->GetSocketTransform("TentacleSocket");
+		
+		// spawn stun tentacle
+		TentacleOnRightHand = World->SpawnActor<AAttachingTentacle>(StunTentacleClass, TentacleSpawnTrans, StunTentacleParams);
+
+		if(!TentacleOnRightHand) return;
+		
+		const FAttachmentTransformRules AttachmentRule = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+		TentacleOnRightHand->AttachToComponent(PlayerMesh, AttachmentRule, "TentacleSocket");
+	}
+}
+
 // =================================== Begin Play, Set up InputComponent, Tick ==============================
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -147,6 +169,11 @@ void APlayerCharacter::BeginPlay()
 	CameraSwitchingTimeline.AddInterpFloat(CameraRotationCurve, CameraRotationUpdate);
 	CameraSwitchingTimeline.SetTimelineFinishedFunc(CameraRotationFinish);
 
+	FOnTimelineFloat TentacleMaterialUpdate;
+	TentacleMaterialUpdate.BindDynamic(this, &APlayerCharacter::OnUpdateTentacleMaterial);
+	TentacleMaterialChangingTimeline.AddInterpFloat(MaterialChangingCurve, TentacleMaterialUpdate);
+
+	TentacleAttachment();
 	
 	TryCacheInstanceRef();
 	if(InstanceRef && InstanceRef->ShouldSaveAtPCSpawn()) InstanceRef->SaveGame();
@@ -157,6 +184,9 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	CameraSwitchingTimeline.TickTimeline(DeltaSeconds);
+
+	const float DelatWithSpeedBonus = DeltaSeconds * UpdatedAttackingSpeedBonus;
+	TentacleMaterialChangingTimeline.TickTimeline(DelatWithSpeedBonus);
 
 	const APlayerController* PlayerControl = GetWorld()->GetFirstPlayerController();
 	// reset input vector
@@ -233,7 +263,10 @@ void APlayerCharacter::TryMeleeAttack()
 {
 	// if player is recovering from action or is dodging, return
 	if(CanPerformAttack())
+	{
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Attack);
+		if(bExecuted) TentacleOnRightHand->SetTentacleInvisible();
+	}
 	
 }
 
@@ -331,12 +364,12 @@ void APlayerCharacter::DebugTestFunction()
 {
 	if(!DebugingBool)
 	{
-		OnSwitchingToExecutionCamera_Implementation();
+		TentacleMaterialChangingTimeline.PlayFromStart();
 		DebugingBool = true;
 	}
 	else
 	{
-		OnSwitchingBackToDefaultCamera_Implementation();
+		TentacleMaterialChangingTimeline.ReverseFromEnd();
 		DebugingBool = false;
 	}
 }
@@ -347,6 +380,21 @@ void APlayerCharacter::ResumeSimulatePhysic()
 	if(!PlayerCap) return;
 
 	PlayerCap->SetSimulatePhysics(false);
+}
+
+void APlayerCharacter::OnUpdateTentacleMaterial(float Alpha)
+{
+	if(!TentacleOnRightHand) return;
+
+	TentacleOnRightHand->SetMaterialValue(Alpha);
+}
+
+void APlayerCharacter::OnCancelTentacleMaterialChange()
+{
+	if(!TentacleOnRightHand) return;
+
+	TentacleMaterialChangingTimeline.Stop();
+	TentacleOnRightHand->SetTentacleInvisible();
 }
 
 void APlayerCharacter::SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime)
@@ -426,6 +474,22 @@ void APlayerCharacter::TryCacheInstanceRef()
 	if(InstanceRef) return;
 
 	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
+}
+
+bool APlayerCharacter::HasSpaceToLand(FVector KnockingDir)
+{
+	FHitResult Hit;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+
+	
+	const FVector AssumeLandingStart = GetActorLocation() + (KnockingDir * 100.0f) + (GetActorUpVector() * 100.0f);
+	const FVector AssumeLandingEnd =  AssumeLandingStart + (GetActorUpVector() * -1 * 300.0f);
+
+	
+	const bool IsFloorHit = UKismetSystemLibrary::SphereTraceSingle(GetWorld(), AssumeLandingStart, AssumeLandingEnd, 10.0f, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::Persistent,Hit,true);
+	
+	return IsFloorHit;
 }
 
 void APlayerCharacter::StopRegenerateStamina()
@@ -604,12 +668,12 @@ void APlayerCharacter::OnChangePlayerIndicatorHUD_Visibility_Implementation(bool
 	HUDRef->ChangeVisibility(IsVisible);
 }
 
-void APlayerCharacter::OnApplyChargeKnockForce_Implementation(FVector ApplyingForce)
+void APlayerCharacter::OnApplyChargeKnockForce_Implementation(FVector ApplyingForce, FVector ForceDirection)
 {
-	Super::OnApplyChargeKnockForce_Implementation(ApplyingForce);
+	Super::OnApplyChargeKnockForce_Implementation(ApplyingForce, ForceDirection);
 
-	LaunchCharacter(ApplyingForce, true, true);
-
+	if(HasSpaceToLand(ForceDirection)) LaunchCharacter(ApplyingForce, true, true);
+	else LaunchCharacter(GetActorUpVector() * 400.0f, true, true);
 }
 
 void APlayerCharacter::TryClearCounterVictim_Implementation(AEnemyBase* ClearingVictim)
@@ -618,6 +682,14 @@ void APlayerCharacter::TryClearCounterVictim_Implementation(AEnemyBase* Clearing
 
 	ClearCounteringTarget(ClearingVictim);
 
+}
+
+void APlayerCharacter::OnMakingTentacleVisible_Implementation(bool bShowTentacle)
+{
+	Super::OnMakingTentacleVisible_Implementation(bShowTentacle);
+
+	if(bShowTentacle) TentacleMaterialChangingTimeline.PlayFromStart();
+	else TentacleMaterialChangingTimeline.ReverseFromEnd();
 }
 
 
