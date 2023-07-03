@@ -476,6 +476,22 @@ void APlayerCharacter::TryCacheInstanceRef()
 	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
 }
 
+bool APlayerCharacter::HasSpaceToLand(FVector KnockingDir)
+{
+	FHitResult Hit;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+
+	
+	const FVector AssumeLandingStart = GetActorLocation() + (KnockingDir * 100.0f) + (GetActorUpVector() * 100.0f);
+	const FVector AssumeLandingEnd =  AssumeLandingStart + (GetActorUpVector() * -1 * 300.0f);
+
+	
+	const bool IsFloorHit = UKismetSystemLibrary::SphereTraceSingle(GetWorld(), AssumeLandingStart, AssumeLandingEnd, 10.0f, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::Persistent,Hit,true);
+	
+	return IsFloorHit;
+}
+
 void APlayerCharacter::StopRegenerateStamina()
 {
 	const UWorld* World = GetWorld();
@@ -652,12 +668,12 @@ void APlayerCharacter::OnChangePlayerIndicatorHUD_Visibility_Implementation(bool
 	HUDRef->ChangeVisibility(IsVisible);
 }
 
-void APlayerCharacter::OnApplyChargeKnockForce_Implementation(FVector ApplyingForce)
+void APlayerCharacter::OnApplyChargeKnockForce_Implementation(FVector ApplyingForce, FVector ForceDirection)
 {
-	Super::OnApplyChargeKnockForce_Implementation(ApplyingForce);
+	Super::OnApplyChargeKnockForce_Implementation(ApplyingForce, ForceDirection);
 
-	LaunchCharacter(ApplyingForce, true, true);
-
+	if(HasSpaceToLand(ForceDirection)) LaunchCharacter(ApplyingForce, true, true);
+	else LaunchCharacter(GetActorUpVector() * 400.0f, true, true);
 }
 
 void APlayerCharacter::TryClearCounterVictim_Implementation(AEnemyBase* ClearingVictim)

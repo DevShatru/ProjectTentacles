@@ -727,8 +727,9 @@ void AEnemyBrute::ChargeKnock(AActor* KnockingActor)
 	const FVector UpForceVector = CharUpDir * UpForce;
 
 	const FVector KnockForce = ForwardForceVector + UpForceVector;
+	const FVector KnockDirection = CharForwardDir + CharUpDir;
 	
-	ICharacterActionInterface::Execute_OnApplyChargeKnockForce(KnockingActor, KnockForce);
+	ICharacterActionInterface::Execute_OnApplyChargeKnockForce(KnockingActor, KnockForce, KnockDirection);
 }
 
 void AEnemyBrute::SetCapsuleCompCollision(ECollisionChannel ResponseChannel, ECollisionResponse RequestResponse)

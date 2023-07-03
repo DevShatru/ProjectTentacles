@@ -94,6 +94,8 @@ private:
 	void TryCacheGameModeRef();
 	void TryCacheInstanceRef();
 
+	bool HasSpaceToLand(FVector KnockingDir);
+	
 	FTimeline TentacleAppearingTimeline;
 	
 	class AProjectTentacleGameModeBase* GameModeRef;
@@ -436,7 +438,7 @@ public:
 	virtual void OnChangePlayerIndicatorHUD_Visibility_Implementation(bool IsVisible) override;
 
 	UFUNCTION()
-	virtual void OnApplyChargeKnockForce_Implementation(FVector ApplyingForce) override;
+	virtual void OnApplyChargeKnockForce_Implementation(FVector ApplyingForce, FVector ForceDirection) override;
 
 	UFUNCTION()
 	virtual void TryClearCounterVictim_Implementation(AEnemyBase* ClearingVictim) override;
