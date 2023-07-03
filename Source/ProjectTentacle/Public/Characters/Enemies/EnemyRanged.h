@@ -80,5 +80,7 @@ private:
 	void SpawnOrCollapsePlayerHUD(bool Spawn);
 	
 	void ShowOrHidePlayerHUD(bool Show);
+
+	bool CheckCanSeePlayer();
 	
 };

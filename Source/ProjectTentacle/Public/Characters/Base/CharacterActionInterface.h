@@ -69,6 +69,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void TryClearCounterVictim(AEnemyBase* ClearingVictim);
 	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnMakingTentacleVisible(bool bShowTentacle);
 	
 	
 	// Enemy Delegate

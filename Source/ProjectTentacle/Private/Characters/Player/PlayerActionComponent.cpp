@@ -136,7 +136,7 @@ void UPlayerActionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		TryToUpdateTarget();
 
 	// delta time will change due to player's combo time
-	const float DeltaWithComboBonus = DeltaTime * (1 + (CurrentComboCount * ComboSpeedMultiplier));
+	const float DeltaWithComboBonus = DeltaTime * PlayerOwnerRef->GetUpdatedAttackingSpeedBonus();
 	TwoHandWidePushTimeLine.TickTimeline(DeltaWithComboBonus);
 	TwoHandPushTimeLine.TickTimeline(DeltaWithComboBonus);
 	TwoHandClapTimeLine.TickTimeline(DeltaWithComboBonus);
@@ -225,6 +225,8 @@ void UPlayerActionComponent::PerformMelee(AEnemyBase* RegisteredTarget, TArray<U
 	
 	// combo count increment
 	ComboCountIncrement();
+
+	PlayerOwnerRef->SetUpdatedAttackingSpeedBonus(1 + (CurrentComboCount * ComboSpeedMultiplier));
 }
 
 int32 UPlayerActionComponent::GetDifferentCloseMeleeMontage(TArray<UAnimMontage*> ListOfMeleeMontages)
@@ -990,6 +992,10 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 			const EPlayerAttackAnimations CurrentRegisteredAttackAnim = PlayerOwnerRef->GetCurrentAttackAnim();
 			StopSpecificMovingTimeline(CurrentRegisteredAttackAnim);
 
+			// Stop player's attaching tentacle material update
+			PlayerOwnerRef->OnCancelTentacleMaterialChange();
+			
+			
 			// make damaging enemy resume moving
 			AEnemyBase* ResumeMovementDamagingActor = PlayerOwnerRef->GetDamagingActor();
 			if(ResumeMovementDamagingActor)

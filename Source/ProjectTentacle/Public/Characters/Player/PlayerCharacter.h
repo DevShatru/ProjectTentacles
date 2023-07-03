@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AttachingTentacle.h"
 #include "GenericTeamAgentInterface.h"
 #include "PlayerCameraInterface.h"
 #include "PlayerDamageInterface.h"
@@ -93,6 +94,8 @@ private:
 	void TryCacheGameModeRef();
 	void TryCacheInstanceRef();
 
+	FTimeline TentacleAppearingTimeline;
+	
 	class AProjectTentacleGameModeBase* GameModeRef;
 	class UProjectTentacleGameInstance* InstanceRef;
 
@@ -101,6 +104,12 @@ private:
 	unsigned int bTakingSwampDamage:1;
 	FTimerDelegate SwampDamageDelegate;
 	unsigned int bIsOHKOEnabled:1;
+
+	AAttachingTentacle* TentacleOnRightHand;
+
+	void TentacleAttachment();
+
+	float UpdatedAttackingSpeedBonus = 1.0f;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
@@ -167,22 +176,23 @@ protected:
 	
 	UPROPERTY()
 	EPlayerAttackAnimations CurrentAttackingAnim;
-	
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
-	// bool CameraMoveEaseOut = true;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
-	// bool CameraMoveEaseIn = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
 	float CameraMoveTime = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
 	UCurveFloat* CameraRotationCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= TentacleAttachingSetting)
+	UCurveFloat* MaterialChangingCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= TentacleAttachingSetting)
+	TSubclassOf<AAttachingTentacle> StunTentacleClass;
 	
 	
 	// timeline
 	FTimeline CameraSwitchingTimeline;
+	FTimeline TentacleMaterialChangingTimeline;
 	
 	FRotator CurrentCameraRotation = FRotator(0,0,0);
 	FRotator ExecutionCameraRotation = FRotator(0,0,0);
@@ -207,7 +217,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
 	TArray<UAnimMontage*> MeleeAttackMontages;
-
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
 	float CurrentStamina = 100.0f;
@@ -336,6 +346,11 @@ public:
 
 	UFUNCTION()
 	void ResumeSimulatePhysic();
+
+	UFUNCTION()
+	void OnUpdateTentacleMaterial(float Alpha);
+
+	void OnCancelTentacleMaterialChange();
 	
 	
 	// ================================================= Get And Set Functions ============================================
@@ -346,6 +361,9 @@ public:
 	void SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime);
 	void TryClearStoredRange(AEnemyBase* ClearingEnemy) {if(RangeAimingEnemy == ClearingEnemy) RangeAimingEnemy = nullptr;}
 
+	float GetUpdatedAttackingSpeedBonus() const {return UpdatedAttackingSpeedBonus;}
+	void SetUpdatedAttackingSpeedBonus(float NewSpeed) {UpdatedAttackingSpeedBonus = NewSpeed;}
+	
 
 	float GetCurrentDamage() const {return CurrentDamage;}
 	void SetCurrentDamage(int32 CurrentComboCount) {CurrentDamage = UKismetMathLibrary::FClamp((BaseDamage * (1 + (CurrentComboCount * DamageMultiplier))), BaseDamage, MaxDamage);}
@@ -422,4 +440,7 @@ public:
 
 	UFUNCTION()
 	virtual void TryClearCounterVictim_Implementation(AEnemyBase* ClearingVictim) override;
+
+	UFUNCTION()
+	virtual void OnMakingTentacleVisible_Implementation(bool bShowTentacle) override;
 };
