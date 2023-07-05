@@ -41,6 +41,7 @@ private:
 	FVector GetChargeDirection(FVector DirToPlayer, FVector ActorCurrentPos);
 	FVector GetJumpSlamPosition(FVector DirFromPlayerToSelf, FVector PlayerPos);
 	bool CheckIfPlayerDodge();
+	void OnCancelCharge(const bool bHitWall);
 
 	EBruteAttackType BruteAttack = EBruteAttackType::Swipe;
 	

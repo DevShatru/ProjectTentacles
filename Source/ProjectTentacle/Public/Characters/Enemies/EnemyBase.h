@@ -215,6 +215,8 @@ protected:
 
 	void OnSetFocus();
 
+	FVector GetVerticalUpdatedMovePos(const FVector SupposeMovingPos, const bool bIsMovementVerticalInclude, const float GroundAlpha, const float CapHalfHeight, TArray<AActor*> IgnoringActors);
+
 	
 public:
 	virtual void Reset() override;
