@@ -543,7 +543,7 @@ FVector AEnemyBase::GetVerticalUpdatedMovePos(const FVector SupposeMovingPos, co
 	// line trace to adjust position on slope
 	const FVector FloorCheckPosStart = SupposeMovingPos + (GetActorUpVector() * CapHalfHeight);
 	const FVector FloorCheckPosEnd = SupposeMovingPos + ((GetActorUpVector() * -1) * (CapHalfHeight * VerticalLineTraceMultiply));
-	const bool bHitFloor = UKismetSystemLibrary::LineTraceSingle(this, FloorCheckPosStart, FloorCheckPosEnd,UEngineTypes::ConvertToTraceType(ECC_Camera),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
+	const bool bHitFloor = UKismetSystemLibrary::LineTraceSingle(this, FloorCheckPosStart, FloorCheckPosEnd,UEngineTypes::ConvertToTraceType(ECC_Camera),false, IgnoringActors,  EDrawDebugTrace::None,Hit,true);
 
 	if(!bIsMovementVerticalInclude) return bHitFloor ? (Hit.Location + (GetActorUpVector() * CapHalfHeight)) : SupposeMovingPos;
 
