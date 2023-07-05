@@ -248,6 +248,13 @@ void AEnemyMelee::UpdateAttackingPosition(float Alpha)
 
 	const FVector MovingPos = FVector(LerpPos.X, LerpPos.Y, CharacterCurrentPos.Z);
 
+	TArray<AActor*> IgnoringActors;
+	IgnoringActors.Add(this);
+	const float CapHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	
+	// line trace to adjust position on slope
+	const FVector UpdatedPos = GetVerticalUpdatedMovePos(MovingPos, false, 1.0f, CapHalfHeight, IgnoringActors);
+
 	SetActorLocation(MovingPos);
 }
 

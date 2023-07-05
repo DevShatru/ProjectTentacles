@@ -109,6 +109,7 @@ private:
 
 	AAttachingTentacle* TentacleOnRightHand;
 
+	void TimelineInitialization();
 	void TentacleAttachment();
 
 	float UpdatedAttackingSpeedBonus = 1.0f;

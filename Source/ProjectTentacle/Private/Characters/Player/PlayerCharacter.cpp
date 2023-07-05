@@ -123,6 +123,22 @@ void APlayerCharacter::TryCachePlayerController()
 }
 
 
+void APlayerCharacter::TimelineInitialization()
+{
+	FOnTimelineFloat CameraRotationUpdate;
+	CameraRotationUpdate.BindDynamic(this, &APlayerCharacter::OnUpdatingCameraMovement);
+	
+	FOnTimelineEvent CameraRotationFinish;
+	CameraRotationFinish.BindDynamic(this, &APlayerCharacter::OnFinishCameraMovement);
+	
+	CameraSwitchingTimeline.AddInterpFloat(CameraRotationCurve, CameraRotationUpdate);
+	CameraSwitchingTimeline.SetTimelineFinishedFunc(CameraRotationFinish);
+
+	FOnTimelineFloat TentacleMaterialUpdate;
+	TentacleMaterialUpdate.BindDynamic(this, &APlayerCharacter::OnUpdateTentacleMaterial);
+	TentacleMaterialChangingTimeline.AddInterpFloat(MaterialChangingCurve, TentacleMaterialUpdate);
+}
+
 void APlayerCharacter::TentacleAttachment()
 {
 	if(UWorld* World = GetWorld())
@@ -155,23 +171,14 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Variable set up
 	CharacterCurrentHealth = CharacterMaxHealth;
 	GameModeRef = nullptr;
 	bIsDead = false;
 	bIsOHKOEnabled = false;
 
-	FOnTimelineFloat CameraRotationUpdate;
-	CameraRotationUpdate.BindDynamic(this, &APlayerCharacter::OnUpdatingCameraMovement);
-	
-	FOnTimelineEvent CameraRotationFinish;
-	CameraRotationFinish.BindDynamic(this, &APlayerCharacter::OnFinishCameraMovement);
-	
-	CameraSwitchingTimeline.AddInterpFloat(CameraRotationCurve, CameraRotationUpdate);
-	CameraSwitchingTimeline.SetTimelineFinishedFunc(CameraRotationFinish);
-
-	FOnTimelineFloat TentacleMaterialUpdate;
-	TentacleMaterialUpdate.BindDynamic(this, &APlayerCharacter::OnUpdateTentacleMaterial);
-	TentacleMaterialChangingTimeline.AddInterpFloat(MaterialChangingCurve, TentacleMaterialUpdate);
+	// initialize timeline and tentacle on player's hand
+	TimelineInitialization();
 
 	TentacleAttachment();
 	
@@ -183,20 +190,22 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	// time line tick
 	CameraSwitchingTimeline.TickTimeline(DeltaSeconds);
+	
+	const float DeltaWithSpeedBonus = DeltaSeconds * UpdatedAttackingSpeedBonus;
+	TentacleMaterialChangingTimeline.TickTimeline(DeltaWithSpeedBonus);
 
-	const float DelatWithSpeedBonus = DeltaSeconds * UpdatedAttackingSpeedBonus;
-	TentacleMaterialChangingTimeline.TickTimeline(DelatWithSpeedBonus);
-
-	const APlayerController* PlayerControl = GetWorld()->GetFirstPlayerController();
+	TryCachePlayerController();
+	
 	// reset input vector
-	if(PlayerControl->WasInputKeyJustReleased(MovingForwardKey) || PlayerControl->WasInputKeyJustReleased(MovingBackKey))
+	if(PlayerCurrentController->WasInputKeyJustReleased(MovingForwardKey) || PlayerCurrentController->WasInputKeyJustReleased(MovingBackKey))
 	{
 		InputDirection.SetPreviousInputDirectionY(InputDirection.GetInputDirectionY());
 		InputDirection.SetInputDirectionY(0.0f);
 	}
 	
-	if(PlayerControl->WasInputKeyJustReleased(MovingLeftKey) || PlayerControl->WasInputKeyJustReleased(MovingRightKey))
+	if(PlayerCurrentController->WasInputKeyJustReleased(MovingLeftKey) || PlayerCurrentController->WasInputKeyJustReleased(MovingRightKey))
 	{
 		InputDirection.SetPreviousInputDirectionX(InputDirection.GetInputDirectionX());
 		InputDirection.SetInputDirectionX(0.0f);
@@ -289,6 +298,7 @@ void APlayerCharacter::TryDodge()
 		StopRegenerateStamina();
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Dodge);
 
+		// cost stamina and reset stamina
 		CurrentStamina -= CostForEachDodge;
 		
 		WaitToRegenStamina();
@@ -297,11 +307,13 @@ void APlayerCharacter::TryDodge()
 
 bool APlayerCharacter::CanPerformAttack()
 {
+	// only in idle or preaction state can perform attack
 	return CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::PreAction;
 }
 
 bool APlayerCharacter::CanPerformDodge()
 {
+	// only in before attack, idle or preaction state can perform dodge
 	return CurrentActionState == EActionState::BeforeAttack || CurrentActionState == EActionState::Idle || CurrentActionState == EActionState::PreAction;
 }
 
@@ -349,7 +361,7 @@ void APlayerCharacter::UnsetCurrentTarget()
 {
 	if(TargetActor != nullptr)
 	{
-		// if target actor is not null ptr, unshow its target icon, and clear the reference of target actor
+		// if target actor is not nullptr, unshow its target icon, and clear the reference of target actor
 		if(TargetActor->GetClass()->ImplementsInterface(UEnemyWidgetInterface::StaticClass()))
 		{
 			IEnemyWidgetInterface::Execute_UnShowPlayerTargetIndicator(TargetActor);
@@ -478,14 +490,13 @@ void APlayerCharacter::TryCacheInstanceRef()
 
 bool APlayerCharacter::HasSpaceToLand(FVector KnockingDir)
 {
+	// line trace to check if player has space to land after getting knocked off
 	FHitResult Hit;
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(this);
-
 	
 	const FVector AssumeLandingStart = GetActorLocation() + (KnockingDir * 100.0f) + (GetActorUpVector() * 100.0f);
 	const FVector AssumeLandingEnd =  AssumeLandingStart + (GetActorUpVector() * -1 * 300.0f);
-
 	
 	const bool IsFloorHit = UKismetSystemLibrary::SphereTraceSingle(GetWorld(), AssumeLandingStart, AssumeLandingEnd, 10.0f, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::Persistent,Hit,true);
 	

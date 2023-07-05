@@ -535,6 +535,21 @@ void AEnemyBase::OnSetFocus()
 	CurrentAIOwner->SetFocus(AsActor);
 }
 
+FVector AEnemyBase::GetVerticalUpdatedMovePos(const FVector SupposeMovingPos, const bool bIsMovementVerticalInclude, const float GroundAlpha, const float CapHalfHeight, TArray<AActor*> IgnoringActors)
+{
+	const float VerticalLineTraceMultiply = bIsMovementVerticalInclude ? 2.0f : 1.5f;
+	FHitResult Hit;
+	
+	// line trace to adjust position on slope
+	const FVector FloorCheckPosStart = SupposeMovingPos + (GetActorUpVector() * CapHalfHeight);
+	const FVector FloorCheckPosEnd = SupposeMovingPos + ((GetActorUpVector() * -1) * (CapHalfHeight * VerticalLineTraceMultiply));
+	const bool bHitFloor = UKismetSystemLibrary::LineTraceSingle(this, FloorCheckPosStart, FloorCheckPosEnd,UEngineTypes::ConvertToTraceType(ECC_Camera),false, IgnoringActors,  EDrawDebugTrace::None,Hit,true);
+
+	if(!bIsMovementVerticalInclude) return bHitFloor ? (Hit.Location + (GetActorUpVector() * CapHalfHeight)) : SupposeMovingPos;
+
+	return bHitFloor && GroundAlpha >= 0.7f ? (Hit.Location + (GetActorUpVector() * CapHalfHeight)) : SupposeMovingPos;
+}
+
 void AEnemyBase::StartAttackTimeout()
 {
 	GetWorldTimerManager().SetTimer(AttackTimeoutHandle, this, &AEnemyBase::TimeoutAttack, AttackTimeoutDuration);
