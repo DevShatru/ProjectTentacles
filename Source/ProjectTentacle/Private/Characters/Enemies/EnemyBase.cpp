@@ -381,6 +381,14 @@ void AEnemyBase::OnDeath()
 	
 	// Clear from player's target reference
 	TryClearFromPlayerTarget();
+
+	if(CurrentEnemyState == EEnemyCurrentState::Attacking)
+	{
+		TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+		OnHideAttackIndicator();
+		StopAnimMontage();
+	}
+	
 	
 	// flip death bool to prevent getting selected
 	IsDead = true;

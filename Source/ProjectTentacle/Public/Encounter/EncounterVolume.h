@@ -6,6 +6,7 @@
 #include "EncounterVolumeInterface.h"
 #include "GameFramework/Actor.h"
 #include "WaveParams.h"
+#include "Components/BoxComponent.h"
 #include "EncounterVolume.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEncounterComplete);
@@ -24,7 +25,8 @@ public:
 	// Try to start the encounter, if it hasn't already
 	UFUNCTION()
 	void TryTriggerEncounter(AActor* Target);
-
+	
+	
 	// Return list of contained units excluding passed pawn
 	TArray<AEnemyBase*> GetAlliesForPawn(APawn* Pawn);
 
@@ -65,6 +67,10 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UFUNCTION()
+	void OnActorHitTriggerCollision(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+											UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	// Area around the encounter to generate navigation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -73,8 +79,16 @@ protected:
 	// Root component
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	USceneComponent* Root;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UBoxComponent* CollisionMesh;
 
+	
+	
 	// Set of all contained units at any time
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
+	bool IsPlayerInsideEncounter = false;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	TSet<AEnemyBase*> ContainedUnits;
 
@@ -161,3 +175,5 @@ private:
 	class APlayerCharacter* EncounterTarget;
 	FWaveParams* CurrentWaveParams;
 };
+
+

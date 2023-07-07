@@ -3,6 +3,7 @@
 
 #include "Characters/Player/PlayerCharacter.h"
 
+#include "NavigationSystem.h"
 #include "ProjectTentacleGameInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -210,8 +211,6 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 		InputDirection.SetPreviousInputDirectionX(InputDirection.GetInputDirectionX());
 		InputDirection.SetInputDirectionX(0.0f);
 	}
-
-	
 }
 
 

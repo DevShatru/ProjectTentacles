@@ -6,6 +6,7 @@
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Player/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "Encounter/SwampWater.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -904,19 +905,34 @@ void UPlayerActionComponent::MovingAttackMovement(float Alpha)
 
 void UPlayerActionComponent::DodgeMovement(float Alpha)
 {
+	const UWorld* World = GetWorld();
+	if(!World) return;
+
+	const FVector UpVector = PlayerOwnerRef->GetActorUpVector();
+	const FVector DownVector = UpVector * -1;
 	const FVector CharacterCurrentPos = PlayerOwnerRef->GetActorLocation();
 	const FVector MovingPos = UKismetMathLibrary::VLerp(MovingStartPos, MovingEndPos, Alpha);
 	const FVector LaunchingPos = FVector(MovingPos.X, MovingPos.Y, CharacterCurrentPos.Z);
 
-	const FVector LinetraceEnd = CharacterCurrentPos + (LaunchingPos - CharacterCurrentPos) * 10;
+	const FVector LinetraceWallEnd = CharacterCurrentPos + (LaunchingPos - CharacterCurrentPos) * 10;
 	
 	// Try To Get if building is blocking or not
 	FHitResult Hit;
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(PlayerOwnerRef);
-	const bool IsHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), CharacterCurrentPos, LinetraceEnd, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+
+	const float CapHalfHeight = PlayerOwnerRef->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	
-	if(!IsHit) PlayerOwnerRef->SetActorLocation(LaunchingPos, false);
+	const bool IsWallHit = UKismetSystemLibrary::LineTraceSingle(World, CharacterCurrentPos, LinetraceWallEnd, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
+	const bool IsFloorHit = UKismetSystemLibrary::LineTraceSingle(World, LaunchingPos, LaunchingPos + (DownVector * CapHalfHeight * 1.5f), UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::Persistent,Hit,true);
+	
+	if(!IsWallHit)
+	{
+		if(!IsFloorHit) return;
+
+		const FVector FixedFloorPos = Hit.Location + (UpVector * CapHalfHeight);
+		PlayerOwnerRef->SetActorLocation(FixedFloorPos, false);
+	}
 }
 
 void UPlayerActionComponent::SetCollisionIgnoreToEnemy()

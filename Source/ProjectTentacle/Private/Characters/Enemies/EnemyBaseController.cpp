@@ -2,12 +2,15 @@
 
 
 #include "Characters/Enemies/EnemyBaseController.h"
+
+#include "NavigationSystem.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Encounter/EncounterVolume.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Enemies/EnemyBrute.h"
 #include "Characters/Player/PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 
@@ -81,7 +84,7 @@ void AEnemyBaseController::QuitFromEncounter()
 {
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.0f, FColor::Purple, FString::Printf(TEXT("%s left queue list"), *OwnPawn->GetHumanReadableName()));
 
-	// TODO: Change to RegisterUnitDestroyed 
+	
 	OwningEncounter->RemoveDeadUnitFromEncounter(this);
 }
 

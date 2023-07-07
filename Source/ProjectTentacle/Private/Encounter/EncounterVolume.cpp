@@ -4,6 +4,7 @@
 #include "Encounter/EncounterVolume.h"
 
 #include "NavigationInvokerComponent.h"
+#include "NavigationSystem.h"
 #include "ProjectTentacleGameInstance.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBase.h"
@@ -24,13 +25,19 @@ AEncounterVolume::AEncounterVolume()
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Encounter Root"));
 	Root->SetMobility(EComponentMobility::Static);
 	SetRootComponent(Root);
+
+	CollisionMesh = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collision"));
+	CollisionMesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
+
+	CollisionMesh->OnComponentBeginOverlap.AddDynamic(this, &AEncounterVolume::OnActorHitTriggerCollision);
 }
 
 
 void AEncounterVolume::TryTriggerEncounter(AActor* Target)
 {
-	// Early return if encounter has already begun
-	if(bIsEncounterActive || bIsEncounterComplete) return;
+	// Early return if encounter has already begun or player hasn't enter encounter
+	if(bIsEncounterActive || bIsEncounterComplete || !IsPlayerInsideEncounter) return;
+	
 	bIsEncounterActive = true;
 	EngageContainedUnits(Target);
 	TriggerNextWave();
@@ -137,6 +144,24 @@ void AEncounterVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	Setup();
+}
+
+void AEncounterVolume::OnActorHitTriggerCollision(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// make collision ignore if player is already in the encounter
+	if(IsPlayerInsideEncounter)
+	{
+		CollisionMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		return;
+	}
+	
+	APlayerCharacter* CastPlayer = Cast<APlayerCharacter>(OtherActor);
+	
+	if(!CastPlayer) return;
+
+	IsPlayerInsideEncounter = true;
+	CollisionMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 }
 
 void AEncounterVolume::EndPlay(const EEndPlayReason::Type EndPlayReason)
