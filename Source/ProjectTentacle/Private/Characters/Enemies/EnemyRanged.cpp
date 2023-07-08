@@ -12,7 +12,11 @@ void AEnemyRanged::ExecuteAttack()
 {
 	Super::ExecuteAttack();
 
-	if(!CheckCanSeePlayer()) TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+	// if(!CheckCanSeePlayer())
+	// {
+	// 	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+	// 	return;
+	// }
 
 	PlayAnimMontage(KneelDownToAimAnim, 1, "Default");
 }
@@ -23,6 +27,8 @@ void AEnemyRanged::BeginFire()
 	OnHideAttackIndicator();
 	
 	// Start fire animation
+	if(CurrentEnemyState != EEnemyCurrentState::Attacking) return;
+
 	StopAnimMontage();
 	PlayAnimMontage(KneelFireAnim,1, "Default");
 }
@@ -32,6 +38,28 @@ void AEnemyRanged::InSightConditionUpdate()
 	const bool IsInCameraSight = WasRecentlyRendered(CheckInSightTick);
 
 	ShowOrHidePlayerHUD(IsInCameraSight);
+}
+
+void AEnemyRanged::OnDeath()
+{
+	Super::OnDeath();
+
+	if(CurrentEnemyState == EEnemyCurrentState::Attacking)
+	{
+		// Stop current montage
+		StopAnimMontage();
+
+		// Stop timers
+		StopAimingTimer();
+		StopCheckInSightTimer();
+		
+		// Stop Both attack indicators
+		OnHideAttackIndicator();
+		SpawnOrCollapsePlayerHUD(false);
+		
+		// Finish task
+		TryFinishAttackTask(EEnemyCurrentState::Damaged);
+	}
 }
 
 AActor* AEnemyRanged::GetDamageActorByLineTrace()

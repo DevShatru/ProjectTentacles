@@ -48,6 +48,8 @@ protected:
 	UFUNCTION()
 	void InSightConditionUpdate();
 
+	virtual void OnDeath() override;
+
 public:
 
 

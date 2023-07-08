@@ -924,7 +924,7 @@ void UPlayerActionComponent::DodgeMovement(float Alpha)
 	const float CapHalfHeight = PlayerOwnerRef->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	
 	const bool IsWallHit = UKismetSystemLibrary::LineTraceSingle(World, CharacterCurrentPos, LinetraceWallEnd, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
-	const bool IsFloorHit = UKismetSystemLibrary::LineTraceSingle(World, LaunchingPos, LaunchingPos + (DownVector * CapHalfHeight * 1.5f), UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::Persistent,Hit,true);
+	const bool IsFloorHit = UKismetSystemLibrary::LineTraceSingle(World, LaunchingPos, LaunchingPos + (DownVector * CapHalfHeight * 1.5f), UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
 	
 	if(!IsWallHit)
 	{
